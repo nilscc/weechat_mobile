@@ -54,31 +54,15 @@ class _MyHomePageState extends State<MyHomePage> {
     final s = await SecureSocket.connect('nils.cc', 9009,
         onBadCertificate: (cert) => true);
 
-    s.write('(handshake) handshake password_hash_algo=sha512\n');
+    s.write('(handshake) handshake\n');
 
     s.listen((event) {
       try {
-        print(event);
-        final view = ByteData.sublistView(event);
-        print(view.getUint32(0));
-        print(view.getUint8(4));
-        final comp = zlib.decode(event.sublist(5)) as Uint8List;
-        print(comp);
-        final compview = ByteData.sublistView(comp);
-        final idlen = compview.getUint32(0);
-        print(idlen);
-        var offset = 4;
-        print(String.fromCharCodes(comp.sublist(offset, offset+idlen)));
-        offset += idlen;
-        print(String.fromCharCodes(comp.sublist(offset, offset+3)));
-        offset += 3;
-        print(String.fromCharCodes(comp.sublist(offset, offset+3)));
-        print(String.fromCharCodes(comp.sublist(offset+3, offset+6)));
-        offset += 6;
-        print(compview.getUint32(offset));
-      }
-      catch (e) {
-        print(e);
+        final p = RelayParser(event).body();
+        print(p.id);
+        for (var o in p.objects) {
+          print(o);
+        }
       }
       finally {
         s.close();
