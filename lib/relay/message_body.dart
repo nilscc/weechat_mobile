@@ -10,19 +10,28 @@ import 'package:weechat/relay/info_list.dart';
 
 class RelayMessageBody {
   final ByteData _data;
-  final List<dynamic> objects = [];
+  List<dynamic> objects() {
+    final l = [];
+    final length = _data.lengthInBytes;
 
-  RelayMessageBody(ByteData data) : _data = data {
     // skip ID
     int offset = strLength(0);
 
-    print(_data.buffer.asUint8List(offset));
+    while (offset < length) {
+      final ty = objectType(offset);
+      offset += 3;
+      print(ty);
+      print(offset);
 
-    final ty = objectType(offset);
-    offset += 3;
+      l.add(decodeObject(ty, offset));
+      offset += objectLength(ty, offset);
+    }
 
-    objects.add(decodeObject(ty, offset));
-    offset += objectLength(ty, offset);
+    return l;
+  }
+
+  RelayMessageBody(ByteData data) : _data = data {
+    print(data.buffer.asUint8List().toList());
   }
 
   ByteBuffer get buffer => _data.buffer;
@@ -111,30 +120,32 @@ class RelayMessageBody {
   int hdaLength(int offset) {
     int res = 0;
 
-    final hPath = strObject(offset)!;
+    final hPath = strObject(offset);
     res += strLength(offset);
 
-    final hPathElements = hPath.split('/').length;
-
-    final keys = strObject(offset + res)!;
+    final keys = strObject(offset + res);
     res += strLength(offset + res);
-
-    // convert string of keys into list with name/type tuples
-    final List<RelayHDataKeyNameType> keyTypes = [];
-    for (var nameType in keys.split(',')) {
-      final t = nameType.split(':');
-      keyTypes.add(RelayHDataKeyNameType(t[0], t[1]));
-    }
 
     final count = intObject(offset + res);
     res += intLength(offset + res);
 
-    for (var i = 0; i < count; ++i) {
-      for (var p = 0; p < hPathElements; ++p) {
-        res += ptrLength(offset + res);
+    if (hPath != null && keys != null && count > 0) {
+      final hPathElements = hPath.split('/').length;
+
+      // convert string of keys into list with name/type tuples
+      final List<RelayHDataKeyNameType> keyTypes = [];
+      for (var nameType in keys.split(',')) {
+        final t = nameType.split(':');
+        keyTypes.add(RelayHDataKeyNameType(t[0], t[1]));
       }
-      for (var nameType in keyTypes) {
-        res += objectLength(nameType.type, offset + res);
+
+      for (var i = 0; i < count; ++i) {
+        for (var p = 0; p < hPathElements; ++p) {
+          res += ptrLength(offset + res);
+        }
+        for (var nameType in keyTypes) {
+          res += objectLength(nameType.type, offset + res);
+        }
       }
     }
 
@@ -142,50 +153,53 @@ class RelayMessageBody {
   }
 
   RelayHData hdaObject(int offset) {
-    final hPath = strObject(offset)!;
+    final hPath = strObject(offset);
     offset += strLength(offset);
 
-    final hPathElements = hPath.split('/').length;
-
-    final keys = strObject(offset)!;
+    final keys = strObject(offset);
     offset += strLength(offset);
-
-    // convert string of keys into list with name/type tuples
-    final List<RelayHDataKeyNameType> keyTypes = [];
-    for (var nameType in keys.split(',')) {
-      final t = nameType.split(':');
-      keyTypes.add(RelayHDataKeyNameType(t[0], t[1]));
-    }
 
     final count = intObject(offset);
     offset += intLength(offset);
 
-    final List<RelayHDataObject> objects = [];
-    for (var i = 0; i < count; ++i) {
-      // parse all p-path pointers
-      final List<String> pPath = [];
-      for (var p = 0; p < hPathElements; ++p) {
-        pPath.add(ptrObject(offset));
-        offset += ptrLength(offset);
+    if (hPath != null && keys != null && count > 0) {
+      final hPathElements = hPath.split('/').length;
+
+      // convert string of keys into list with name/type tuples
+      final List<RelayHDataKeyNameType> keyTypes = [];
+      for (var nameType in keys.split(',')) {
+        final t = nameType.split(':');
+        keyTypes.add(RelayHDataKeyNameType(t[0], t[1]));
       }
 
-      final List<dynamic> values = [];
-      for (var nameType in keyTypes) {
-        values.add(decodeObject(nameType.type, offset));
-        offset += objectLength(nameType.type, offset);
+      final List<RelayHDataObject> objects = [];
+      for (var i = 0; i < count; ++i) {
+        // parse all p-path pointers
+        final List<String> pPath = [];
+        for (var p = 0; p < hPathElements; ++p) {
+          pPath.add(ptrObject(offset));
+          offset += ptrLength(offset);
+        }
+
+        final List<dynamic> values = [];
+        for (var nameType in keyTypes) {
+          values.add(decodeObject(nameType.type, offset));
+          offset += objectLength(nameType.type, offset);
+        }
+
+        objects.add(RelayHDataObject(
+          pPath: pPath,
+          values: values,
+        ));
       }
 
-      objects.add(RelayHDataObject(
-        pPath: pPath,
-        values: values,
-      ));
-    }
-
-    return RelayHData(
-      hPath: hPath,
-      keys: keyTypes,
-      objects: objects,
-    );
+      return RelayHData(
+        hPath: hPath,
+        keys: keyTypes,
+        objects: objects,
+      );
+    } else
+      return RelayHData(hPath: null, keys: null, objects: []);
   }
 
   int infLength(int offset) {

@@ -25,6 +25,7 @@ void main() {
     test('Decode info', _decodeInfo);
     test('Decode info list', _decodeInfoList);
     test('Decode array', _decodeArray);
+    test('Other objects', _decodeObject);
   });
 }
 
@@ -153,10 +154,10 @@ void _decodeHData() {
   expect(h01.hPath, equals('buffer'));
 
   // test key/type pairs
-  expect(h01.keys[0].name, equals('number'));
-  expect(h01.keys[0].type, equals('int'));
-  expect(h01.keys[1].name, equals('full_name'));
-  expect(h01.keys[1].type, equals('str'));
+  expect(h01.keys![0].name, equals('number'));
+  expect(h01.keys![0].type, equals('int'));
+  expect(h01.keys![1].name, equals('full_name'));
+  expect(h01.keys![1].type, equals('str'));
 
   // test number of objects
   expect(h01.count, equals(2));
@@ -239,11 +240,43 @@ final _arr03 = _fromList('str'.codeUnits + [0x00, 0x00, 0x00, 0x00]);
 
 void _decodeArray() {
   expect(RelayMessageBody(_arr01).arrObject(0), equals(['abc', 'de']));
-  expect(RelayMessageBody(_arr01).arrLength(0), equals(_arr01.buffer.lengthInBytes));
+  expect(RelayMessageBody(_arr01).arrLength(0),
+      equals(_arr01.buffer.lengthInBytes));
 
   expect(RelayMessageBody(_arr02).arrObject(0), equals([123, 456, 789]));
-  expect(RelayMessageBody(_arr03).arrLength(0), equals(_arr03.buffer.lengthInBytes));
+  expect(RelayMessageBody(_arr03).arrLength(0),
+      equals(_arr03.buffer.lengthInBytes));
 
   expect(RelayMessageBody(_arr03).arrObject(0), equals([]));
-  expect(RelayMessageBody(_arr03).arrLength(0), equals(_arr03.buffer.lengthInBytes));
+  expect(RelayMessageBody(_arr03).arrLength(0),
+      equals(_arr03.buffer.lengthInBytes));
+}
+
+final _obj01 = _fromList([
+  0,
+  0,
+  0,
+  1,
+  48,
+  104,
+  100,
+  97,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  0,
+  0,
+  0,
+  0
+]);
+
+void _decodeObject() {
+  final b = RelayMessageBody(_obj01);
+  print(b.id);
+  print(b.objects());
 }

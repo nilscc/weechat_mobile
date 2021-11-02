@@ -1,6 +1,6 @@
 class RelayHData {
-  final String hPath;
-  final List<RelayHDataKeyNameType> keys;
+  final String? hPath;
+  final List<RelayHDataKeyNameType>? keys;
   final List<RelayHDataObject> objects;
 
   int get count => objects.length;
