@@ -1,0 +1,16 @@
+{
+  "settingsTitle": "Einstellungen",
+  "settingsConnectionTitle": "Verbindung",
+  "settingsConnectionSubtitle": "Server, Port und Login-Informationen von deiner entfernten Weechat-Instanz.",
+  "settingsConnectionHostname": "Servername",
+  "settingsConnectionPort": "Portnummer",
+  "settingsConnectionRelayPassword": "Relay-Passwort",
+  "settingsConnectionVerifyButton": "Verbindung testen.",
+
+  "certificateValid": "Zertifikat ist gültig.",
+  "certificateInvalid": "Zertifikat ist ungültig.",
+  "certificateIssuerLabel": "Ersteller:",
+  "certificateStartValidity": "Anfang Gültigkeit:",
+  "certificateEndValidity": "Ende Gültigkeit:",
+  "certificateSubject": "Betreff:"
+}

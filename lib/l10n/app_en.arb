@@ -1,0 +1,16 @@
+{
+  "settingsTitle": "Settings",
+  "settingsConnectionTitle": "Connection",
+  "settingsConnectionSubtitle": "Host, port and login information of your remote Weechat instance.",
+  "settingsConnectionHostname": "Host name",
+  "settingsConnectionPort": "Port number",
+  "settingsConnectionRelayPassword": "Relay password",
+  "settingsConnectionVerifyButton": "Verify connection.",
+
+  "certificateValid": "Certificate is valid.",
+  "certificateInvalid": "Certificate is invalid.",
+  "certificateIssuerLabel": "Issuer:",
+  "certificateStartValidity": "Start validity:",
+  "certificateEndValidity": "End validity:",
+  "certificateSubject": "Subject:"
+}
