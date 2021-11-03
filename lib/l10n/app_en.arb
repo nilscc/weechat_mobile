@@ -12,5 +12,7 @@
   "certificateIssuerLabel": "Issuer:",
   "certificateStartValidity": "Start validity:",
   "certificateEndValidity": "End validity:",
-  "certificateSubject": "Subject:"
+  "certificateSubject": "Subject:",
+
+  "channelInputPlaceholder": "Write a message..."
 }

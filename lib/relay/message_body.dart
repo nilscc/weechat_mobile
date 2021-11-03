@@ -20,8 +20,6 @@ class RelayMessageBody {
     while (offset < length) {
       final ty = objectType(offset);
       offset += 3;
-      print(ty);
-      print(offset);
 
       l.add(decodeObject(ty, offset));
       offset += objectLength(ty, offset);
@@ -30,9 +28,7 @@ class RelayMessageBody {
     return l;
   }
 
-  RelayMessageBody(ByteData data) : _data = data {
-    print(data.buffer.asUint8List().toList());
-  }
+  RelayMessageBody(ByteData data) : _data = data;
 
   ByteBuffer get buffer => _data.buffer;
 

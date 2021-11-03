@@ -21,7 +21,7 @@ class Config extends _ConfigBackend {
       this['relayPassword'] = relayPassword;
 }
 
-class _ConfigBackend extends ChangeNotifier {
+class _ConfigBackend {
   final String path;
 
   _ConfigBackend({required this.path}) {

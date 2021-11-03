@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 int stringLength(ByteData data, {int offset: 0, int lengthSize: 4}) {
@@ -13,7 +14,7 @@ String? decodeString(ByteData data, {int offset = 0, int lengthSize: 4}) {
 
   offset += lengthSize;
 
-  return String.fromCharCodes(data.buffer.asUint8List(), offset, offset + len);
+  return utf8.decode(data.buffer.asUint8List().sublist(offset, offset + len));
 }
 
 List<int> encodeString(String s, {lengthSize: 4}) {

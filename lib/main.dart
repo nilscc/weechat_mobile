@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -7,19 +9,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/home.dart';
 import 'package:weechat/pages/settings/config.dart';
+import 'package:weechat/relay/connection.dart';
+import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/themes.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // lookup config path
-  final appDir = await getApplicationDocumentsDirectory();
-  final configPath = join(appDir.path, 'config.json');
-
-  // create config
-  final config = Config(path: configPath);
-
   // check if locale is part of supported locales
   Locale locale = Locale('en');
   for (final l in window.locales) {
@@ -33,22 +28,50 @@ void main() async {
   // set default locale to detected language code for consistent translations
   Intl.defaultLocale = locale.languageCode;
 
-  // run application
-  runApp(MyApp(
-    config: config,
-  ));
+  // connection status is kept globally
+  final cs = RelayConnectionStatus();
+
+  // run application with exception handling
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    // lookup config path
+    final appDir = await getApplicationDocumentsDirectory();
+    final configPath = join(appDir.path, 'config.json');
+
+    // create config
+    final config = Config(path: configPath);
+
+    runApp(MyApp(
+      config: config,
+      connectionStatus: cs,
+    ));
+  }, (Object error, StackTrace stack) {
+    print(error);
+    if (error is SocketException)
+      cs.connected = false;
+    else
+      throw error;
+  });
 }
 
 class MyApp extends StatelessWidget {
   final Config config;
+  final RelayConnectionStatus connectionStatus;
+  final RelayConnection connection;
 
-  MyApp({required this.config});
+  MyApp({
+    required this.config,
+    required this.connectionStatus,
+  }) : connection = RelayConnection(connectionStatus: connectionStatus);
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) => MultiProvider(
         providers: [
-          ChangeNotifierProvider.value(value: config),
+          Provider<Config>.value(value: config),
+          ChangeNotifierProvider.value(value: connectionStatus),
+          Provider<RelayConnection>.value(value: connection),
         ],
         builder: (context, child) => _app(context, child),
       );
@@ -65,6 +88,9 @@ class MyApp extends StatelessWidget {
         supportedLocales: AppLocalizations.supportedLocales,
 
         // Pages
-        home: HomePage(title: 'Flutter Demo Home Page'),
+        home: HomePage(
+          title: 'Weechat Mobile',
+          context: context,
+        ),
       );
 }
