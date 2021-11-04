@@ -71,7 +71,7 @@ class _SettingsState extends State<SettingsPage> {
           decoration: InputDecoration(
             border: OutlineInputBorder(),
             labelText: loc.settingsConnectionPort,
-            icon: Icon(Icons.door_front_outlined),
+            icon: Icon(Icons.door_front),
           ),
           onChanged: (value) => config.portNumber = int.tryParse(value),
         ),
