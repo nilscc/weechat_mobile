@@ -26,7 +26,9 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
+  # Nice icons: https://pub.dev/packages/flutter_font_icons
   flutter_font_icons : ^2.2.4
+
   intl: ^0.17.0
   tuple: any
   provider: ^6.0.1

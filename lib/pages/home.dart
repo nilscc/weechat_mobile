@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/home/channel_list_item.dart';
 import 'package:weechat/pages/settings.dart';
@@ -121,8 +122,8 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _connect(context),
         tooltip: 'Increment',
-        child: Icon(
-            cs.connected ? Icons.stop_outlined : Icons.play_arrow_outlined),
+        backgroundColor: cs.connected ? Colors.green : Colors.red,
+        child: cs.connected ? Icon(Feather.log_out) : Icon(Feather.log_in),
       ),
     );
   }
