@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:weechat/pages/settings/config.dart';
 
@@ -57,7 +58,7 @@ class _SettingsState extends State<SettingsPage> {
           keyboardType: TextInputType.url,
           decoration: InputDecoration(
             border: OutlineInputBorder(),
-            icon: Icon(Icons.computer),
+            icon: Icon(Feather.server),
             labelText: loc.settingsConnectionHostname,
           ),
           onChanged: (value) => config.hostName = value,
@@ -71,7 +72,7 @@ class _SettingsState extends State<SettingsPage> {
           decoration: InputDecoration(
             border: OutlineInputBorder(),
             labelText: loc.settingsConnectionPort,
-            icon: Icon(Icons.door_front),
+            icon: Icon(Feather.hash),
           ),
           onChanged: (value) => config.portNumber = int.tryParse(value),
         ),
@@ -84,7 +85,7 @@ class _SettingsState extends State<SettingsPage> {
           decoration: InputDecoration(
             border: OutlineInputBorder(),
             labelText: loc.settingsConnectionRelayPassword,
-            icon: Icon(Icons.lock_outline),
+            icon: Icon(Feather.lock),
           ),
           onChanged: (value) => config.relayPassword = value,
         ),
