@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/relay/message_body.dart';
 import 'package:weechat/relay/parser.dart';
 
-typedef Future<void> RelayCallback(RelayMessageBody body);
+typedef Future<bool?> RelayCallback(RelayMessageBody body);
 
 const String CONNECTION_CLOSED = 'Connection closed.';
 const String CONNECTION_TIMEOUT = 'Connection timeout.';
@@ -16,6 +15,13 @@ class RelayConnection {
   StreamSubscription? _streamSubscription;
 
   Map<String, RelayCallback> _callbacks = {};
+
+  void addCallback(String id, RelayCallback callback) {
+    _callbacks[id] = callback;
+  }
+  void removeCallback(String id) {
+    _callbacks.remove(id);
+  }
 
   RelayConnectionStatus connectionStatus;
 
@@ -114,8 +120,9 @@ class RelayConnection {
 
   Future<void> _handleMessageBody(final RelayMessageBody body) async {
     if (_callbacks.containsKey(body.id)) {
-      await _callbacks[body.id]!(body);
-      _callbacks.remove(body.id);
+      final b = await _callbacks[body.id]!(body);
+      if (b != true)
+        _callbacks.remove(body.id);
     } else {
       print('Unhandled message body: ${body.id}');
     }

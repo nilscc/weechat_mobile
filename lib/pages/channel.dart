@@ -1,37 +1,31 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:weechat/pages/channel/line.dart';
-import 'package:weechat/relay/colors.dart';
+import 'package:weechat/pages/channel/lines.dart';
+import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/connection/status.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:weechat/relay/hdata.dart';
 
 class ChannelPage extends StatefulWidget {
-  final String bufferPointer, name;
+  final RelayBuffer buffer;
 
   ChannelPage({
-    required this.bufferPointer,
-    required this.name,
+    required this.buffer,
   });
 
   @override
   _ChannelPageState createState() => _ChannelPageState();
 
   static MaterialPageRoute route({
-    required String bufferPointer,
-    required String name,
+    required RelayBuffer buffer,
   }) =>
       MaterialPageRoute(
-          builder: (context) => ChannelPage(
-                bufferPointer: bufferPointer,
-                name: name,
-              ));
+        builder: (context) => ChannelPage(
+          buffer: buffer,
+        ),
+      );
 }
 
 class _ChannelPageState extends State<ChannelPage> {
@@ -63,7 +57,7 @@ class _ChannelPageState extends State<ChannelPage> {
           onTap: () {
             print('Tap!');
           },
-          child: Text(widget.name),
+          child: Text(widget.buffer.name),
         ),
       ),
       body: Column(
@@ -77,46 +71,10 @@ class _ChannelPageState extends State<ChannelPage> {
     );
   }
 
-  Widget _linesWidget(BuildContext context) {
-    final c = Provider.of<RelayConnection>(context);
-    final comp = Completer();
-
-    c.command(
-      'buffer_lines',
-      'hdata buffer:${widget.bufferPointer}/own_lines/last_line(-30)/data date,prefix,message',
-      callback: (body) async {
-        final List<ChannelLine> l = [];
-        final objs = body.objects();
-        for (final obj in objs) {
-          for (int i = 0; i < obj.count; ++i) {
-            final o = obj.objects[i];
-            final d = DateTime.fromMillisecondsSinceEpoch(o.values[0] * 1000);
-            final p = stripColors(o.values[1]);
-            final m = stripColors(o.values[2]);
-            l.insert(
-                0,
-                ChannelLine(
-                  lineDataPointer: o.pPath[3],
-                  date: d,
-                  prefix: p,
-                  message: m,
-                ));
-          }
-        }
-        comp.complete(l);
-      },
-    );
-
-    return FutureBuilder(
-        future: comp.future,
-        builder: (context, snapshot) => ListView(
-              children: [
-                if (snapshot.hasData)
-                  ...(snapshot.data as List<ChannelLine>)
-                      .map((e) => e.build(context)),
-              ],
-            ));
-  }
+  Widget _linesWidget(BuildContext context) => ChangeNotifierProvider.value(
+        value: widget.buffer,
+        child: ChannelLines(),
+      );
 
   TextEditingController _inputController = TextEditingController();
 
