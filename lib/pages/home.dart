@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
@@ -36,6 +37,12 @@ class _HomePageState extends State<HomePage> {
         _channelList.clear();
       });
     } else {
+      if ((cfg.hostName ?? '').isEmpty ||
+          cfg.portNumber == null ||
+          (cfg.relayPassword ?? '').isEmpty) {
+        await Navigator.of(context).push(SettingsPage.route());
+      }
+
       await _connection.connect(
         hostName: cfg.hostName!,
         portNumber: cfg.portNumber!,
@@ -108,15 +115,16 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
               onPressed: () {
-                Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => SettingsPage()));
+                Navigator.of(context).push(SettingsPage.route());
               },
               icon: Icon(Icons.settings)),
         ],
       ),
 
       // main body
-      body: _buildChannelList(context),
+      body: cs.connected
+          ? _buildChannelList(context)
+          : _showConnectionErrors(context, reason: cs.reason),
 
       // the connection status floating button
       floatingActionButton: FloatingActionButton(
@@ -135,6 +143,23 @@ class _HomePageState extends State<HomePage> {
         ..._channelList.map((e) => e.build(context)),
         Container(height: 100),
       ],
+    );
+  }
+
+  Widget _showConnectionErrors(context, {String? reason}) {
+    final l = AppLocalizations.of(context)!;
+
+    if (reason == CONNECTION_CLOSED)
+      reason = l.errorConnectionClosedRemotely;
+    else if (reason == CONNECTION_TIMEOUT)
+      reason = l.errorConnectionTimeout;
+
+    return Container(
+      padding: EdgeInsets.all(10),
+      child: Container(
+        padding: EdgeInsets.all(5),
+        child: Text(reason ?? l.errorNotConnected),
+      ),
     );
   }
 }

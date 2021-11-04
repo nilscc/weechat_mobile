@@ -1,4 +1,9 @@
 {
+  "errorNotConnected": "Nicht verbunden.",
+  "errorConnectionClosedRemotely": "Verbindung wurde unerwartet getrennt.",
+  "errorConnectionTimeout": "Verbindung wurde wegen Zeitüberschreitung unterbrochen.",
+  "errorConnectionFailedInit": "Initialisierung gescheitert. Möglicherweise falsches Relay-Passwort?",
+
   "settingsTitle": "Einstellungen",
   "settingsConnectionTitle": "Verbindung",
   "settingsConnectionSubtitle": "Server, Port und Login-Informationen von deiner entfernten Weechat-Instanz.",

@@ -8,6 +8,9 @@ import 'package:weechat/relay/parser.dart';
 
 typedef Future<void> RelayCallback(RelayMessageBody body);
 
+const String CONNECTION_CLOSED = 'Connection closed.';
+const String CONNECTION_TIMEOUT = 'Connection timeout.';
+
 class RelayConnection {
   SecureSocket? _socket;
   StreamSubscription? _streamSubscription;
@@ -15,37 +18,42 @@ class RelayConnection {
   Map<String, RelayCallback> _callbacks = {};
 
   RelayConnectionStatus connectionStatus;
-  void _connectionStatusListener() {
-    if (!connectionStatus.connected) close();
-  }
 
-  RelayConnection({required this.connectionStatus}) {
-    connectionStatus.addListener(_connectionStatusListener);
-  }
+  RelayConnection({required this.connectionStatus});
 
   bool get isConnected => connectionStatus.connected;
 
-  Future<void> close() async {
+  Future<void> close({String? reason}) async {
     try {
-      if (_socket != null) await _socket!.close();
+      try {
+        if (_socket != null) await _socket!.close();
+      } catch (e) {
+        // socket already closed
+        if (!(e is StateError)) rethrow;
+      }
       if (_streamSubscription != null) await _streamSubscription!.cancel();
       if (_pingTimer != null) _pingTimer!.cancel();
     } finally {
       _socket = null;
       _streamSubscription = null;
       _pingTimer = null;
+      connectionStatus.reason = reason;
       connectionStatus.connected = false;
     }
   }
 
-  Future<bool> connect({
+  Future<void> connect({
     required String hostName,
     required int portNumber,
     bool ignoreInvalidCertificate: true,
   }) async {
     try {
-      _socket = await SecureSocket.connect(hostName, portNumber,
-          onBadCertificate: (c) => ignoreInvalidCertificate);
+      _socket = await SecureSocket.connect(
+        hostName,
+        portNumber,
+        onBadCertificate: (c) => ignoreInvalidCertificate,
+        timeout: Duration(seconds: 1),
+      );
 
       // start listening
       _streamSubscription = _socket!.listen((event) {
@@ -54,14 +62,11 @@ class RelayConnection {
       });
 
       connectionStatus.connected = true;
-      return true;
     } catch (e) {
-      if (e is SocketException) {
+      if (e is SocketException)
         close();
-        return false;
-      } else {
+      else
         rethrow;
-      }
     }
   }
 
@@ -70,9 +75,11 @@ class RelayConnection {
     String command, {
     RelayCallback? callback,
     String? responseId,
+    Duration? callbackTimeout,
   }) async {
     if (_socket == null) return;
 
+    // setup callback
     Completer? c;
     if (callback != null) {
       c = Completer();
@@ -80,21 +87,48 @@ class RelayConnection {
         await callback(b);
         c!.complete();
       };
+
+      // add timeout to future, otherwise it might get stuck when connection is lost
+      c.future.timeout(callbackTimeout ?? Duration(seconds: 1)).catchError((e) {
+        if (e is TimeoutException)
+          close(reason: CONNECTION_TIMEOUT);
+        else
+          throw e;
+      });
     }
 
-    _socket!.write('($id) $command\n');
-    if (c != null) await c.future;
+    // run command and catch possible exception
+    try {
+      _socket!.write('($id) $command\n');
+      await _socket!.flush();
+      if (c != null) await c.future;
+    } catch (e, s) {
+      print(e);
+      print(s);
+      if (e is StateError)
+        close(reason: CONNECTION_CLOSED);
+      else
+        rethrow;
+    }
   }
 
   Future<void> _handleMessageBody(final RelayMessageBody body) async {
     if (_callbacks.containsKey(body.id)) {
       await _callbacks[body.id]!(body);
       _callbacks.remove(body.id);
+    } else {
+      print('Unhandled message body: ${body.id}');
     }
   }
 
   Future<void> handshake() async {
-    await command('handshake', 'handshake');
+    await command(
+      'handshake',
+      'handshake',
+      callback: (body) async {
+        // TODO
+      },
+    );
   }
 
   Future<void> init(String relayPassword) async {

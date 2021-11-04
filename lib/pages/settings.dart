@@ -4,15 +4,16 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:weechat/pages/settings/config.dart';
 
 class SettingsPage extends StatefulWidget {
-
   SettingsPage({Key? key}) : super(key: key);
 
   @override
   _SettingsState createState() => _SettingsState();
+
+  static MaterialPageRoute route({Key? key}) =>
+      MaterialPageRoute(builder: (context) => SettingsPage(key: key));
 }
 
 class _SettingsState extends State<SettingsPage> {
-
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;

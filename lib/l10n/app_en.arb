@@ -1,4 +1,9 @@
 {
+  "errorNotConnected": "Not connected.",
+  "errorConnectionClosedRemotely": "Connection was closed unexpectedly.",
+  "errorConnectionTimeout": "Connection timed out.",
+  "errorConnectionFailedInit": "Initialization failed. Possibly incorrect relay password?",
+
   "settingsTitle": "Settings",
   "settingsConnectionTitle": "Connection",
   "settingsConnectionSubtitle": "Host, port and login information of your remote Weechat instance.",

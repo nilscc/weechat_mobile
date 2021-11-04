@@ -30,6 +30,7 @@ void main() async {
 
   // connection status is kept globally
   final cs = RelayConnectionStatus();
+  final con = RelayConnection(connectionStatus: cs);
 
   // run application with exception handling
   runZonedGuarded(() async {
@@ -44,33 +45,34 @@ void main() async {
 
     runApp(MyApp(
       config: config,
-      connectionStatus: cs,
+      connection: con,
     ));
-  }, (Object error, StackTrace stack) {
-    print(error);
-    if (error is SocketException)
-      cs.connected = false;
-    else
+  }, (error, stack) {
+    print('runZonedGuarded: $error');
+    if (error is SocketException) {
+      con.close(reason: error.message);
+    } else if (error is TimeoutException) {
+      con.close(reason: error.message);
+    } else
       throw error;
   });
 }
 
 class MyApp extends StatelessWidget {
   final Config config;
-  final RelayConnectionStatus connectionStatus;
   final RelayConnection connection;
 
   MyApp({
     required this.config,
-    required this.connectionStatus,
-  }) : connection = RelayConnection(connectionStatus: connectionStatus);
+    required this.connection,
+  });
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) => MultiProvider(
         providers: [
           Provider<Config>.value(value: config),
-          ChangeNotifierProvider.value(value: connectionStatus),
+          ChangeNotifierProvider.value(value: connection.connectionStatus),
           Provider<RelayConnection>.value(value: connection),
         ],
         builder: (context, child) => _app(context, child),
