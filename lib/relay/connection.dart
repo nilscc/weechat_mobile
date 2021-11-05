@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:weechat/relay/connection/status.dart';
-import 'package:weechat/relay/message_body.dart';
-import 'package:weechat/relay/parser.dart';
+import 'package:weechat/relay/protocol/message_body.dart';
+import 'package:weechat/relay/protocol/parser.dart';
 
 typedef Future<bool?> RelayCallback(RelayMessageBody body);
 

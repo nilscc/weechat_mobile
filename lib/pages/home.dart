@@ -9,7 +9,7 @@ import 'package:weechat/pages/settings.dart';
 import 'package:weechat/pages/settings/config.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/connection/status.dart';
-import 'package:weechat/relay/hdata.dart';
+import 'package:weechat/relay/protocol/hdata.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key, required this.title, required this.context})

@@ -4,9 +4,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:tuple/tuple.dart';
-import 'package:weechat/relay/decode_string.dart';
-import 'package:weechat/relay/hdata.dart';
-import 'package:weechat/relay/info_list.dart';
+import 'package:weechat/relay/protocol/decode_string.dart';
+import 'package:weechat/relay/protocol/hdata.dart';
+import 'package:weechat/relay/protocol/info_list.dart';
 
 class RelayMessageBody {
   final ByteData _data;

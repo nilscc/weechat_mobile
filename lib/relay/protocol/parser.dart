@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
-import 'package:weechat/relay/message_body.dart';
+import 'package:weechat/relay/protocol/message_body.dart';
 
 // https://weechat.org/files/doc/stable/weechat_relay_protocol.en.html#messages
 

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:tuple/tuple.dart';
 import 'package:weechat/relay/connection.dart';
-import 'package:weechat/relay/hdata.dart';
+import 'package:weechat/relay/protocol/hdata.dart';
 
 class RelayCompletion {
   final String context, baseWord;
