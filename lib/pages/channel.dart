@@ -74,7 +74,10 @@ class _ChannelPageState extends State<ChannelPage> {
 
   Widget _linesWidget(BuildContext context) => ChangeNotifierProvider.value(
         value: widget.buffer,
-        child: ChannelLines(),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+          child: ChannelLines(),
+        ),
       );
 
   TextEditingController _inputController = TextEditingController();

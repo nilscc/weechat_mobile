@@ -1,11 +1,14 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:weechat/relay/colors.dart';
 
 void main() {
-  group('stripColors', () {
+  group('Colors', () {
     for (int i = 0; i < _cols01.length; ++i) {
       test('stripColors("${_cols01[i]}")', () { _stripColors(i); });
     }
+    test('parseColors', _parseColors);
   });
 }
 
@@ -39,4 +42,10 @@ void _stripColors(int idx) {
   print('Input: $testString (expected: $expected)');
 
   expect(stripColors(testString), equals(expected));
+}
+
+void _parseColors() {
+  final rt01 = parseColors('\x19F00\x19F01test');
+  expect(rt01.text.toPlainText(), equals('test'));
+  expect(rt01.text.style?.color, equals(colorCodes[1]));
 }

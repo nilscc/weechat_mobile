@@ -1,7 +1,10 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/relay/buffer.dart';
+import 'package:weechat/relay/colors.dart';
 
 class ChannelLines extends StatefulWidget {
   @override
@@ -25,6 +28,35 @@ class _ChannelLinesState extends State<ChannelLines> {
 
   Widget _buildLineData(BuildContext context, LineData line) {
     final df = DateFormat.Hm().format(line.date);
-    return Text('[$df] <${line.prefix}> ${line.message}');
+    final tt = Theme.of(context).textTheme;
+
+    final isSystem = ['<--', '-->'].any((e) => line.prefix.endsWith(e));
+    final alpha = isSystem ? 50 : 255;
+    final defaultColor = tt.bodyText2?.color;
+
+    final prefixRT =
+        parseColors(line.prefix, alpha: alpha, defaultColor: defaultColor).text;
+
+    return Container(
+      padding: EdgeInsets.only(top: 5),
+      child: RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: '$df ',
+              style: tt.bodyText2?.copyWith(
+                fontFeatures: [FontFeature.tabularFigures()],
+                color: Colors.grey.withAlpha(100),
+              ),
+            ),
+            if (!isSystem) TextSpan(text: '<'),
+            prefixRT,
+            TextSpan(text: isSystem ? ' ' : '> '),
+            parseColors(line.message, alpha: alpha, defaultColor: defaultColor)
+                .text,
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -49,8 +49,8 @@ List<LineData> _handleLineData(
     final notifyLevel = (o.values[4] as String).codeUnits[0];
     final highlight = (o.values[5] as String).codeUnits[0] == 1;
     final tags = (o.values[6] as List).map((e) => e as String).toList();
-    final prefix = stripColors(o.values[7]);
-    final message = stripColors(o.values[8]);
+    final prefix = o.values[7];
+    final message = o.values[8];
 
     l.add(LineData(
       lineDataPointer: o.pPath[lineDataPointerPPathIndex],
