@@ -50,7 +50,6 @@ class _ChannelPageState extends State<ChannelPage> {
 
   @override
   Widget build(BuildContext context) {
-    final c = Provider.of<RelayConnection>(context);
     return Scaffold(
       appBar: AppBar(
         title: GestureDetector(
@@ -80,6 +79,8 @@ class _ChannelPageState extends State<ChannelPage> {
 
   Widget _inputWidget(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final con = Provider.of<RelayConnection>(context);
+
     return Card(
       margin: EdgeInsets.all(10),
       child: Container(
@@ -95,18 +96,23 @@ class _ChannelPageState extends State<ChannelPage> {
                 ),
               ),
             ),
-            Container(
-              padding: EdgeInsets.zero,
-              child: IconButton(
-                icon: Icon(Icons.keyboard_tab),
-                onPressed: () {},
-              ),
-            ),
+            // Container(
+            //   padding: EdgeInsets.zero,
+            //   child: IconButton(
+            //     icon: Icon(Icons.keyboard_tab),
+            //     onPressed: () {},
+            //   ),
+            // ),
             Container(
               padding: EdgeInsets.zero,
               child: IconButton(
                 icon: Icon(Icons.arrow_upward),
-                onPressed: () {},
+                onPressed: () async {
+                  final text = _inputController.text;
+                  await con.command('buffer_input',
+                      'input ${widget.buffer.bufferPointer} $text');
+                  _inputController.text = '';
+                },
               ),
             ),
           ],

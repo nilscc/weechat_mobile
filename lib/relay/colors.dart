@@ -10,8 +10,8 @@ String stripColors(String raw) {
   final List<int> i = [];
 
   bool colorCode = false;
-  bool setAttribute = false;
-  bool remAttribute = false;
+  // bool setAttribute = false;
+  // bool remAttribute = false;
 
   final it = raw.runes.iterator;
   while (it.moveNext()) {
