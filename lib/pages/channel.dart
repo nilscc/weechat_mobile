@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/channel/lines.dart';
 import 'package:weechat/relay/buffer.dart';
+import 'package:weechat/relay/completion.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/connection/status.dart';
 
@@ -78,6 +79,8 @@ class _ChannelPageState extends State<ChannelPage> {
 
   TextEditingController _inputController = TextEditingController();
 
+  RelayCompletion? _completion;
+
   Widget _inputWidget(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final con = Provider.of<RelayConnection>(context);
@@ -95,15 +98,33 @@ class _ChannelPageState extends State<ChannelPage> {
                 decoration: InputDecoration.collapsed(
                   hintText: loc.channelInputPlaceholder,
                 ),
+                onChanged: (text) {
+                  _completion = null;
+                },
               ),
             ),
-            // Container(
-            //   padding: EdgeInsets.zero,
-            //   child: IconButton(
-            //     icon: Icon(Icons.keyboard_tab),
-            //     onPressed: () {},
-            //   ),
-            // ),
+            Container(
+              padding: EdgeInsets.zero,
+              child: IconButton(
+                icon: Icon(Icons.keyboard_tab),
+                onPressed: () async {
+                  if (_completion == null)
+                    _completion = await RelayCompletion.load(
+                        con,
+                        widget.buffer.bufferPointer,
+                        _inputController.text,
+                        _inputController.selection.base.offset);
+
+                  print('Got: $_completion');
+                  final n = _completion!.next();
+                  _inputController.text = n.item1;
+                  _inputController.selection = TextSelection(
+                    baseOffset: n.item2,
+                    extentOffset: n.item2,
+                  );
+                },
+              ),
+            ),
             Container(
               padding: EdgeInsets.zero,
               child: IconButton(

@@ -14,9 +14,7 @@ class _ChannelLinesState extends State<ChannelLines> {
     final buffer = Provider.of<RelayBuffer>(context, listen: true);
     return ListView(
       reverse: true,
-      children: [
-        ...buffer.lines.map((e) => _buildLineData(context, e)),
-      ],
+      children: buffer.lines.map((e) => _buildLineData(context, e)).toList(),
     );
   }
 
