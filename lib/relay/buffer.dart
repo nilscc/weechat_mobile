@@ -30,9 +30,11 @@ class LineData {
   });
 }
 
-const _lineDataSelected = 'buffer,date,date_printed,displayed,notify_level,highlight,tags_array,prefix,message';
+const _lineDataSelected =
+    'buffer,date,date_printed,displayed,notify_level,highlight,tags_array,prefix,message';
 
-List<LineData> _handleLineData(RelayHData hdata, {required int lineDataPointerPPathIndex}) {
+List<LineData> _handleLineData(
+    RelayHData hdata, int lineDataPointerPPathIndex) {
   // hdata has format:
   // buffer,date,date_printed,displayed,notify_level,highlight,tags_array,prefix,message
   // 0      1    2            3         4            5         6          7      8
@@ -54,20 +56,18 @@ List<LineData> _handleLineData(RelayHData hdata, {required int lineDataPointerPP
     final prefix = stripColors(o.values[7]);
     final message = stripColors(o.values[8]);
 
-    l.insert(
-        0,
-        LineData(
-          lineDataPointer: o.pPath[lineDataPointerPPathIndex],
-          bufferPointer: bufferPointer,
-          date: date,
-          datePrinted: datePrinted,
-          displayed: displayed,
-          notifyLevel: notifyLevel,
-          highlight: highlight,
-          tags: tags,
-          prefix: prefix,
-          message: message,
-        ));
+    l.add(LineData(
+      lineDataPointer: o.pPath[lineDataPointerPPathIndex],
+      bufferPointer: bufferPointer,
+      date: date,
+      datePrinted: datePrinted,
+      displayed: displayed,
+      notifyLevel: notifyLevel,
+      highlight: highlight,
+      tags: tags,
+      prefix: prefix,
+      message: message,
+    ));
   }
   return l;
 }
@@ -102,7 +102,7 @@ class RelayBuffer extends ChangeNotifier {
       '$hdataCmd\n$syncCmd',
       callback: (body) async {
         for (final hdata in body.objects())
-          lines.addAll(_handleLineData(hdata, lineDataPointerPPathIndex: 3));
+          lines.addAll(_handleLineData(hdata, 3));
         notifyListeners();
       },
     );
@@ -111,11 +111,13 @@ class RelayBuffer extends ChangeNotifier {
   void _addCallbacks(RelayConnection relayConnection) {
     relayConnection.addCallback('_buffer_line_added', (body) async {
       for (final hdata in body.objects())
-        lines.addAll(_handleLineData(hdata, lineDataPointerPPathIndex: 0));
+        for (final l in _handleLineData(hdata, 0))
+          lines.insert(0, l);
       notifyListeners();
       return true; // keep callback persistent
     });
   }
+
   void _removeCallbacks(RelayConnection relayConnection) {
     relayConnection.removeCallback('_buffer_line_added');
   }

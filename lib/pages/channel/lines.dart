@@ -12,8 +12,8 @@ class _ChannelLinesState extends State<ChannelLines> {
   @override
   Widget build(BuildContext context) {
     final buffer = Provider.of<RelayBuffer>(context, listen: true);
-
     return ListView(
+      reverse: true,
       children: [
         ...buffer.lines.map((e) => _buildLineData(context, e)),
       ],
