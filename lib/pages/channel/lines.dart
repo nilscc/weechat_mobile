@@ -9,12 +9,17 @@ class ChannelLines extends StatefulWidget {
 }
 
 class _ChannelLinesState extends State<ChannelLines> {
+  void _requestFocus() => FocusScope.of(context).requestFocus(FocusNode());
+
   @override
   Widget build(BuildContext context) {
     final buffer = Provider.of<RelayBuffer>(context, listen: true);
-    return ListView(
-      reverse: true,
-      children: buffer.lines.map((e) => _buildLineData(context, e)).toList(),
+    return GestureDetector(
+      onTap: _requestFocus,
+      child: ListView(
+        reverse: true,
+        children: buffer.lines.map((e) => _buildLineData(context, e)).toList(),
+      ),
     );
   }
 
