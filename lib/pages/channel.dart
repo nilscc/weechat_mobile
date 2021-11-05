@@ -95,8 +95,8 @@ class _ChannelPageState extends State<ChannelPage> {
               child: TextField(
                 keyboardType: TextInputType.text,
                 controller: _inputController,
-                decoration: InputDecoration.collapsed(
-                  hintText: loc.channelInputPlaceholder,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
                 ),
                 onChanged: (text) {
                   _completion = null;
