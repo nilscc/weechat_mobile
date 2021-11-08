@@ -38,7 +38,7 @@ TextSpan urlify(TextSpan input) {
                   style: TextStyle(color: Colors.blue),
                 ),
                 onTap: () {
-                  launch(u.toString(), forceWebView: true);
+                  launch(u.toString());
                 },
               ),
             ),
