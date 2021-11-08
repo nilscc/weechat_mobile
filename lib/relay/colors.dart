@@ -6,90 +6,30 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:weechat/relay/colors/color_code_parser.dart';
+import 'package:weechat/relay/colors/rich_text_parser.dart';
 
-const _attributes = ['F', 'B', '*', '!', '/', '_', '|'];
+//const _attributes = ['F', 'B', '*', '!', '/', '_', '|'];
 const _combiners = [',', '~'];
 
-final colorCodes = {
-  1: Colors.black,
-  2: Colors.grey.shade800,
-  3: Colors.red.shade900,
-  4: Colors.red.shade400,
-  5: Colors.green.shade800,
-  6: Colors.green.shade400,
-  7: Colors.brown,
-  8: Colors.yellow,
-  9: Colors.blue.shade800,
-  10: Colors.lightBlue,
-  11: Colors.pink.shade800,
-  12: Colors.pink.shade400,
-  13: Colors.cyan.shade800,
-  14: Colors.cyan.shade400,
-  15: Colors.grey,
-  16: Colors.white,
-};
-
-class _ColorParser {
-  _ColorParser({
-    this.defaultFgColor,
-    this.defaultBgColor,
-    this.defaultAlpha,
-  });
-
-  // list of finished text spans
-  final List<TextSpan> _l = [];
-
-  TextSpan get span => _l.length == 1 ? _l[0] : TextSpan(children: _l);
-
-  // current text
-  String? _text;
-
-  // detected colors
-  int? defaultAlpha;
-  final Color? defaultFgColor, defaultBgColor;
-  Color? fgColor, bgColor;
-
-  // detected font styles and weights
-  FontWeight? fontWeight;
-  FontStyle? fontStyle;
-  TextDecoration? textDecoration;
-
-  void finalizeCurrentSpan() {
-    if (_text != null) {
-      _l.add(TextSpan(
-          text: _text,
-          style: TextStyle(
-            color: (fgColor ?? defaultFgColor)?.withAlpha(defaultAlpha ?? 255),
-            backgroundColor: bgColor ?? defaultBgColor,
-            fontWeight: fontWeight,
-            fontStyle: fontStyle,
-          )));
-    }
-    _text = null;
-  }
-
-  void reset() {
-    fgColor = null;
-    bgColor = null;
-    fontWeight = null;
-    fontStyle = null;
-  }
-
-  void addText(String text) {
-    _text = (_text ?? '') + text;
-  }
-}
-
-RichText parseColors(String raw,
-    {TextStyle? textStyle, int? alpha, Color? defaultColor}) {
+RichText parseColors(
+  String raw,
+  Color defaultColor, {
+  TextStyle? textStyle,
+  int? alpha,
+}) {
   final it = raw.runes.iterator;
 
-  final p = _ColorParser(defaultFgColor: defaultColor, defaultAlpha: alpha);
+  final p = RichTextParser(defaultFgColor: defaultColor, defaultAlpha: alpha);
 
   while (it.moveNext()) {
-    if (it.current == 0x1A || it.current == 0x1B) {
+    final rawIndex = it.rawIndex;
+
+    // SET ATTRIBUTE
+    if (it.current == 0x1A) {
       // move to next char
       it.moveNext();
+
       if (it.currentAsString == '*')
         p.fontWeight = FontWeight.bold;
       else if (it.currentAsString == '!') {
@@ -98,70 +38,58 @@ RichText parseColors(String raw,
         p.fontStyle = FontStyle.italic;
       else if (it.currentAsString == '_')
         p.textDecoration = TextDecoration.underline;
-      else if (it.currentAsString == '|') {/* TODO: handle keep attributes */}
-    } else if (it.current == 0x1C) {
+      else if (it.currentAsString == '|') {
+        /* TODO: handle keep attributes */
+      }
+    }
+
+    // REMOVE ATTRIBUTE
+    else if (it.current == 0x1B) {
+      // move to next char
+      it.moveNext();
+
+      if (it.currentAsString == '*')
+        p.fontWeight = null;
+      else if (it.currentAsString == '!') {
+        /* TODO: handle reverse? */
+      } else if (it.currentAsString == '/')
+        p.fontStyle = null;
+      else if (it.currentAsString == '_')
+        p.textDecoration = null;
+      else if (it.currentAsString == '|') {
+        /* TODO: handle keep attributes */
+      }
+    }
+
+    // RESET
+    else if (it.current == 0x1C) {
       // reset parser
       p.finalizeCurrentSpan();
       p.reset();
-    } else if (it.current == 0x19) {
-      // skip char
-      it.moveNext();
+    }
 
+    // COLOR CODE
+    else if (it.current == 0x19) {
       p.finalizeCurrentSpan();
 
-      // skip attributes
-      while (true) {
-        if (_attributes.contains(it.currentAsString))
-          it.moveNext();
-        else
-          break;
+      ColorCodeParser ccp = ColorCodeParser(defaultFgColor: defaultColor);
+      if (ccp.parse(it)) {
+        if (ccp.fgColor != null)
+          p.fgColor = ccp.fgColor;
+
+        if (ccp.bgColor != null)
+          p.bgColor = ccp.bgColor;
+
+        if (ccp.fgTextStyle?.fontWeight != null)
+          p.fontWeight = ccp.fgTextStyle?.fontWeight;
+
+        if (ccp.fgTextStyle?.fontStyle != null)
+          p.fontStyle = ccp.fgTextStyle?.fontStyle;
+
+        if (ccp.fgTextStyle?.decoration != null)
+          p.textDecoration = ccp.fgTextStyle?.decoration;
       }
 
-      bool fg = true;
-
-      while (true) {
-        if (it.currentAsString == '@') {
-          it.moveNext(); // skip @
-          // extended: move 5 characters
-          String s = it.currentAsString;
-          it.moveNext();
-          s += it.currentAsString;
-          it.moveNext();
-          s += it.currentAsString;
-          it.moveNext();
-          s += it.currentAsString;
-          it.moveNext();
-          s += it.currentAsString;
-
-          // TODO: assign extended color
-          print('Extended: $s');
-        } else {
-          // standard: move 2 characters
-          String s = it.currentAsString;
-          it.moveNext();
-          s += it.currentAsString;
-
-          int? cc = int.tryParse(s);
-          if (cc != null) {
-            Color? c;
-            if (colorCodes.containsKey(cc)) c = colorCodes[cc];
-            if (fg)
-              p.fgColor = c;
-            else
-              p.bgColor = c;
-          }
-        }
-
-        // peek next character to check for combiners
-        it.moveNext();
-        if (_combiners.contains(it.currentAsString)) {
-          it.moveNext();
-          fg = false;
-        } else {
-          it.movePrevious();
-          break;
-        }
-      }
     } else if (it.current > 0) p.addText(it.currentAsString);
   }
 
@@ -170,5 +98,5 @@ RichText parseColors(String raw,
 }
 
 String stripColors(String raw) {
-  return parseColors(raw).text.toPlainText();
+  return parseColors(raw, Colors.black).text.toPlainText();
 }
