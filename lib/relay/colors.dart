@@ -5,6 +5,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 const _attributes = ['F', 'B', '*', '!', '/', '_', '|'];
 const _combiners = [',', '~'];
@@ -29,6 +30,12 @@ final colorCodes = {
 };
 
 class _ColorParser {
+  _ColorParser({
+    this.defaultFgColor,
+    this.defaultBgColor,
+    this.defaultAlpha,
+  });
+
   // list of finished text spans
   final List<TextSpan> _l = [];
 
@@ -38,19 +45,22 @@ class _ColorParser {
   String? _text;
 
   // detected colors
+  int? defaultAlpha;
+  final Color? defaultFgColor, defaultBgColor;
   Color? fgColor, bgColor;
 
   // detected font styles and weights
   FontWeight? fontWeight;
   FontStyle? fontStyle;
+  TextDecoration? textDecoration;
 
   void finalizeCurrentSpan() {
     if (_text != null) {
       _l.add(TextSpan(
           text: _text,
           style: TextStyle(
-            color: fgColor,
-            backgroundColor: bgColor,
+            color: (fgColor ?? defaultFgColor)?.withAlpha(defaultAlpha ?? 255),
+            backgroundColor: bgColor ?? defaultBgColor,
             fontWeight: fontWeight,
             fontStyle: fontStyle,
           )));
@@ -70,30 +80,30 @@ class _ColorParser {
   }
 }
 
-RichText parseColors(String raw, {TextStyle? textStyle, int? alpha, Color? defaultColor}) {
+RichText parseColors(String raw,
+    {TextStyle? textStyle, int? alpha, Color? defaultColor}) {
   final it = raw.runes.iterator;
 
-  final p = _ColorParser();
+  final p = _ColorParser(defaultFgColor: defaultColor, defaultAlpha: alpha);
 
   while (it.moveNext()) {
     if (it.current == 0x1A || it.current == 0x1B) {
-      // skip char
+      // move to next char
       it.moveNext();
-
-      // TODO: handle attribute
-      continue;
-    }
-
-    if (it.current == 0x1C) {
-      // skip char
-      it.moveNext();
-
+      if (it.currentAsString == '*')
+        p.fontWeight = FontWeight.bold;
+      else if (it.currentAsString == '!') {
+        /* TODO: handle reverse? */
+      } else if (it.currentAsString == '/')
+        p.fontStyle = FontStyle.italic;
+      else if (it.currentAsString == '_')
+        p.textDecoration = TextDecoration.underline;
+      else if (it.currentAsString == '|') {/* TODO: handle keep attributes */}
+    } else if (it.current == 0x1C) {
       // reset parser
       p.finalizeCurrentSpan();
       p.reset();
-    }
-
-    if (it.current == 0x19) {
+    } else if (it.current == 0x19) {
       // skip char
       it.moveNext();
 
@@ -122,7 +132,6 @@ RichText parseColors(String raw, {TextStyle? textStyle, int? alpha, Color? defau
           s += it.currentAsString;
           it.moveNext();
           s += it.currentAsString;
-          it.moveNext();
 
           // TODO: assign extended color
           print('Extended: $s');
@@ -131,14 +140,11 @@ RichText parseColors(String raw, {TextStyle? textStyle, int? alpha, Color? defau
           String s = it.currentAsString;
           it.moveNext();
           s += it.currentAsString;
-          it.moveNext();
 
           int? cc = int.tryParse(s);
           if (cc != null) {
             Color? c;
             if (colorCodes.containsKey(cc)) c = colorCodes[cc];
-            if (alpha != null)
-              c = (c ?? defaultColor)?.withAlpha(alpha);
             if (fg)
               p.fgColor = c;
             else
@@ -147,15 +153,16 @@ RichText parseColors(String raw, {TextStyle? textStyle, int? alpha, Color? defau
         }
 
         // peek next character to check for combiners
+        it.moveNext();
         if (_combiners.contains(it.currentAsString)) {
           it.moveNext();
           fg = false;
-        } else
+        } else {
+          it.movePrevious();
           break;
+        }
       }
-    }
-
-    if (it.current > 0) p.addText(it.currentAsString);
+    } else if (it.current > 0) p.addText(it.currentAsString);
   }
 
   p.finalizeCurrentSpan();

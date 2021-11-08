@@ -30,12 +30,16 @@ class _ChannelLinesState extends State<ChannelLines> {
     final df = DateFormat.Hm().format(line.date);
     final tt = Theme.of(context).textTheme;
 
-    final isSystem = ['<--', '-->'].any((e) => line.prefix.endsWith(e));
-    final alpha = isSystem ? 50 : 255;
+    final isSystem = ['<--', '-->', '--', '==='].any((e) => line.prefix.endsWith(e));
+    final alpha = isSystem ? 100 : 255;
     final defaultColor = tt.bodyText2?.color;
 
     final prefixRT =
         parseColors(line.prefix, alpha: alpha, defaultColor: defaultColor).text;
+
+    final messageRT =
+        parseColors(line.message, alpha: alpha, defaultColor: defaultColor)
+            .text;
 
     return Container(
       padding: EdgeInsets.only(top: 5),
@@ -49,11 +53,12 @@ class _ChannelLinesState extends State<ChannelLines> {
                 color: Colors.grey.withAlpha(100),
               ),
             ),
-            if (!isSystem) TextSpan(text: '<'),
+            if (!isSystem) TextSpan(text: '<', style: tt.bodyText2?.copyWith(
+
+            )),
             prefixRT,
-            TextSpan(text: isSystem ? ' ' : '> '),
-            parseColors(line.message, alpha: alpha, defaultColor: defaultColor)
-                .text,
+            TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyText2),
+            messageRT,
           ],
         ),
       ),

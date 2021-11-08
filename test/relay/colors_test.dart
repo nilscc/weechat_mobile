@@ -6,7 +6,7 @@ import 'package:weechat/relay/colors.dart';
 void main() {
   group('Colors', () {
     for (int i = 0; i < _cols01.length; ++i) {
-      test('stripColors("${_cols01[i]}")', () { _stripColors(i); });
+      test('stripColors("$i")', () { _stripColors(i); });
     }
     test('parseColors', _parseColors);
   });
