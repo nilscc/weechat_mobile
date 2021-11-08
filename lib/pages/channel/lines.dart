@@ -32,13 +32,13 @@ class _ChannelLinesState extends State<ChannelLines> {
 
     final isSystem = ['<--', '-->', '--', '==='].any((e) => line.prefix.endsWith(e));
     final alpha = isSystem ? 100 : 255;
-    final defaultColor = tt.bodyText2?.color;
+    final defaultColor = tt.bodyText2?.color ?? Colors.black;
 
     final prefixRT =
-        parseColors(line.prefix, alpha: alpha, defaultColor: defaultColor).text;
+        parseColors(line.prefix, defaultColor, alpha: alpha).text;
 
     final messageRT =
-        parseColors(line.message, alpha: alpha, defaultColor: defaultColor)
+        parseColors(line.message, defaultColor, alpha: alpha)
             .text;
 
     return Container(
