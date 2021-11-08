@@ -71,8 +71,7 @@ class RelayConnection {
     } catch (e) {
       if (e is SocketException)
         close();
-      else
-        rethrow;
+      rethrow;
     }
   }
 
