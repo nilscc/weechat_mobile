@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:weechat/pages/channel/urlify.dart';
 import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/colors.dart';
 
@@ -30,16 +31,13 @@ class _ChannelLinesState extends State<ChannelLines> {
     final df = DateFormat.Hm().format(line.date);
     final tt = Theme.of(context).textTheme;
 
-    final isSystem = ['<--', '-->', '--', '==='].any((e) => line.prefix.endsWith(e));
+    final isSystem =
+        ['<--', '-->', '--', '==='].any((e) => line.prefix.endsWith(e));
     final alpha = isSystem ? 100 : 255;
     final defaultColor = tt.bodyText2?.color ?? Colors.black;
 
-    final prefixRT =
-        parseColors(line.prefix, defaultColor, alpha: alpha).text;
-
-    final messageRT =
-        parseColors(line.message, defaultColor, alpha: alpha)
-            .text;
+    final prefixRT = parseColors(line.prefix, defaultColor, alpha: alpha).text;
+    final messageRT = parseColors(line.message, defaultColor, alpha: alpha).text;
 
     return Container(
       padding: EdgeInsets.only(top: 5),
@@ -53,12 +51,10 @@ class _ChannelLinesState extends State<ChannelLines> {
                 color: Colors.grey.withAlpha(100),
               ),
             ),
-            if (!isSystem) TextSpan(text: '<', style: tt.bodyText2?.copyWith(
-
-            )),
+            if (!isSystem) TextSpan(text: '<', style: tt.bodyText2),
             prefixRT,
             TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyText2),
-            messageRT,
+            urlify(messageRT as TextSpan),
           ],
         ),
       ),
