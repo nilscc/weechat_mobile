@@ -35,7 +35,8 @@ TextSpan urlify(TextSpan input) {
               child: GestureDetector(
                 child: Text(
                   words[idx],
-                  style: TextStyle(color: Colors.blue),
+                  style:
+                      (input.style ?? TextStyle()).copyWith(color: Colors.blue),
                 ),
                 onTap: () {
                   launch(u.toString());
