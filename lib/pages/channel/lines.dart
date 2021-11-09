@@ -21,6 +21,7 @@ class _ChannelLinesState extends State<ChannelLines> {
     return GestureDetector(
       onTap: _requestFocus,
       child: ListView.builder(
+        shrinkWrap: true,
         itemBuilder: (BuildContext context, int index) =>
             _buildLineData(context, buffer.lines[index]),
         itemCount: buffer.lines.length,
