@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
-import 'package:weechat/relay/colors.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/protocol/hdata.dart';
 

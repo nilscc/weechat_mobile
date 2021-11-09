@@ -6,8 +6,7 @@ import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/completion.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/connection/status.dart';
-
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+//import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ChannelPage extends StatefulWidget {
   final RelayBuffer buffer;
@@ -85,7 +84,7 @@ class _ChannelPageState extends State<ChannelPage> {
   RelayCompletion? _completion;
 
   Widget _inputWidget(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    //final loc = AppLocalizations.of(context)!;
     final con = Provider.of<RelayConnection>(context);
 
     return Card(

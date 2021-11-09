@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:weechat/relay/colors.dart';
 import 'package:weechat/relay/colors/color_codes.dart';
-import 'package:weechat/relay/colors/extended_definition.dart';
 
 void main() {
   group('stripColors', () {
@@ -12,7 +11,6 @@ void main() {
       });
     }
   });
-
 
   test('parseColors', _parseColors);
   test('parseColorsExtended', _parseColorsExtended);

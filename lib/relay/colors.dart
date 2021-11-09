@@ -9,9 +9,6 @@ import 'package:flutter/widgets.dart';
 import 'package:weechat/relay/colors/color_code_parser.dart';
 import 'package:weechat/relay/colors/rich_text_parser.dart';
 
-//const _attributes = ['F', 'B', '*', '!', '/', '_', '|'];
-const _combiners = [',', '~'];
-
 RichText parseColors(
   String raw,
   Color defaultColor, {
@@ -23,7 +20,6 @@ RichText parseColors(
   final p = RichTextParser(defaultFgColor: defaultColor, defaultAlpha: alpha);
 
   while (it.moveNext()) {
-    final rawIndex = it.rawIndex;
 
     // SET ATTRIBUTE
     if (it.current == 0x1A) {

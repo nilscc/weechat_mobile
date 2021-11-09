@@ -21,8 +21,9 @@ final colorCodes = {
 
 final _default = null;
 
-final _black = colorCodes[1],
-    _darkgray = colorCodes[2],
+final
+    //_black = colorCodes[1],
+    //_darkgray = colorCodes[2],
     _darkred = colorCodes[3],
     _red = _darkred,
     _lightred = colorCodes[4],
@@ -33,14 +34,14 @@ final _black = colorCodes[1],
     _yellow = colorCodes[8],
     _darkblue = colorCodes[9],
     _blue = _darkblue,
-    _lightblue = colorCodes[10],
+    // _lightblue = colorCodes[10],
     _darkmagenta = colorCodes[11],
     _magenta = _darkmagenta,
     _lightmagenta = colorCodes[12],
     _darkcyan = colorCodes[13],
     _cyan = _darkcyan,
     _lightcyan = colorCodes[14],
-    _gray = colorCodes[15],
+    // _gray = colorCodes[15],
     _white = colorCodes[16];
 
 // Color options taken from:
