@@ -36,27 +36,43 @@ class _ChannelLinesState extends State<ChannelLines> {
     final alpha = isSystem ? 100 : 255;
     final defaultColor = tt.bodyText2?.color ?? Colors.black;
 
-    final prefixRT = parseColors(line.prefix, defaultColor, alpha: alpha).text;
-    final messageRT = parseColors(line.message, defaultColor, alpha: alpha).text;
+    //print('<${line.prefix}> ${line.message} (${line.message.codeUnits.map((e) => e.toRadixString(16)).toList()})');
 
-    return Container(
-      padding: EdgeInsets.only(top: 5),
+    final prefixRT = parseColors(line.prefix, defaultColor, alpha: alpha).text;
+    final messageRT =
+        parseColors(line.message, defaultColor, alpha: alpha).text as TextSpan;
+
+    final dateRT = Container(
+      padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
+      margin: EdgeInsets.only(right: 5),
+      color: line.highlight ? Colors.redAccent : null,
       child: RichText(
         text: TextSpan(
-          children: [
-            TextSpan(
-              text: '$df ',
-              style: tt.bodyText2?.copyWith(
-                fontFeatures: [FontFeature.tabularFigures()],
-                color: Colors.grey.withAlpha(100),
-              ),
-            ),
-            if (!isSystem) TextSpan(text: '<', style: tt.bodyText2),
-            prefixRT,
-            TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyText2),
-            urlify(messageRT as TextSpan),
-          ],
+          text: '$df',
+          style: tt.bodyText2?.copyWith(
+            fontFeatures: [FontFeature.tabularFigures()],
+            color: line.highlight ? Colors.white : Colors.grey.withAlpha(100),
+          ),
         ),
+      ),
+    );
+
+    final bodyRT = RichText(
+      text: TextSpan(
+        children: [
+          if (!isSystem) TextSpan(text: '<', style: tt.bodyText2),
+          prefixRT,
+          TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyText2),
+          urlify(messageRT),
+        ],
+      ),
+    );
+
+    return Container(
+      padding: EdgeInsets.only(top: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [dateRT, Expanded(child: bodyRT)],
       ),
     );
   }
