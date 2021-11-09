@@ -4,14 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:validators/validators.dart';
 
+bool _validUrl(String text) => isURL(
+      text,
+      protocols: ['https', 'http'],
+      requireProtocol: true,
+      requireTld: true,
+    );
+
 TextSpan urlify(TextSpan input) {
   var words = input.text?.split(' ');
-  print(words);
 
   var text;
   List<InlineSpan>? children;
 
-  var idx = words?.indexWhere(isURL) ?? -1;
+  var idx = words?.indexWhere(_validUrl) ?? -1;
   if (idx == -1) {
     text = input.text;
   } else {
@@ -47,7 +53,7 @@ TextSpan urlify(TextSpan input) {
 
       // build words list for the rest of the input, then find next URL
       words = words.sublist(idx + 1);
-      idx = words.indexWhere(isURL);
+      idx = words.indexWhere(_validUrl);
       addSpace = ' ';
     }
 
@@ -59,10 +65,7 @@ TextSpan urlify(TextSpan input) {
   // urlify all children of input
   if (input.children?.isNotEmpty == true)
     children = (children ?? []) +
-        input.children!.map((e) {
-          print('child: $e');
-          return e is TextSpan ? urlify(e) : e;
-        }).toList();
+        input.children!.map((e) => (e is TextSpan) ? urlify(e) : e).toList();
 
   return TextSpan(
     text: text,
