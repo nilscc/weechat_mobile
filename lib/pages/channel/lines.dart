@@ -20,9 +20,11 @@ class _ChannelLinesState extends State<ChannelLines> {
     final buffer = Provider.of<RelayBuffer>(context, listen: true);
     return GestureDetector(
       onTap: _requestFocus,
-      child: ListView(
+      child: ListView.builder(
+        itemBuilder: (BuildContext context, int index) =>
+            _buildLineData(context, buffer.lines[index]),
+        itemCount: buffer.lines.length,
         reverse: true,
-        children: buffer.lines.map((e) => _buildLineData(context, e)).toList(),
       ),
     );
   }
