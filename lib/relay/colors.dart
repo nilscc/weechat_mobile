@@ -30,17 +30,8 @@ RichText parseColors(
       // move to next char
       it.moveNext();
 
-      if (it.currentAsString == '*')
-        p.fontWeight = FontWeight.bold;
-      else if (it.currentAsString == '!') {
-        /* TODO: handle reverse? */
-      } else if (it.currentAsString == '/')
-        p.fontStyle = FontStyle.italic;
-      else if (it.currentAsString == '_')
-        p.textDecoration = TextDecoration.underline;
-      else if (it.currentAsString == '|') {
-        /* TODO: handle keep attributes */
-      }
+      final a = tryParseAttribute(it);
+      if (a != null) p.attributes.set(a);
     }
 
     // REMOVE ATTRIBUTE
@@ -48,17 +39,8 @@ RichText parseColors(
       // move to next char
       it.moveNext();
 
-      if (it.currentAsString == '*')
-        p.fontWeight = null;
-      else if (it.currentAsString == '!') {
-        /* TODO: handle reverse? */
-      } else if (it.currentAsString == '/')
-        p.fontStyle = null;
-      else if (it.currentAsString == '_')
-        p.textDecoration = null;
-      else if (it.currentAsString == '|') {
-        /* TODO: handle keep attributes */
-      }
+      final a = tryParseAttribute(it);
+      if (a != null) p.attributes.remove(a);
     }
 
     // RESET
@@ -74,22 +56,10 @@ RichText parseColors(
 
       ColorCodeParser ccp = ColorCodeParser(defaultFgColor: defaultColor);
       if (ccp.parse(it)) {
-        if (ccp.fgColor != null)
-          p.fgColor = ccp.fgColor;
-
-        if (ccp.bgColor != null)
-          p.bgColor = ccp.bgColor;
-
-        if (ccp.fgTextStyle?.fontWeight != null)
-          p.fontWeight = ccp.fgTextStyle?.fontWeight;
-
-        if (ccp.fgTextStyle?.fontStyle != null)
-          p.fontStyle = ccp.fgTextStyle?.fontStyle;
-
-        if (ccp.fgTextStyle?.decoration != null)
-          p.textDecoration = ccp.fgTextStyle?.decoration;
+        if (ccp.fgColor != null) p.fgColor = ccp.fgColor;
+        if (ccp.bgColor != null) p.bgColor = ccp.bgColor;
+        if (ccp.attributes != null) p.attributes.set(ccp.attributes!);
       }
-
     } else if (it.current > 0) p.addText(it.currentAsString);
   }
 

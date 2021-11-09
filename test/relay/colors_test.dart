@@ -39,6 +39,7 @@ final _cols01 = [
   '\x19*@00214~@00017',
   '\x1A*',
   '\x1A_',
+  '\x1A|',
   '\x1B!',
   '\x1C',
 ];
@@ -59,6 +60,11 @@ void _parseColors() {
 
   final rt02 = parseColors('\x19F00~\x19F@00151f0ck', _defaultColor);
   expect(rt02.text.toPlainText(), equals('~f0ck'));
+
+  final rt03 = parseColors('\x1A*\x19F|01bla', _defaultColor);
+  expect(rt03.text.toPlainText(), equals('bla'));
+  expect(rt03.text.style?.fontWeight, equals(FontWeight.bold));
+  expect(rt03.text.style?.color, equals(colorCodes[1]));
 }
 
 void _parseColorsExtended() {

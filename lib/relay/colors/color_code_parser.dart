@@ -44,19 +44,73 @@ Color? tryParseColor(RuneIterator it, Color defaultColor) {
     return result;
 }
 
-TextStyle? tryParseAttribute(RuneIterator iterator) {
+class RelayAttribute {
+  bool? bold;
+  bool? italic;
+  bool? reverse;
+  bool? underline;
+  bool? keepAttributes;
+
+  RelayAttribute(
+      {this.bold,
+      this.italic,
+      this.reverse,
+      this.underline,
+      this.keepAttributes});
+
+  @override
+  bool operator ==(Object other) =>
+      (other is RelayAttribute) &&
+      bold == other.bold &&
+      italic == other.italic &&
+      reverse == other.reverse &&
+      underline == other.underline &&
+      keepAttributes == other.keepAttributes;
+
+  @override
+  int get hashCode =>
+      bold.hashCode +
+      italic.hashCode +
+      reverse.hashCode +
+      underline.hashCode +
+      keepAttributes.hashCode;
+
+  void set(RelayAttribute other) {
+    bold = other.bold ?? bold;
+    italic = other.italic ?? italic;
+    reverse = other.reverse ?? reverse;
+    underline = other.underline ?? underline;
+    keepAttributes = other.keepAttributes ?? underline;
+  }
+
+  void remove(RelayAttribute other) {
+    if (other.bold == true) bold = null;
+    if (other.italic == true) italic = null;
+    if (other.reverse == true) reverse = null;
+    if (other.underline == true) underline = null;
+    if (other.keepAttributes == true) keepAttributes = null;
+  }
+
+  TextStyle get textStyle => TextStyle(
+        decoration: underline == null ? null : TextDecoration.underline,
+        fontWeight: bold == null ? null : FontWeight.bold,
+        fontStyle: italic == null ? null : FontStyle.italic,
+      );
+}
+
+RelayAttribute? tryParseAttribute(RuneIterator iterator) {
   if (iterator.rawIndex == -1) return null; // uninitialized iterator
 
-  if (iterator.currentAsString == '*') {
-    iterator.moveNext();
-    return TextStyle(fontWeight: FontWeight.bold);
-  } else if (iterator.currentAsString == '/') {
-    iterator.moveNext();
-    return TextStyle(fontStyle: FontStyle.italic);
-  } else if (iterator.currentAsString == '_') {
-    iterator.moveNext();
-    return TextStyle(decoration: TextDecoration.underline);
-  }
+  if (iterator.currentAsString == '*')
+    return RelayAttribute(bold: true);
+  else if (iterator.currentAsString == '/')
+    return RelayAttribute(italic: true);
+  else if (iterator.currentAsString == '_')
+    return RelayAttribute(underline: true);
+  else if (iterator.currentAsString == '|')
+    return RelayAttribute(keepAttributes: true);
+  else if (iterator.currentAsString == '!')
+    return RelayAttribute(reverse: true);
 }
 
 class ColorCodeParser {
@@ -64,7 +118,9 @@ class ColorCodeParser {
   final Color? defaultBgColor;
 
   Color? fgColor, bgColor;
-  TextStyle? fgTextStyle;
+  RelayAttribute? attributes;
+
+  TextStyle? get fgTextStyle => attributes?.textStyle;
 
   // Constructor
   ColorCodeParser({
@@ -91,13 +147,15 @@ class ColorCodeParser {
         iterator.moveNext();
 
         // parse attributes if any
-        TextStyle? ts = tryParseAttribute(iterator);
+        final a = tryParseAttribute(iterator);
+        if (a != null)
+          iterator.moveNext();
 
         // parse color
         Color? c = tryParseColor(iterator, defaultFgColor);
         if (c != null) {
           fgColor = c;
-          fgTextStyle = ts;
+          attributes = a;
           success = true;
         }
       }
@@ -117,12 +175,12 @@ class ColorCodeParser {
         iterator.moveNext();
 
         // parse attributes if any
-        TextStyle? ts = tryParseAttribute(iterator);
+        final a = tryParseAttribute(iterator);
 
         Color? c1 = tryParseColor(iterator, defaultFgColor);
         if (c1 != null) {
           fgColor = c1;
-          fgTextStyle = ts;
+          attributes = a;
           success = true;
 
           final idx = iterator.rawIndex;

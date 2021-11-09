@@ -33,16 +33,18 @@ final _tryParseAttributeInputs = {
   'aksjdh': null,
 
   // correct input
-  '*': TextStyle(fontWeight: FontWeight.bold),
-  '/': TextStyle(fontStyle: FontStyle.italic),
-  '_': TextStyle(decoration: TextDecoration.underline),
+  '*': RelayAttribute(bold: true),
+  '/': RelayAttribute(italic: true),
+  '_': RelayAttribute(underline: true),
+  '|': RelayAttribute(keepAttributes: true),
+  '!': RelayAttribute(reverse: true),
 };
 
-void _tryParseAttribute(String input, TextStyle? expected) {
+void _tryParseAttribute(String input, RelayAttribute? expected) {
   final it = input.runes.iterator;
   it.moveNext();
 
-  TextStyle? ts = tryParseAttribute(it);
+  RelayAttribute? ts = tryParseAttribute(it);
   expect(ts, equals(expected));
 }
 

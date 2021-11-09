@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:weechat/relay/colors/color_code_parser.dart';
 
 class RichTextParser {
   RichTextParser({
@@ -21,9 +22,7 @@ class RichTextParser {
   Color? fgColor, bgColor;
 
   // detected font styles and weights
-  FontWeight? fontWeight;
-  FontStyle? fontStyle;
-  TextDecoration? textDecoration;
+  RelayAttribute attributes = RelayAttribute();
 
   void finalizeCurrentSpan() {
     if (_text != null) {
@@ -32,8 +31,10 @@ class RichTextParser {
           style: TextStyle(
             color: (fgColor ?? defaultFgColor)?.withAlpha(defaultAlpha ?? 255),
             backgroundColor: bgColor ?? defaultBgColor,
-            fontWeight: fontWeight,
-            fontStyle: fontStyle,
+            fontWeight: attributes.bold == true ? FontWeight.bold : null,
+            fontStyle: attributes.italic == true ? FontStyle.italic : null,
+            decoration:
+                attributes.underline == true ? TextDecoration.underline : null,
           )));
     }
     _text = null;
@@ -42,8 +43,7 @@ class RichTextParser {
   void reset() {
     fgColor = null;
     bgColor = null;
-    fontWeight = null;
-    fontStyle = null;
+    if (attributes.keepAttributes != true) attributes = RelayAttribute();
   }
 
   void addText(String text) {
