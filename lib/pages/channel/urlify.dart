@@ -39,10 +39,12 @@ TextSpan urlify(TextSpan input) {
             // widget for the URL
             WidgetSpan(
               child: GestureDetector(
-                child: Text(
-                  words[idx],
-                  style:
-                      (input.style ?? TextStyle()).copyWith(color: Colors.blue),
+                child: RichText(
+                  text: TextSpan(
+                    style: (input.style ?? TextStyle())
+                        .copyWith(color: Colors.blue),
+                    text: words[idx],
+                  ),
                 ),
                 onTap: () {
                   launch(u.toString());
