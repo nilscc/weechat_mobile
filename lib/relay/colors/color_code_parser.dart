@@ -2,6 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:weechat/relay/colors/color_codes.dart';
 import 'package:weechat/relay/colors/extended_definition.dart';
 
+Color? tryParseColorOption(RuneIterator it, Color defaultColor) {
+  Color? result;
+  bool success = false;
+
+  // before consuming iterator, store index so we can restore iterator position
+  // if parsing fails
+  final cur = it.rawIndex;
+  if (cur == -1) return null; // uninitialized iterator
+
+  String s = it.currentAsString;
+  if (it.moveNext()) {
+    s += it.currentAsString;
+    if (s == '00') {
+      result = defaultColor;
+      success = true;
+    } else {
+      int? i = int.tryParse(s);
+      if (i != null && colorOptions.containsKey(i)) {
+        result = colorOptions[i] ?? defaultColor;
+        success = true;
+      }
+    }
+  }
+
+  if (!success) {
+    it.reset(cur);
+    it.moveNext();
+    return null;
+  } else
+    return result;
+}
+
 Color? tryParseColor(RuneIterator it, Color defaultColor) {
   Color? result;
 
@@ -39,6 +71,7 @@ Color? tryParseColor(RuneIterator it, Color defaultColor) {
 
   if (result == null) {
     it.reset(cur);
+    it.moveNext();
     return null;
   } else
     return result;
@@ -101,16 +134,23 @@ class RelayAttribute {
 RelayAttribute? tryParseAttribute(RuneIterator iterator) {
   if (iterator.rawIndex == -1) return null; // uninitialized iterator
 
+  RelayAttribute? result;
+
   if (iterator.currentAsString == '*')
-    return RelayAttribute(bold: true);
+ result = RelayAttribute(bold: true);
   else if (iterator.currentAsString == '/')
-    return RelayAttribute(italic: true);
+    result = RelayAttribute(italic: true);
   else if (iterator.currentAsString == '_')
-    return RelayAttribute(underline: true);
+    result = RelayAttribute(underline: true);
   else if (iterator.currentAsString == '|')
-    return RelayAttribute(keepAttributes: true);
+    result = RelayAttribute(keepAttributes: true);
   else if (iterator.currentAsString == '!')
-    return RelayAttribute(reverse: true);
+    result = RelayAttribute(reverse: true);
+
+  if (result != null) {
+    iterator.moveNext();
+    return result;
+  }
 }
 
 class ColorCodeParser {
@@ -148,8 +188,6 @@ class ColorCodeParser {
 
         // parse attributes if any
         final a = tryParseAttribute(iterator);
-        if (a != null)
-          iterator.moveNext();
 
         // parse color
         Color? c = tryParseColor(iterator, defaultFgColor);
@@ -203,9 +241,9 @@ class ColorCodeParser {
         }
       }
 
-      // parse regular color
+      // parse color option
       else {
-        Color? c = tryParseColor(iterator, defaultFgColor);
+        Color? c = tryParseColorOption(iterator, defaultFgColor);
         if (c != null) {
           fgColor = c;
           success = true;

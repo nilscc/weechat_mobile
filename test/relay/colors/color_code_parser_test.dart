@@ -11,10 +11,19 @@ void main() {
       test('tryParseAttribute($inp, $exp)', () => _tryParseAttribute(inp, exp));
     }
   });
+
   group('tryParseColor', () {
     for (final inp in _tryParseColorInputs.keys) {
       final exp = _tryParseColorInputs[inp];
       test('tryParseColor($inp, $exp)', () => _tryParseColor(inp, exp));
+    }
+  });
+
+  group('tryParseColorOptions', () {
+    for (final inp in _tryParseColorOptionInputs.keys) {
+      final exp = _tryParseColorOptionInputs[inp];
+      test('tryParseColorOptions($inp, $exp)',
+          () => _tryParseColorOptions(inp, exp));
     }
   });
 
@@ -25,6 +34,14 @@ void main() {
     }
   });
 }
+
+final _std01 = colorCodes[1],
+    _ext214 = Color.fromARGB(0xFF, 255, 175, 0),
+    _opt01 = colorOptions[1]  ?? _defaultColor,
+    _opt30 = colorOptions[30] ?? _defaultColor,
+    _opt40 = colorOptions[40] ?? _defaultColor;
+
+final _tsBold = TextStyle(fontWeight: FontWeight.bold);
 
 final _tryParseAttributeInputs = {
   // empty input
@@ -50,6 +67,44 @@ void _tryParseAttribute(String input, RelayAttribute? expected) {
 
 final _defaultColor = Colors.black;
 
+/*
+ * COLOR CODE OPTIONS
+ *
+ */
+
+final _tryParseColorOptionInputs = {
+  '': null,
+  '0': null,
+  '00': _defaultColor,
+  '01': _opt01,
+  '30': _opt30,
+  '40': _opt40,
+  '99': null,
+  'asd': null,
+  '@00001': null,
+};
+
+void _tryParseColorOptions(String input, Color? expected) {
+  print(input);
+
+  final it = input.runes.iterator;
+  it.moveNext();
+  final idx = it.rawIndex;
+
+  Color? c = tryParseColorOption(it, _defaultColor);
+  expect(c, equals(expected));
+
+  if (c == null)
+    expect(it.rawIndex, equals(idx));
+  else
+    expect(it.rawIndex, equals(input.length - 1));
+}
+
+/*
+ * COLOR CODES (STD + EXT)
+ *
+ */
+
 final _tryParseColorInputs = {
   '': null,
   '0': null,
@@ -70,29 +125,35 @@ final _tryParseColorInputs = {
 };
 
 void _tryParseColor(String input, Color? expected) {
+  print(input);
+
   final it = input.runes.iterator;
   it.moveNext();
+  final idx = it.rawIndex;
 
   Color? c = tryParseColor(it, _defaultColor);
   expect(c, equals(expected));
 
   if (c == null)
-    expect(it.rawIndex, equals(-1));
+    expect(it.rawIndex, equals(idx));
   else
     expect(it.rawIndex, equals(input.length - 1));
 }
 
-final _std01 = colorCodes[1], _ext214 = Color.fromARGB(0xFF, 255, 175, 0);
-
-final _tsBold = TextStyle(fontWeight: FontWeight.bold);
+/*
+ * COLOR CODES (FULL)
+ *
+ */
 
 final _colorCodeParserInputs = {
-  // 0x19 + STD
+  // 0x19 + STD => color options!
   '\x1900': Tuple3(_defaultColor, null, null),
-  '\x1901': Tuple3(_std01, null, null),
+  '\x1901': Tuple3(_opt01, null, null),
+  '\x1930': Tuple3(_opt30, null, null),
+  '\x1940': Tuple3(_opt40, null, null),
 
-  // 0x19 + EXT
-  '\x19@00214': Tuple3(_ext214, null, null),
+  // 0x19 + EXT => not supported: ncurses pairs
+  //'\x19@00214': Tuple3(_ext214, null, null),
 
   // 0x19 + F + (A)STD
   '\x19F*01': Tuple3(_std01, _tsBold, null),
@@ -133,7 +194,6 @@ final _colorCodeParserInputs = {
 
 void _colorCodeParser01(
     String input, Tuple3<Color?, TextStyle?, Color?>? expected) {
-
   final it = input.runes.iterator;
 
   assert(it.moveNext() && it.rawIndex == 0);
@@ -147,8 +207,7 @@ void _colorCodeParser01(
     expect(c.bgColor, equals(expected.item3));
 
     expect(it.rawIndex, equals(input.length - 1));
-  }
-  else {
+  } else {
     expect(c.fgColor, equals(null));
     expect(c.fgTextStyle, equals(null));
     expect(c.bgColor, equals(null));
