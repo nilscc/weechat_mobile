@@ -8,6 +8,10 @@ import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/colors.dart';
 
 class ChannelLines extends StatefulWidget {
+  final ScrollController? scrollController;
+
+  ChannelLines({this.scrollController});
+
   @override
   _ChannelLinesState createState() => _ChannelLinesState();
 }
@@ -21,6 +25,7 @@ class _ChannelLinesState extends State<ChannelLines> {
     return GestureDetector(
       onTap: _requestFocus,
       child: ListView.builder(
+        controller: widget.scrollController,
         shrinkWrap: true,
         itemBuilder: (BuildContext context, int index) =>
             _buildLineData(context, buffer.lines[index]),

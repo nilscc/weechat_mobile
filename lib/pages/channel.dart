@@ -76,15 +76,17 @@ class _ChannelPageState extends State<ChannelPage> {
     );
   }
 
+  final _linesController = ScrollController();
+
   Widget _linesWidget(BuildContext context) => ChangeNotifierProvider.value(
         value: widget.buffer,
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-          child: ChannelLines(),
+          child: ChannelLines(scrollController: _linesController),
         ),
       );
 
-  TextEditingController _inputController = TextEditingController();
+  final _inputController = TextEditingController();
 
   RelayCompletion? _completion;
 
@@ -101,12 +103,22 @@ class _ChannelPageState extends State<ChannelPage> {
             Expanded(
               child: TextField(
                 keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.send,
                 controller: _inputController,
                 decoration: InputDecoration(
                   border: InputBorder.none,
                 ),
                 onChanged: (text) {
                   _completion = null;
+                },
+                onEditingComplete: () async {
+                  final text = _inputController.text;
+                  if (text.isNotEmpty) {
+                    await con
+                        .command('input ${widget.buffer.bufferPointer} $text');
+                    _inputController.text = '';
+                    _linesController.jumpTo(0);
+                  }
                 },
               ),
             ),
@@ -122,7 +134,6 @@ class _ChannelPageState extends State<ChannelPage> {
                         _inputController.text,
                         _inputController.selection.base.offset);
 
-                  print('Got: $_completion');
                   if (_completion != null) {
                     final n = _completion!.next();
                     _inputController.text = n.item1;
