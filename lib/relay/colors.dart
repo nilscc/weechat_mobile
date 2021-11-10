@@ -23,18 +23,12 @@ RichText parseColors(
 
     // SET ATTRIBUTE
     if (it.current == 0x1A) {
-      // move to next char
-      it.moveNext();
-
       final a = tryParseAttribute(it);
       if (a != null) p.attributes.set(a);
     }
 
     // REMOVE ATTRIBUTE
     else if (it.current == 0x1B) {
-      // move to next char
-      it.moveNext();
-
       final a = tryParseAttribute(it);
       if (a != null) p.attributes.remove(a);
     }
@@ -49,7 +43,6 @@ RichText parseColors(
     // COLOR CODE
     else if (it.current == 0x19) {
       p.finalizeCurrentSpan();
-
       ColorCodeParser ccp = ColorCodeParser(defaultFgColor: defaultColor);
       if (ccp.parse(it)) {
         if (ccp.fgColor != null) p.fgColor = ccp.fgColor;

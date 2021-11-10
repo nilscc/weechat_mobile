@@ -20,7 +20,7 @@ final _defaultColor = Colors.black;
 
 final _cols01 = [
   '\x1901',
-  '\x19@00001',
+  //'\x19@00001', invalid => no color option
   '\x19F*05',
   '\x19F@00214',
   '\x19B05',

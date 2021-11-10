@@ -37,10 +37,8 @@ Color? tryParseColorOption(RuneIterator it, Color defaultColor) {
 Color? tryParseColor(RuneIterator it, Color defaultColor) {
   Color? result;
 
-  // before consuming iterator, store index so we can restore iterator position
-  // if parsing fails
+  if (!it.moveNext()) return null;
   final cur = it.rawIndex;
-  if (cur == -1) return null; // uninitialized iterator
 
   // Parse EXT color, defined by '@' + 2 zeros + 3 color code digits
   // (total 5 digits)
@@ -132,25 +130,30 @@ class RelayAttribute {
 }
 
 RelayAttribute? tryParseAttribute(RuneIterator iterator) {
-  if (iterator.rawIndex == -1) return null; // uninitialized iterator
-
   RelayAttribute? result;
 
-  if (iterator.currentAsString == '*')
- result = RelayAttribute(bold: true);
-  else if (iterator.currentAsString == '/')
-    result = RelayAttribute(italic: true);
-  else if (iterator.currentAsString == '_')
-    result = RelayAttribute(underline: true);
-  else if (iterator.currentAsString == '|')
-    result = RelayAttribute(keepAttributes: true);
-  else if (iterator.currentAsString == '!')
-    result = RelayAttribute(reverse: true);
+  while (iterator.moveNext()) {
+    if (['*', '/', '_', '|', '!'].contains(iterator.currentAsString)) {
+      if (result == null)
+        result = RelayAttribute();
 
-  if (result != null) {
-    iterator.moveNext();
-    return result;
+      if (iterator.currentAsString == '*')
+        result.bold = true;
+      else if (iterator.currentAsString == '/')
+        result.italic = true;
+      else if (iterator.currentAsString == '_')
+        result.underline = true;
+      else if (iterator.currentAsString == '|')
+        result.keepAttributes = true;
+      else if (iterator.currentAsString == '!')
+        result.reverse = true;
+    } else {
+      iterator.movePrevious();
+      break;
+    }
   }
+
+  return result;
 }
 
 class ColorCodeParser {
@@ -182,10 +185,8 @@ class ColorCodeParser {
     if (iterator.currentAsString == '\x19') {
       iterator.moveNext();
 
-      // set foreground mode
+      // foreground mode
       if (iterator.currentAsString == 'F') {
-        iterator.moveNext();
-
         // parse attributes if any
         final a = tryParseAttribute(iterator);
 
@@ -198,9 +199,8 @@ class ColorCodeParser {
         }
       }
 
-      // set background mode
+      // background mode
       else if (iterator.currentAsString == 'B') {
-        iterator.moveNext();
         Color? c = tryParseColor(iterator, defaultBgColor ?? defaultFgColor);
         if (c != null) {
           bgColor = c;
@@ -208,13 +208,12 @@ class ColorCodeParser {
         }
       }
 
-      // set star mode
+      // star mode
       else if (iterator.currentAsString == '*') {
-        iterator.moveNext();
-
         // parse attributes if any
         final a = tryParseAttribute(iterator);
 
+        // parse colors
         Color? c1 = tryParseColor(iterator, defaultFgColor);
         if (c1 != null) {
           fgColor = c1;
@@ -226,10 +225,8 @@ class ColorCodeParser {
 
           // peek if next character is combination character
           if (iterator.moveNext()) {
-            if ([',', '~'].contains(iterator.currentAsString)) {
-              iterator.moveNext();
+            if ([',', '~'].contains(iterator.currentAsString))
               c2 = tryParseColor(iterator, defaultBgColor ?? defaultFgColor);
-            }
           }
 
           if (c2 != null)
@@ -241,7 +238,7 @@ class ColorCodeParser {
         }
       }
 
-      // parse color option
+      // color option mode
       else {
         Color? c = tryParseColorOption(iterator, defaultFgColor);
         if (c != null) {

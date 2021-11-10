@@ -59,8 +59,6 @@ final _tryParseAttributeInputs = {
 
 void _tryParseAttribute(String input, RelayAttribute? expected) {
   final it = input.runes.iterator;
-  it.moveNext();
-
   RelayAttribute? ts = tryParseAttribute(it);
   expect(ts, equals(expected));
 }
@@ -128,14 +126,12 @@ void _tryParseColor(String input, Color? expected) {
   print(input);
 
   final it = input.runes.iterator;
-  it.moveNext();
-  final idx = it.rawIndex;
 
   Color? c = tryParseColor(it, _defaultColor);
   expect(c, equals(expected));
 
   if (c == null)
-    expect(it.rawIndex, equals(idx));
+    expect(it.rawIndex, equals(input.isEmpty ? -1 : 0));
   else
     expect(it.rawIndex, equals(input.length - 1));
 }
