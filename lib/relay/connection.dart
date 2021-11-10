@@ -102,7 +102,7 @@ class RelayConnection {
       };
 
       // add timeout to future, otherwise it might get stuck when connection is lost
-      f = c.future.timeout(callbackTimeout ?? Duration(seconds: 1),
+      f = c.future.timeout(callbackTimeout ?? Duration(seconds: 5),
           onTimeout: onTimeout);
     }
 
