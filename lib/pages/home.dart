@@ -12,27 +12,27 @@ import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/relay/protocol/hdata.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key? key, required this.title, required this.context})
+  HomePage({Key? key})
       : super(key: key);
 
-  final String title;
-  final BuildContext context;
+  final String title = "WeeChat Mobile";
 
   @override
   _HomePageState createState() => _HomePageState();
+
+  static
+  MaterialPageRoute route({Key? key}) => MaterialPageRoute(builder: (BuildContext context) => HomePage());
 }
 
 class _HomePageState extends State<HomePage> {
   final List<ChannelListItem> _channelList = [];
 
-  RelayConnection get _connection =>
-      Provider.of<RelayConnection>(widget.context, listen: false);
-
   void _connect(BuildContext context) async {
     final cfg = Config.of(context);
+    final con = Provider.of<RelayConnection>(context, listen: false);
 
-    if (_connection.isConnected) {
-      await _connection.close();
+    if (con.isConnected) {
+      await con.close();
       setState(() {
         _channelList.clear();
       });
@@ -43,25 +43,26 @@ class _HomePageState extends State<HomePage> {
         await Navigator.of(context).push(SettingsPage.route());
       }
 
-      await _connection.connect(
+      await con.connect(
         hostName: cfg.hostName!,
         portNumber: cfg.portNumber!,
       );
 
-      await _connection.handshake();
-      await _connection.init(cfg.relayPassword!);
+      await con.handshake();
+      await con.init(cfg.relayPassword!);
 
-      _connection.startPingTimer();
+      con.startPingTimer();
 
-      await _loadChannelList();
+      await _loadChannelList(context);
     }
   }
 
-  Future<void> _loadChannelList() async {
+  Future<void> _loadChannelList(BuildContext context) async {
+    final con = Provider.of<RelayConnection>(context, listen: false);
+
     // https://weechat.org/files/doc/devel/weechat_plugin_api.en.html#hdata_buffer
     // https://github.com/weechat/weechat/blob/12be3b8c332c75a398f77478fd8d62304c632a1e/src/gui/gui-buffer.h#L73
-    await _connection.command(
-      'buffer_list',
+    await con.command(
       'hdata buffer:gui_buffers(*) plugin,short_name,title,nicklist_nicks_count,type',
       callback: (body) async {
         final List<ChannelListItem> l = [];
@@ -85,7 +86,7 @@ class _HomePageState extends State<HomePage> {
         final pluginPointers = l.map((e) => e.plugin).toSet();
         pluginPointers.removeWhere((e) => e == '0x0');
         for (final s in pluginPointers) {
-          await _connection.command('plugin_names', 'hdata plugin:$s name',
+          await con.command('hdata plugin:$s name',
               callback: (body) async {
             final h = body.objects()[0] as RelayHData;
             final n = h.objects[0].values[0];
@@ -151,8 +152,7 @@ class _HomePageState extends State<HomePage> {
 
     if (reason == CONNECTION_CLOSED)
       reason = l.errorConnectionClosedRemotely;
-    else if (reason == CONNECTION_TIMEOUT)
-      reason = l.errorConnectionTimeout;
+    else if (reason == CONNECTION_TIMEOUT) reason = l.errorConnectionTimeout;
 
     return Container(
       padding: EdgeInsets.all(10),

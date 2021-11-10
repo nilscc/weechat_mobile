@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/channel/lines.dart';
+import 'package:weechat/pages/home.dart';
 import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/completion.dart';
 import 'package:weechat/relay/connection.dart';
@@ -32,7 +33,11 @@ class _ChannelPageState extends State<ChannelPage> {
   late RelayConnectionStatus _status;
 
   void _closeOnDisconnect() {
-    if (!_status.connected) Navigator.of(context).pop();
+    if (!_status.connected)
+      Navigator.of(context).pushAndRemoveUntil(
+        HomePage.route(),
+        (route) => false, // remove all previous routes
+      );
   }
 
   @override

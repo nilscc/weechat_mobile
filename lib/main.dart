@@ -90,9 +90,6 @@ class MyApp extends StatelessWidget {
         supportedLocales: AppLocalizations.supportedLocales,
 
         // Pages
-        home: HomePage(
-          title: 'Weechat Mobile',
-          context: context,
-        ),
+        home: HomePage(),
       );
 }
