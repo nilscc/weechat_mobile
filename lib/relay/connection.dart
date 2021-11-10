@@ -19,6 +19,7 @@ class RelayConnection {
   void addCallback(String id, RelayCallback callback) {
     _callbacks[id] = callback;
   }
+
   void removeCallback(String id) {
     _callbacks.remove(id);
   }
@@ -69,8 +70,8 @@ class RelayConnection {
 
       connectionStatus.connected = true;
     } catch (e) {
-      if (e is SocketException)
-        close();
+      print('Exception on RelayConnection.connect(): $e');
+      if (e is SocketException) await close();
       rethrow;
     }
   }
@@ -81,37 +82,36 @@ class RelayConnection {
     RelayCallback? callback,
     String? responseId,
     Duration? callbackTimeout,
+    FutureOr Function()? onTimeout,
   }) async {
     if (_socket == null) return;
 
     // setup callback
-    Completer? c;
+    Future? f;
     if (callback != null) {
-      c = Completer();
+      final c = Completer();
       _callbacks[responseId ?? id] = (b) async {
-        await callback(b);
-        c!.complete();
+        final r = await callback(b);
+        c.complete();
+        return r;
       };
 
       // add timeout to future, otherwise it might get stuck when connection is lost
-      c.future.timeout(callbackTimeout ?? Duration(seconds: 1)).catchError((e) {
-        if (e is TimeoutException)
-          close(reason: CONNECTION_TIMEOUT);
-        else
-          throw e;
-      });
+      f = c.future.timeout(callbackTimeout ?? Duration(seconds: 1),
+          onTimeout: onTimeout);
     }
 
     // run command and catch possible exception
     try {
       _socket!.write('($id) $command\n');
       await _socket!.flush();
-      if (c != null) await c.future;
-    } catch (e, s) {
-      print(e);
-      print(s);
+      if (f != null) await f;
+    } catch (e) {
+      print('Exception on RelayConnection.command(): $e');
       if (e is StateError)
-        close(reason: CONNECTION_CLOSED);
+        await close(reason: CONNECTION_CLOSED);
+      else if (e is TimeoutException)
+        await close(reason: CONNECTION_TIMEOUT);
       else
         rethrow;
     }
@@ -119,11 +119,12 @@ class RelayConnection {
 
   Future<void> _handleMessageBody(final RelayMessageBody body) async {
     if (_callbacks.containsKey(body.id)) {
-      final b = await _callbacks[body.id]!(body);
-      if (b != true)
-        _callbacks.remove(body.id);
+      final cb = _callbacks.remove(body.id)!;
+      final b = await cb(body);
+      if (b == true && !_callbacks.containsKey(body.id))
+        _callbacks[body.id] = cb;
     } else {
-      print('Unhandled message body: ${body.id}');
+      print('Unhandled message body: ${body.id} ${body.objects()}');
     }
   }
 
@@ -147,7 +148,7 @@ class RelayConnection {
     final epoch = DateTime.now().microsecondsSinceEpoch;
 
     // send ping to relay
-    final pingFuture = command(
+    await command(
       'ping',
       'ping $epoch',
       responseId: '_pong',
@@ -158,12 +159,11 @@ class RelayConnection {
         } else
           c.complete(null);
       },
+      callbackTimeout: timeout,
+      onTimeout: () {
+        c.complete(null);
+      },
     );
-
-    // add timeout to ping callback
-    pingFuture.timeout(timeout ?? Duration(seconds: 1), onTimeout: () {
-      c.complete(null);
-    });
 
     return await c.future;
   }

@@ -10,12 +10,19 @@ class RelayHData {
     required this.keys,
     required this.objects,
   });
+
+  @override
+  String toString() =>
+      'RelayHData(hPath: $hPath, keys: $keys, objects: $objects)';
 }
 
 class RelayHDataKeyNameType {
   final String name, type;
 
   RelayHDataKeyNameType(this.name, this.type);
+
+  @override
+  String toString() => '$name [$type]';
 }
 
 class RelayHDataObject {
@@ -26,4 +33,7 @@ class RelayHDataObject {
     required this.pPath,
     required this.values,
   });
+
+  @override
+  String toString() => 'RelayHDataObject(pPath: $pPath, values: $values)';
 }
