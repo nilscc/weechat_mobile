@@ -118,24 +118,14 @@ class _ChannelPageState extends State<ChannelPage> {
                         _inputController.selection.base.offset);
 
                   print('Got: $_completion');
-                  final n = _completion!.next();
-                  _inputController.text = n.item1;
-                  _inputController.selection = TextSelection(
-                    baseOffset: n.item2,
-                    extentOffset: n.item2,
-                  );
-                },
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.zero,
-              child: IconButton(
-                icon: Icon(Icons.arrow_upward),
-                onPressed: () async {
-                  final text = _inputController.text;
-                  await con.command('buffer_input',
-                      'input ${widget.buffer.bufferPointer} $text');
-                  _inputController.text = '';
+                  if (_completion != null) {
+                    final n = _completion!.next();
+                    _inputController.text = n.item1;
+                    _inputController.selection = TextSelection(
+                      baseOffset: n.item2,
+                      extentOffset: n.item2,
+                    );
+                  }
                 },
               ),
             ),
