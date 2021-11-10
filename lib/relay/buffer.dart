@@ -78,7 +78,7 @@ class RelayBuffer extends ChangeNotifier {
 
   Future<void> desync(RelayConnection relayConnection) async {
     _removeCallbacks(relayConnection);
-    await relayConnection.command('desync', 'desync $bufferPointer buffer');
+    await relayConnection.command('desync $bufferPointer buffer');
   }
 
   Future<void> sync(RelayConnection relayConnection,
@@ -93,7 +93,6 @@ class RelayBuffer extends ChangeNotifier {
     final syncCmd = 'sync $bufferPointer buffer';
 
     relayConnection.command(
-      'buffer_lines_sync',
       '$hdataCmd\n$syncCmd',
       callback: (body) async {
         for (final hdata in body.objects())
@@ -106,8 +105,7 @@ class RelayBuffer extends ChangeNotifier {
   void _addCallbacks(RelayConnection relayConnection) {
     relayConnection.addCallback('_buffer_line_added', (body) async {
       for (final hdata in body.objects())
-        for (final l in _handleLineData(hdata, 0))
-          lines.insert(0, l);
+        for (final l in _handleLineData(hdata, 0)) lines.insert(0, l);
       notifyListeners();
       return true; // keep callback persistent
     });

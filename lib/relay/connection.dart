@@ -76,8 +76,10 @@ class RelayConnection {
     }
   }
 
+  int _id = 0;
+  String _nextId() => '__cmd_${_id++}';
+
   Future<void> command(
-    String id,
     String command, {
     RelayCallback? callback,
     String? responseId,
@@ -86,11 +88,14 @@ class RelayConnection {
   }) async {
     if (_socket == null) return;
 
+    // get next id if not set manually
+    final id = responseId ?? _nextId();
+
     // setup callback
     Future? f;
     if (callback != null) {
       final c = Completer();
-      _callbacks[responseId ?? id] = (b) async {
+      _callbacks[id] = (b) async {
         final r = await callback(b);
         c.complete();
         return r;
@@ -131,7 +136,6 @@ class RelayConnection {
   Future<void> handshake() async {
     await command(
       'handshake',
-      'handshake',
       callback: (body) async {
         // TODO
       },
@@ -140,7 +144,7 @@ class RelayConnection {
 
   Future<void> init(String relayPassword) async {
     relayPassword = relayPassword.replaceAll(',', '\\,');
-    await command('init', 'init password=$relayPassword');
+    await command('init password=$relayPassword');
   }
 
   Future<Duration?> ping({Duration? timeout}) async {
@@ -149,7 +153,6 @@ class RelayConnection {
 
     // send ping to relay
     await command(
-      'ping',
       'ping $epoch',
       responseId: '_pong',
       callback: (b) async {
@@ -186,5 +189,5 @@ class RelayConnection {
     }
   }
 
-  Future<void> test() async => command('test', 'test');
+  Future<void> test() async => command('test');
 }
