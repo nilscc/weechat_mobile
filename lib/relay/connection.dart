@@ -12,17 +12,8 @@ const String CONNECTION_TIMEOUT = 'Connection timeout.';
 
 class RelayConnection {
   SecureSocket? _socket;
-  StreamSubscription? _streamSubscription;
 
   Map<String, RelayCallback> _callbacks = {};
-
-  void addCallback(String id, RelayCallback callback) {
-    _callbacks[id] = callback;
-  }
-
-  void removeCallback(String id) {
-    _callbacks.remove(id);
-  }
 
   RelayConnectionStatus connectionStatus;
 
@@ -30,19 +21,23 @@ class RelayConnection {
 
   bool get isConnected => connectionStatus.connected;
 
+  void dispose() {
+    _socket?.close();
+  }
+
   Future<void> close({String? reason}) async {
     try {
+      _pingTimer?.cancel();
+
+      // close connection properly
       try {
-        if (_socket != null) await _socket!.close();
-      } catch (e) {
-        // socket already closed
-        if (!(e is StateError)) rethrow;
-      }
-      if (_streamSubscription != null) await _streamSubscription!.cancel();
-      if (_pingTimer != null) _pingTimer!.cancel();
+        _socket?.write('(quit) quit\n');
+        await _socket?.flush();
+      } catch (e) {}
+
+      _socket?.close();
     } finally {
       _socket = null;
-      _streamSubscription = null;
       _pingTimer = null;
       connectionStatus.reason = reason;
       connectionStatus.connected = false;
@@ -63,7 +58,7 @@ class RelayConnection {
       );
 
       // start listening
-      _streamSubscription = _socket!.listen((event) {
+      _socket!.listen((event) {
         final b = RelayParser(event).body();
         _handleMessageBody(b);
       });
@@ -120,6 +115,14 @@ class RelayConnection {
       else
         rethrow;
     }
+  }
+
+  void addCallback(String id, RelayCallback callback) {
+    _callbacks[id] = callback;
+  }
+
+  void removeCallback(String id) {
+    _callbacks.remove(id);
   }
 
   Future<void> _handleMessageBody(final RelayMessageBody body) async {
