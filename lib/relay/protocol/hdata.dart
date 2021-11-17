@@ -12,8 +12,20 @@ class RelayHData {
   });
 
   @override
-  String toString() =>
-      'RelayHData(hPath: $hPath, keys: $keys, objects: $objects)';
+  String toString() {
+    final obj = [];
+
+    for (final o in objects) {
+      final val = [];
+      for (var i = 0; i < (keys?.length ?? 0); ++i) {
+        val.add('${keys![i].name}: [${keys![i].type}] ${o.values[i]}');
+      }
+      if (val.isNotEmpty)
+        obj.add(o.pPath.toString() + ' {\n\t' + val.join(',\n\t') + '\n}');
+    }
+
+    return 'RelayHData(hPath: $hPath, objects: {\n${obj.join(",\n\n")}\n})'; // keys: $keys, objects: $objects)';
+  }
 }
 
 class RelayHDataKeyNameType {
