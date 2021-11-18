@@ -15,7 +15,7 @@ class LogPage extends StatelessWidget {
           child: ListView(
             children: EventLogger.of(context, listen: true)
                 .messages
-                .map((e) => Text('[${e.item1}] ${e.item2}'))
+                .map((e) => Text('${e.item1} [${e.item2}]\n${e.item3}\n'))
                 .toList(),
           ),
         ),

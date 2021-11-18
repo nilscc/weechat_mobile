@@ -9,16 +9,16 @@ enum LogType {
 }
 
 class EventLogger extends ChangeNotifier {
-  final List<Tuple2<LogType, String>> _messages = [];
+  final List<Tuple3<DateTime, LogType, String>> _messages = [];
 
-  List<Tuple2<LogType, String>> get messages => _messages;
+  List<Tuple3<DateTime, LogType, String>> get messages => _messages;
 
   static EventLogger of(BuildContext context, {bool listen: false}) =>
       Provider.of<EventLogger>(context, listen: listen);
 
-  void log(LogType type, String message) {
+  void log(LogType type, String message, {DateTime? dateTime}) {
     print('[$type] $message');
-    _messages.add(Tuple2(type, message));
+    _messages.add(Tuple3(dateTime ?? DateTime.now(), type, message));
     notifyListeners();
   }
 
