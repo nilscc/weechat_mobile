@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/relay/protocol/message_body.dart';
 import 'package:weechat/relay/protocol/parser.dart';
@@ -16,6 +17,9 @@ class RelayConnection {
   Map<String, RelayCallback> _callbacks = {};
 
   RelayConnectionStatus connectionStatus;
+
+  // reuse the event logger in the connection status
+  EventLogger? get _eventLogger => connectionStatus.eventLogger;
 
   RelayConnection({required this.connectionStatus});
 
@@ -33,7 +37,9 @@ class RelayConnection {
       try {
         _socket?.write('(quit) quit\n');
         await _socket?.flush();
-      } catch (e) {}
+      } catch (e) {
+        _eventLogger?.error('RelayConnection.close(): $e');
+      }
 
       _socket?.close();
     } finally {
@@ -65,7 +71,7 @@ class RelayConnection {
 
       connectionStatus.connected = true;
     } catch (e) {
-      print('Exception on RelayConnection.connect(): $e');
+      _eventLogger?.error('RelayConnection.connect(): $e');
       if (e is SocketException) await close();
       rethrow;
     }
@@ -107,7 +113,7 @@ class RelayConnection {
       await _socket!.flush();
       if (f != null) await f;
     } catch (e) {
-      print('Exception on RelayConnection.command(): $e');
+      _eventLogger?.error('RelayConnection.command($command): $e');
       if (e is StateError)
         await close(reason: CONNECTION_CLOSED);
       else if (e is TimeoutException)
@@ -132,7 +138,7 @@ class RelayConnection {
       if (b == true && !_callbacks.containsKey(body.id))
         _callbacks[body.id] = cb;
     } else {
-      print('Unhandled message body: ${body.id} ${body.objects()}');
+      _eventLogger?.warning('Unhandled message body: ${body.id} ${body.objects()}');
     }
   }
 
@@ -180,13 +186,13 @@ class RelayConnection {
     if (_pingTimer == null) {
       // start pinging periodically in background
       _pingTimer = Timer.periodic(interval ?? Duration(seconds: 60), (t) async {
-        print('Ping?');
+        _eventLogger?.info('Ping?');
         final p = await ping(timeout: timeout);
         if (p == null) {
-          print('No PONG response from relay.');
+          _eventLogger?.info('No PONG response from relay.');
           close();
         } else {
-          print('Pong! ${p.inMilliseconds}ms');
+          _eventLogger?.info('Pong! ${p.inMilliseconds}ms');
         }
       });
     }

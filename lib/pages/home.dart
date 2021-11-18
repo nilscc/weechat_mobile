@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/home/channel_list_item.dart';
+import 'package:weechat/pages/log.dart';
 import 'package:weechat/pages/settings.dart';
 import 'package:weechat/pages/settings/config.dart';
 import 'package:weechat/relay/connection.dart';
@@ -12,16 +13,15 @@ import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/relay/protocol/hdata.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key? key})
-      : super(key: key);
+  HomePage({Key? key}) : super(key: key);
 
   final String title = "WeeChat Mobile";
 
   @override
   _HomePageState createState() => _HomePageState();
 
-  static
-  MaterialPageRoute route({Key? key}) => MaterialPageRoute(builder: (BuildContext context) => HomePage());
+  static MaterialPageRoute route({Key? key}) =>
+      MaterialPageRoute(builder: (BuildContext context) => HomePage());
 }
 
 class _HomePageState extends State<HomePage> {
@@ -86,8 +86,7 @@ class _HomePageState extends State<HomePage> {
         final pluginPointers = l.map((e) => e.plugin).toSet();
         pluginPointers.removeWhere((e) => e == '0x0');
         for (final s in pluginPointers) {
-          await con.command('hdata plugin:$s name',
-              callback: (body) async {
+          await con.command('hdata plugin:$s name', callback: (body) async {
             final h = body.objects()[0] as RelayHData;
             final n = h.objects[0].values[0];
             if (n != "irc") {
@@ -114,6 +113,12 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(LogPage.route());
+            },
+            icon: Icon(Feather.info),
+          ),
           IconButton(
               onPressed: () {
                 Navigator.of(context).push(SettingsPage.route());

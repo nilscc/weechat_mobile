@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class RelayConnectionStatus extends ChangeNotifier {
+  EventLogger? eventLogger;
+
+  RelayConnectionStatus({this.eventLogger});
+
   static RelayConnectionStatus of(BuildContext context, {bool listen: false}) =>
       Provider.of(context, listen: listen);
 
@@ -10,7 +14,7 @@ class RelayConnectionStatus extends ChangeNotifier {
 
   bool get connected => _connected;
   set connected(bool connected) {
-    print('RelayConnectionStatus.connected = $connected');
+    eventLogger?.info('RelayConnectionStatus.connected = $connected');
     if (_connected != connected) {
       _connected = connected;
 
@@ -24,7 +28,7 @@ class RelayConnectionStatus extends ChangeNotifier {
 
   String? get reason => _reason;
   set reason(String? error) {
-    print('RelayConnectionStatus.reason = $reason');
+    eventLogger?.info('RelayConnectionStatus.reason = $reason');
     if (_reason != error && error != null) {
       _reason = error;
       notifyListeners();

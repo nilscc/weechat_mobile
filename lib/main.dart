@@ -8,6 +8,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/home.dart';
+import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/pages/settings/config.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/connection/status.dart';
@@ -61,11 +62,15 @@ void main() async {
 class MyApp extends StatelessWidget {
   final Config config;
   final RelayConnection connection;
+  final eventLogger = EventLogger();
 
   MyApp({
     required this.config,
     required this.connection,
-  });
+  }) {
+    // link up connection status with event logger
+    this.connection.connectionStatus.eventLogger = eventLogger;
+  }
 
   // This widget is the root of your application.
   @override
@@ -74,6 +79,7 @@ class MyApp extends StatelessWidget {
           Provider<Config>.value(value: config),
           ChangeNotifierProvider.value(value: connection.connectionStatus),
           Provider<RelayConnection>.value(value: connection),
+          ChangeNotifierProvider.value(value: eventLogger),
         ],
         builder: (context, child) => _app(context, child),
       );
