@@ -32,6 +32,7 @@ void main() async {
   // connection status is kept globally
   final cs = RelayConnectionStatus();
   final con = RelayConnection(connectionStatus: cs);
+  final log = EventLogger();
 
   // run application with exception handling
   runZonedGuarded(() async {
@@ -47,9 +48,10 @@ void main() async {
     runApp(MyApp(
       config: config,
       connection: con,
+      eventLogger: log,
     ));
   }, (error, stack) {
-    //print('runZonedGuarded: $error');
+    log.error('runZonedGuarded: $error');
     if (error is SocketException) {
       con.close(reason: error.message);
     } else if (error is TimeoutException) {
@@ -62,11 +64,12 @@ void main() async {
 class MyApp extends StatelessWidget {
   final Config config;
   final RelayConnection connection;
-  final eventLogger = EventLogger();
+  final EventLogger eventLogger;
 
   MyApp({
     required this.config,
     required this.connection,
+    required this.eventLogger,
   }) {
     // link up connection status with event logger
     this.connection.connectionStatus.eventLogger = eventLogger;
