@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:async/async.dart';
 import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/relay/protocol/message_body.dart';
@@ -31,6 +32,8 @@ class RelayConnection {
 
   Future<void> close({String? reason}) async {
     try {
+      // cancel any ongoing ping futures and timers
+      _pingOperation?.cancel();
       _pingTimer?.cancel();
 
       // close connection properly
@@ -45,6 +48,7 @@ class RelayConnection {
     } finally {
       _socket = null;
       _pingTimer = null;
+      _pingOperation = null;
       connectionStatus.reason = reason;
       connectionStatus.connected = false;
     }
@@ -138,7 +142,8 @@ class RelayConnection {
       if (b == true && !_callbacks.containsKey(body.id))
         _callbacks[body.id] = cb;
     } else {
-      _eventLogger?.warning('Unhandled message body: ${body.id} ${body.objects()}');
+      _eventLogger
+          ?.warning('Unhandled message body: ${body.id} ${body.objects()}');
     }
   }
 
@@ -181,20 +186,28 @@ class RelayConnection {
   }
 
   Timer? _pingTimer;
+  CancelableOperation? _pingOperation;
 
   void startPingTimer({Duration? interval, Duration? timeout}) {
     if (_pingTimer == null) {
       // start pinging periodically in background
-      _pingTimer = Timer.periodic(interval ?? Duration(seconds: 60), (t) async {
-        _eventLogger?.info('Ping?');
-        final p = await ping(timeout: timeout);
-        if (p == null) {
-          _eventLogger?.info('No PONG response from relay.');
-          close();
-        } else {
-          _eventLogger?.info('Pong! ${p.inMilliseconds}ms');
-        }
-      });
+      _pingTimer = Timer.periodic(
+        interval ?? Duration(seconds: 60),
+        (t) {
+          _eventLogger?.info('Ping?');
+          _pingOperation = CancelableOperation.fromFuture(
+            ping(timeout: timeout).then((p) {
+              if (p == null) {
+                _eventLogger?.info('No PONG response from relay.');
+                close();
+              } else {
+                _eventLogger?.info('Pong! ${p.inMilliseconds}ms');
+                _pingOperation = null;
+              }
+            }),
+          );
+        },
+      );
     }
   }
 
