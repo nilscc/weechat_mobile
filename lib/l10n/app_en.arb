@@ -12,6 +12,11 @@
   "settingsConnectionRelayPassword": "Relay password",
   "settingsConnectionVerifyButton": "Verify connection.",
 
+  "settingsUiTitle": "User Interface",
+  "settingsUiSubtitle": "Configure look and feel of the user interface.",
+  "settingsUiShowCompletion": "Show completion (tab) button",
+  "settingsUiShowSend": "Show send button",
+
   "certificateValid": "Certificate is valid.",
   "certificateInvalid": "Certificate is invalid.",
   "certificateIssuerLabel": "Issuer:",

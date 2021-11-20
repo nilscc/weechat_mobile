@@ -25,6 +25,7 @@ class _SettingsState extends State<SettingsPage> {
       body: ListView(
         children: [
           ..._connectionSettings(context),
+          ..._uiSettings(context),
         ],
       ),
     );
@@ -89,6 +90,47 @@ class _SettingsState extends State<SettingsPage> {
             icon: Icon(Feather.lock),
           ),
           onChanged: (value) => config.relayPassword = value,
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _uiSettings(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    final config = Config.of(context);
+
+    return [
+      Container(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: ListTile(
+          title: Text(loc.settingsUiTitle),
+          subtitle: Text(loc.settingsUiSubtitle),
+        ),
+      ),
+      Container(
+        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        child: CheckboxListTile(
+          value: config.uiShowCompletion ?? true,
+          onChanged: (newValue) {
+            setState(() {
+              config.uiShowCompletion = newValue;
+            });
+          },
+          title: Text(loc.settingsUiShowCompletion),
+          secondary: Icon(Icons.keyboard_tab),
+        ),
+      ),
+      Container(
+        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        child: CheckboxListTile(
+          value: config.uiShowSend ?? false,
+          onChanged: (newValue) {
+            setState(() {
+              config.uiShowSend = newValue;
+            });
+          },
+          title: Text(loc.settingsUiShowSend),
+          secondary: Icon(Feather.arrow_up),
         ),
       ),
     ];

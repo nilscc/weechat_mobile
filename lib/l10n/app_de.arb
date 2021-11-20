@@ -12,6 +12,11 @@
   "settingsConnectionRelayPassword": "Relay-Passwort",
   "settingsConnectionVerifyButton": "Verbindung testen.",
 
+  "settingsUiTitle": "Benutzerinterface",
+  "settingsUiSubtitle": "Konfiguriere Aussehen und Verhalten des Benutzerinterfaces.",
+  "settingsUiShowCompletion": "Zeige Knopf für Vervollständigung",
+  "settingsUiShowSend": "Zeige Knopf zum Versenden",
+
   "certificateValid": "Zertifikat ist gültig.",
   "certificateInvalid": "Zertifikat ist ungültig.",
   "certificateIssuerLabel": "Ersteller:",

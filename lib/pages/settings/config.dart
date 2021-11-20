@@ -19,6 +19,14 @@ class Config extends _ConfigBackend {
   String? get relayPassword => this['relayPassword'];
   set relayPassword(String? relayPassword) =>
       this['relayPassword'] = relayPassword;
+
+  bool? get uiShowCompletion => this['uiShowCompletion'];
+  set uiShowCompletion(bool? uiShowCompletion) =>
+      this['uiShowCompletion'] = uiShowCompletion;
+
+  bool? get uiShowSend => this['uiShowSend'];
+  set uiShowSend(bool? uiShowSend) =>
+      this['uiShowSend'] = uiShowSend;
 }
 
 class _ConfigBackend {
