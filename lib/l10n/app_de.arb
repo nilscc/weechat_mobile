@@ -24,5 +24,12 @@
   "certificateEndValidity": "Ende Gültigkeit:",
   "certificateSubject": "Betreff:",
 
-  "channelInputPlaceholder": "Nachricht schreiben..."
+  "channelInputPlaceholder": "Nachricht schreiben...",
+
+  "urlifyCopiedMessage": "In die Zwischenablage kopiert: {url}",
+  "@urlifyCopiedMessage": {
+    "placeholders": {
+      "url": {}
+    }
+  }
 }

@@ -24,5 +24,12 @@
   "certificateEndValidity": "End validity:",
   "certificateSubject": "Subject:",
 
-  "channelInputPlaceholder": "Write a message..."
+  "channelInputPlaceholder": "Write a message...",
+
+  "urlifyCopiedMessage": "Copied to clipboard: {url}",
+  "@urlifyCopiedMessage": {
+    "placeholders": {
+      "url": {}
+    }
+  }
 }

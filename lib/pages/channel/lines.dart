@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:weechat/pages/channel/urlify.dart';
 import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/colors.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ChannelLines extends StatefulWidget {
   final ScrollController? scrollController;
@@ -36,6 +37,7 @@ class _ChannelLinesState extends State<ChannelLines> {
   }
 
   Widget _buildLineData(BuildContext context, LineData line) {
+    final loc = AppLocalizations.of(context);
     final df = DateFormat.Hm().format(line.date);
     final tt = Theme.of(context).textTheme;
 
@@ -71,7 +73,12 @@ class _ChannelLinesState extends State<ChannelLines> {
           if (!isSystem) TextSpan(text: '<', style: tt.bodyText2),
           prefixRT,
           TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyText2),
-          urlify(messageRT),
+          urlify(messageRT,
+              onNotification: (msg) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(msg),
+                ));
+              }, localizations: loc),
         ],
       ),
     );

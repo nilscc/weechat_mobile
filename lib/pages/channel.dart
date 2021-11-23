@@ -55,9 +55,12 @@ class _ChannelPageState extends State<ChannelPage> {
     super.dispose();
   }
 
+  GlobalKey<ScaffoldMessengerState> _scaffoldKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: GestureDetector(
           onTap: () {

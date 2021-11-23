@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:validators/validators.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 bool _validUrl(String text) => isURL(
       text,
@@ -9,7 +11,8 @@ bool _validUrl(String text) => isURL(
       requireTld: true,
     );
 
-TextSpan urlify(TextSpan input) {
+TextSpan urlify(TextSpan input,
+    {void onNotification(String text)?, AppLocalizations? localizations}) {
   var words = input.text?.split(' ');
 
   var text;
@@ -47,6 +50,12 @@ TextSpan urlify(TextSpan input) {
                 onTap: () {
                   launch(u.toString());
                 },
+                onLongPress: () async {
+                  await Clipboard.setData(ClipboardData(text: u.toString()));
+                  onNotification?.call(
+                      localizations?.urlifyCopiedMessage(u.toString()) ??
+                          u.toString());
+                },
               ),
             ),
           ];
@@ -65,7 +74,13 @@ TextSpan urlify(TextSpan input) {
   // urlify all children of input
   if (input.children?.isNotEmpty == true)
     children = (children ?? []) +
-        input.children!.map((e) => (e is TextSpan) ? urlify(e) : e).toList();
+        input.children!
+            .map((e) => (e is TextSpan)
+                ? urlify(e,
+                    localizations: localizations,
+                    onNotification: onNotification)
+                : e)
+            .toList();
 
   return TextSpan(
     text: text,
