@@ -19,6 +19,7 @@ class ChannelListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final con = Provider.of<RelayConnection>(context, listen: false);
+    final theme = Theme.of(context);
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
@@ -42,9 +43,27 @@ class ChannelListItem extends StatelessWidget {
           }
         },
         child: Card(
-          child: ListTile(
-            title: Text(name),
-            subtitle: Text('Topic: "$topic"\n$nickCount users'), // TODO: l10n
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  child: Text(
+                    this.name,
+                    style: theme.textTheme.headline6,
+                  ),
+                ),
+                if (this.topic.isNotEmpty)
+                  Container(
+                    padding: EdgeInsets.only(top: 5),
+                    child: Text(
+                      this.topic,
+                      style: theme.textTheme.caption,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
