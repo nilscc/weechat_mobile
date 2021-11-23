@@ -18,21 +18,18 @@ class ChannelLines extends StatefulWidget {
 }
 
 class _ChannelLinesState extends State<ChannelLines> {
-  void _requestFocus() => FocusScope.of(context).requestFocus(FocusNode());
-
   @override
   Widget build(BuildContext context) {
     final buffer = Provider.of<RelayBuffer>(context, listen: true);
-    return GestureDetector(
-      onTap: _requestFocus,
-      child: ListView.builder(
-        controller: widget.scrollController,
-        shrinkWrap: true,
-        itemBuilder: (BuildContext context, int index) =>
-            _buildLineData(context, buffer.lines[index]),
-        itemCount: buffer.lines.length,
-        reverse: true,
-      ),
+
+    return ListView.builder(
+      controller: widget.scrollController,
+      shrinkWrap: true,
+      itemBuilder: (BuildContext context, int index) =>
+          _buildLineData(context, buffer.lines[index]),
+      itemCount: buffer.lines.length,
+      reverse: true,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
     );
   }
 
