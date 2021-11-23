@@ -64,7 +64,7 @@ class _ChannelPageState extends State<ChannelPage> {
       appBar: AppBar(
         title: GestureDetector(
           onTap: () {
-            print('Tap!');
+            print('Tap!'); // TODO: open channel page
           },
           child: Text(widget.buffer.name),
         ),
