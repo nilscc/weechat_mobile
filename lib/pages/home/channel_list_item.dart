@@ -27,10 +27,11 @@ class ChannelListItem extends StatelessWidget {
         onTap: () async {
           // create relay buffer instance for channel
           final buffer = RelayBuffer(
+            relayConnection: con,
             name: name,
             bufferPointer: bufferPointer,
           );
-          buffer.sync(con);
+          buffer.sync();
 
           try {
             // open channel page
@@ -39,7 +40,7 @@ class ChannelListItem extends StatelessWidget {
             );
           } finally {
             // send desync when channel got closed
-            buffer.desync(con);
+            buffer.desync();
           }
         },
         child: Card(

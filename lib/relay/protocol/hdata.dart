@@ -18,7 +18,10 @@ class RelayHData {
     for (final o in objects) {
       final val = [];
       for (var i = 0; i < (keys?.length ?? 0); ++i) {
-        val.add('${keys![i].name}: [${keys![i].type}] ${o.values[i]}');
+        final ty = keys![i].type;
+        var v = o.values[i];
+        if (ty == 'chr') v = v.codeUnits.toString();
+        val.add('${keys![i].name}: [$ty] $v');
       }
       if (val.isNotEmpty)
         obj.add(o.pPath.toString() + ' {\n\t' + val.join(',\n\t') + '\n}');

@@ -13,8 +13,40 @@ class ChannelLines extends StatefulWidget {
 }
 
 class _ChannelLinesState extends State<ChannelLines> {
+  Future? _nextLinesFuture;
+  RelayBuffer? _buffer;
+
+  Future<void> _nextLines() async {
+    try {
+      await _buffer?.loadNext(lineCount: 50);
+    } finally {
+      _nextLinesFuture = null;
+    }
+  }
+
+  @override
+  void initState() {
+    // install scroll listener to fetch new messages when offset is less than
+    // view port dimension
+    widget.scrollController?.addListener(() {
+      final p = widget.scrollController!.position;
+      final d = p.viewportDimension;
+      final o = widget.scrollController!.offset;
+      final r = p.maxScrollExtent;
+      if ((o > (r - d)) && _nextLinesFuture == null)
+        _nextLinesFuture = Future(_nextLines);
+    });
+
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    // load buffer required by _nextLines()
+    if (_buffer == null)
+      _buffer = Provider.of<RelayBuffer>(context, listen: false);
+
+    // update build, so load buffer again and listen
     final buffer = Provider.of<RelayBuffer>(context, listen: true);
 
     return ListView.builder(
