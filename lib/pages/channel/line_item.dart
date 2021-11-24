@@ -23,6 +23,11 @@ class LineItem extends StatelessWidget {
     final alpha = isSystem ? 100 : 255;
     final defaultColor = tt.bodyText2?.color ?? Colors.black;
 
+    final isAction = [' *'].any((e) => line.prefix.endsWith(e));
+    var bodyStyle = tt.bodyText2;
+    if (isAction)
+      bodyStyle = bodyStyle?.copyWith(fontStyle: FontStyle.italic);
+
     //print('<${line.prefix}> ${line.message} (${line.message.codeUnits.map((e) => e.toRadixString(16)).toList()})');
 
     final prefixRT = parseColors(line.prefix, defaultColor, alpha: alpha).text;
@@ -46,10 +51,11 @@ class LineItem extends StatelessWidget {
 
     final bodyRT = RichText(
       text: TextSpan(
+        style: bodyStyle,
         children: [
-          if (!isSystem) TextSpan(text: '<', style: tt.bodyText2),
-          prefixRT,
-          TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyText2),
+          if (!(isSystem || isAction)) TextSpan(text: '<', style: tt.bodyText2),
+          if (!isAction) prefixRT,
+          TextSpan(text: (isSystem || isAction) ? ' ' : '> ', style: tt.bodyText2),
           urlify(messageRT, onNotification: (msg) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(msg),
