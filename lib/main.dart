@@ -53,9 +53,9 @@ void main() async {
   }, (error, stack) {
     log.error('runZonedGuarded: $error');
     if (error is SocketException) {
-      con.close(reason: error.toString());
+      con.close(reason: CONNECTION_CLOSED);
     } else if (error is TimeoutException) {
-      con.close(reason: error.toString());
+      con.close(reason: CONNECTION_TIMEOUT);
     } else
       throw error;
   });
