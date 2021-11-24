@@ -195,17 +195,16 @@ class RelayConnection {
         interval ?? Duration(seconds: 60),
         (t) {
           _eventLogger?.info('Ping?');
-          _pingOperation = CancelableOperation.fromFuture(
-            ping(timeout: timeout).then((p) {
-              if (p == null) {
-                _eventLogger?.info('No PONG response from relay.');
-                close();
-              } else {
-                _eventLogger?.info('Pong! ${p.inMilliseconds}ms');
-                _pingOperation = null;
-              }
-            }),
-          );
+          _pingOperation = CancelableOperation.fromFuture(Future(() async {
+            final p = await ping(timeout: timeout);
+            if (p != null) {
+              _eventLogger?.info('Pong! ${p.inMilliseconds}ms');
+              _pingOperation = null;
+            } else {
+              _eventLogger?.info('No PONG response from relay.');
+              close();
+            }
+          }));
         },
       );
     }
