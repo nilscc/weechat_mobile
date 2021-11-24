@@ -18,7 +18,7 @@ class _ChannelLinesState extends State<ChannelLines> {
 
   Future<void> _nextLines() async {
     try {
-      await _buffer?.loadNext(lineCount: 50);
+      await _buffer?.loadNext();
     } finally {
       _nextLinesFuture = null;
     }
