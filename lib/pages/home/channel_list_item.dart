@@ -14,7 +14,8 @@ class ChannelListItem extends StatelessWidget {
     required this.topic,
     required this.plugin,
     required this.nickCount,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +23,7 @@ class ChannelListItem extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
+      key: key,
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       child: GestureDetector(
         onTap: () async {

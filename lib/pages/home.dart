@@ -76,6 +76,7 @@ class _HomePageState extends State<HomePage> {
               name: o.values[1] ?? '',
               topic: o.values[2] ?? '',
               nickCount: o.values[3],
+              key: ValueKey('ChannelListItem ${o.pPath[0]}'),
             ));
           }
         }
@@ -143,12 +144,30 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildChannelList(BuildContext context) {
-    return ListView(
+    return ReorderableListView(
       children: [
-        Container(height: 5),
+        Container(height: 5, key: UniqueKey()),
         ..._channelList.map((e) => e.build(context)),
-        Container(height: 100),
+        Container(height: 100, key: UniqueKey()),
       ],
+      onReorder: (int oldIndex, int newIndex) async {
+        // subtract 1 from both indexes for the first container child
+        oldIndex -= 1;
+        newIndex -= 1;
+
+        // check if both indexes are in range
+        final l = _channelList.length;
+        if (0 <= oldIndex && oldIndex < l && 0 <= newIndex && newIndex < l) {
+          setState(() {
+            _channelList.insert(newIndex, _channelList[oldIndex]);
+            _channelList
+                .removeAt(oldIndex < newIndex ? oldIndex : oldIndex + 1);
+          });
+
+          // save new layout
+          _saveLayout(context);
+        }
+      },
     );
   }
 
@@ -168,5 +187,9 @@ class _HomePageState extends State<HomePage> {
         child: Text(reason ?? l.errorNotConnected),
       ),
     );
+  }
+
+  void _saveLayout(BuildContext context) {
+    final cfg = Config.of(context);
   }
 }
