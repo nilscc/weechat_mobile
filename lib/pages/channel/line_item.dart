@@ -18,21 +18,20 @@ class LineItem extends StatelessWidget {
     final df = DateFormat.Hm().format(line.date);
     final tt = Theme.of(context).textTheme;
 
-    final isSystem =
-    ['<--', '-->', '--', '==='].any((e) => line.prefix.endsWith(e));
+    final isSystem = line.prefix.isEmpty ||
+        ['<--', '-->', '--', '===', '=!='].any((e) => line.prefix.endsWith(e));
     final alpha = isSystem ? 100 : 255;
     final defaultColor = tt.bodyText2?.color ?? Colors.black;
 
     final isAction = [' *'].any((e) => line.prefix.endsWith(e));
     var bodyStyle = tt.bodyText2;
-    if (isAction)
-      bodyStyle = bodyStyle?.copyWith(fontStyle: FontStyle.italic);
+    if (isAction) bodyStyle = bodyStyle?.copyWith(fontStyle: FontStyle.italic);
 
     //print('<${line.prefix}> ${line.message} (${line.message.codeUnits.map((e) => e.toRadixString(16)).toList()})');
 
     final prefixRT = parseColors(line.prefix, defaultColor, alpha: alpha).text;
     final messageRT =
-    parseColors(line.message, defaultColor, alpha: alpha).text as TextSpan;
+        parseColors(line.message, defaultColor, alpha: alpha).text as TextSpan;
 
     final dateRT = Container(
       padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
@@ -55,7 +54,8 @@ class LineItem extends StatelessWidget {
         children: [
           if (!(isSystem || isAction)) TextSpan(text: '<', style: tt.bodyText2),
           if (!isAction) prefixRT,
-          TextSpan(text: (isSystem || isAction) ? ' ' : '> ', style: tt.bodyText2),
+          if (!isAction && line.prefix.isNotEmpty)
+            TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyText2),
           urlify(messageRT, onNotification: (msg) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(msg),

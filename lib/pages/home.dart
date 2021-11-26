@@ -155,8 +155,10 @@ class _HomePageState extends State<HomePage> {
   Widget _showConnectionErrors(context, {String? reason}) {
     final l = AppLocalizations.of(context)!;
 
-    if (reason == CONNECTION_CLOSED)
+    if (reason == CONNECTION_CLOSED_REMOTE)
       reason = l.errorConnectionClosedRemotely;
+    else if (reason == CONNECTION_CLOSED_OS)
+      reason = l.errorNotConnected;
     else if (reason == CONNECTION_TIMEOUT) reason = l.errorConnectionTimeout;
 
     return Container(

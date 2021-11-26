@@ -52,12 +52,19 @@ void main() async {
     ));
   }, (error, stack) {
     log.error('runZonedGuarded: $error');
+
+    var reason;
     if (error is SocketException) {
-      con.close(reason: CONNECTION_CLOSED);
+      if (error.osError?.errorCode == 9)
+        reason = CONNECTION_CLOSED_OS;
+      else
+        reason = CONNECTION_CLOSED_REMOTE;
     } else if (error is TimeoutException) {
-      con.close(reason: CONNECTION_TIMEOUT);
+      reason = CONNECTION_TIMEOUT;
     } else
-      throw error;
+      reason = 'Uncaught exception: $error';
+    
+    con.close(reason: reason);
   });
 }
 

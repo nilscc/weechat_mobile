@@ -9,7 +9,8 @@ import 'package:weechat/relay/protocol/parser.dart';
 
 typedef Future<bool?> RelayCallback(RelayMessageBody body);
 
-const String CONNECTION_CLOSED = 'Connection closed.';
+const String CONNECTION_CLOSED_REMOTE = 'Connection closed by remote.';
+const String CONNECTION_CLOSED_OS = 'Connection closed by OS.';
 const String CONNECTION_TIMEOUT = 'Connection timeout.';
 
 class RelayConnection {
@@ -119,7 +120,7 @@ class RelayConnection {
     } catch (e) {
       _eventLogger?.error('RelayConnection.command($command): $e');
       if (e is StateError)
-        await close(reason: CONNECTION_CLOSED);
+        await close(reason: CONNECTION_CLOSED_REMOTE);
       else if (e is TimeoutException)
         await close(reason: CONNECTION_TIMEOUT);
       else
