@@ -59,9 +59,9 @@ void main() async {
         reason = CONNECTION_CLOSED_OS;
       else
         reason = CONNECTION_CLOSED_REMOTE;
-    } else if (error is TimeoutException) {
+    } else if (error is TimeoutException)
       reason = CONNECTION_TIMEOUT;
-    } else
+    else
       throw error;
 
     con.close(reason: reason);

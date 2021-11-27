@@ -125,7 +125,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
-
     if (!cs.connected) _channelList.clear();
 
     return Scaffold(
@@ -163,12 +162,11 @@ class _HomePageState extends State<HomePage> {
     final log = EventLogger.of(context);
     log.info('Refresh channel list.');
 
-    _loadHotList(context);
+    await _loadHotList(context);
   }
 
   Widget _buildBody(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
-
     if (cs.connected)
       return RefreshIndicator(
         onRefresh: () => refresh(context),

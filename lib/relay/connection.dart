@@ -157,9 +157,7 @@ class RelayConnection {
   }
 
   Future<void> handshake() async {
-    await command(
-      'handshake',
-    );
+    await command('handshake', callback: (b) async { /* TODO */ });
   }
 
   Future<void> init(String relayPassword) async {

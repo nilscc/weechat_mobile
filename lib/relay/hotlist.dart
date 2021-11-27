@@ -3,15 +3,13 @@ import 'package:weechat/relay/protocol/hdata.dart';
 
 class RelayHotlistEntry {
   final DateTime creationTime;
-  final String pointer, prevHotlist, nextHotlist, buffer;
+  final String pointer, buffer;
   final int priority;
   final List<int> count;
 
   RelayHotlistEntry({
     required this.creationTime,
     required this.pointer,
-    required this.prevHotlist,
-    required this.nextHotlist,
     required this.buffer,
     required this.priority,
     required this.count,
@@ -19,27 +17,27 @@ class RelayHotlistEntry {
 
   @override
   String toString() => 'RelyHotlistEntry(creationTime: $creationTime, '
-      'pointer: $pointer, prevHotlist: $prevHotlist, nextHotlist: $nextHotlist, '
-      'buffer: $buffer, priority: $priority, count: $count)';
+      'pointer: $pointer, buffer: $buffer, priority: $priority, count: $count)';
 }
 
-Future<List<RelayHotlistEntry>> loadRelayHotlist(RelayConnection connection) async {
+Future<List<RelayHotlistEntry>> loadRelayHotlist(
+  RelayConnection connection,
+) async {
   List<RelayHotlistEntry> hotlist = [];
 
   await connection.command(
-    'hdata hotlist:gui_hotlist(*)',
+    'hdata hotlist:gui_hotlist(*) '
+    'priority,creation_time.tv_sec,creation_time.tv_usec,buffer,count',
     callback: (reply) async {
       for (final RelayHData h in reply.objects()) {
         for (final o in h.objects) {
           hotlist.add(RelayHotlistEntry(
-            creationTime:
-                DateTime.fromMillisecondsSinceEpoch(o.values[5] * 1000 + (o.values[0] / 1000).round()),
             pointer: o.pPath[0],
-            prevHotlist: o.values[1],
-            nextHotlist: o.values[4],
-            buffer: o.values[6],
-            priority: o.values[2],
-            count: (o.values[3] as List).map((i) => i as int).toList(),
+            priority: o.values[0],
+            creationTime: DateTime.fromMicrosecondsSinceEpoch(
+                o.values[1].toInt() * 1000000 + o.values[2].toInt()),
+            buffer: o.values[3],
+            count: (o.values[4] as List).map((i) => i as int).toList(),
           ));
         }
       }
