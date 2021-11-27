@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:async/async.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/relay/protocol/message_body.dart';
@@ -14,6 +16,9 @@ const String CONNECTION_CLOSED_OS = 'Connection closed by OS.';
 const String CONNECTION_TIMEOUT = 'Connection timeout.';
 
 class RelayConnection {
+  static RelayConnection of(BuildContext context, {listen: false}) =>
+      Provider.of<RelayConnection>(context, listen: listen);
+
   SecureSocket? _socket;
 
   Map<String, RelayCallback> _callbacks = {};
@@ -154,9 +159,6 @@ class RelayConnection {
   Future<void> handshake() async {
     await command(
       'handshake',
-      callback: (body) async {
-        // TODO
-      },
     );
   }
 

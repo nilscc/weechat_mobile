@@ -25,7 +25,10 @@ class ChannelListItem extends StatelessWidget {
         bufferPointer: bufferPointer,
       );
 
-  void _openBuffer(BuildContext context) async {
+  Future<void> _openBuffer(
+    BuildContext context, {
+    Future Function()? onBufferRouteClosed,
+  }) async {
     final con = Provider.of<RelayConnection>(context, listen: false);
     final log = EventLogger.of(context);
 
@@ -42,6 +45,9 @@ class ChannelListItem extends StatelessWidget {
           buffer: b,
         ),
       );
+
+      // run callback if done
+      await onBufferRouteClosed?.call();
     } finally {
       // send desync when channel got closed
       log.info('Buffer desync: $name');
@@ -53,6 +59,7 @@ class ChannelListItem extends StatelessWidget {
   Widget build(
     BuildContext context, {
     RelayHotlistEntry? hotlist,
+    Future Function()? onBufferRouteClosed,
   }) {
     final theme = Theme.of(context);
 
@@ -85,7 +92,10 @@ class ChannelListItem extends StatelessWidget {
       key: key,
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       child: GestureDetector(
-        onTap: () => _openBuffer(context),
+        onTap: () => _openBuffer(
+          context,
+          onBufferRouteClosed: onBufferRouteClosed,
+        ),
         child: Card(
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),

@@ -57,8 +57,18 @@ class _ChannelPageState extends State<ChannelPage> {
 
   GlobalKey<ScaffoldMessengerState> _scaffoldKey = GlobalKey();
 
+  Future<void> _resetHotList(RelayConnection connection) async {
+    // reset hotlist for current buffer
+    await connection.command(
+      'input ${widget.buffer.bufferPointer} /buffer set hotlist -1',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final con = RelayConnection.of(context);
+    _resetHotList(con);
+
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -101,6 +111,7 @@ class _ChannelPageState extends State<ChannelPage> {
       await con.command('input ${widget.buffer.bufferPointer} $text');
       _inputController.text = '';
       _linesController.jumpTo(0);
+      await _resetHotList(con);
     }
   }
 

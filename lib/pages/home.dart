@@ -182,7 +182,13 @@ class _HomePageState extends State<HomePage> {
     return ReorderableListView(
       children: [
         Container(height: 5, key: UniqueKey()),
-        ..._channelList.map((e) => e.build(context, hotlist: _hotList[e.bufferPointer])),
+        ..._channelList.map((e) => e.build(
+              context,
+              hotlist: _hotList[e.bufferPointer],
+              onBufferRouteClosed: () async {
+                await _loadHotList(context);
+              },
+            )),
         Container(height: 100, key: UniqueKey()),
       ],
       onReorder: (int oldIndex, int newIndex) async {
