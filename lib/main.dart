@@ -62,8 +62,9 @@ void main() async {
     } else if (error is TimeoutException) {
       reason = CONNECTION_TIMEOUT;
     } else
-      reason = 'Uncaught exception: $error';
-    
+      //reason = 'Uncaught exception: $error';
+      throw error;
+
     con.close(reason: reason);
   });
 }

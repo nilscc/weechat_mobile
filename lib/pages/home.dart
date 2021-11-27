@@ -11,6 +11,7 @@ import 'package:weechat/pages/settings.dart';
 import 'package:weechat/pages/settings/config.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/connection/status.dart';
+import 'package:weechat/relay/hotlist.dart';
 import 'package:weechat/relay/protocol/hdata.dart';
 
 class HomePage extends StatefulWidget {
@@ -27,6 +28,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final List<ChannelListItem> _channelList = [];
+  final Map<String, RelayHotlistEntry> _hotList = {};
 
   void _connect(BuildContext context) async {
     final cfg = Config.of(context);
@@ -58,6 +60,7 @@ class _HomePageState extends State<HomePage> {
       con.startPingTimer();
 
       await _loadChannelList(context);
+      await _loadHotList(context);
     }
   }
 
@@ -101,11 +104,22 @@ class _HomePageState extends State<HomePage> {
         }
 
         setState(() {
+          // store channel list
           _channelList.clear();
           _channelList.addAll(l);
         });
       },
     );
+  }
+
+  Future<void> _loadHotList(BuildContext context) async {
+    final con = Provider.of<RelayConnection>(context, listen: false);
+
+    final hot = await loadRelayHotlist(con);
+    setState(() {
+      _hotList.clear();
+      for (final e in hot) _hotList[e.buffer] = e;
+    });
   }
 
   @override
@@ -145,15 +159,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> refresh(BuildContext context) async {
+    final log = EventLogger.of(context);
+    log.info('Refresh channel list.');
+
+    _loadHotList(context);
+  }
+
   Widget _buildBody(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
-    final log = EventLogger.of(context);
 
     if (cs.connected)
       return RefreshIndicator(
-        onRefresh: () async {
-          log.info('Refresh channel list.');
-        },
+        onRefresh: () => refresh(context),
         child: _buildChannelList(context),
       );
     else
@@ -164,7 +182,7 @@ class _HomePageState extends State<HomePage> {
     return ReorderableListView(
       children: [
         Container(height: 5, key: UniqueKey()),
-        ..._channelList.map((e) => e.build(context)),
+        ..._channelList.map((e) => e.build(context, hotlist: _hotList[e.bufferPointer])),
         Container(height: 100, key: UniqueKey()),
       ],
       onReorder: (int oldIndex, int newIndex) async {
