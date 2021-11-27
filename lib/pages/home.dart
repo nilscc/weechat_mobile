@@ -133,9 +133,7 @@ class _HomePageState extends State<HomePage> {
       ),
 
       // main body
-      body: cs.connected
-          ? _buildChannelList(context)
-          : _showConnectionErrors(context, reason: cs.reason),
+      body: _buildBody(context),
 
       // the connection status floating button
       floatingActionButton: FloatingActionButton(
@@ -145,6 +143,21 @@ class _HomePageState extends State<HomePage> {
         child: cs.connected ? Icon(Feather.log_out) : Icon(Feather.log_in),
       ),
     );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    final cs = RelayConnectionStatus.of(context, listen: true);
+    final log = EventLogger.of(context);
+
+    if (cs.connected)
+      return RefreshIndicator(
+        onRefresh: () async {
+          log.info('Refresh channel list.');
+        },
+        child: _buildChannelList(context),
+      );
+    else
+      return _showConnectionErrors(context, reason: cs.reason);
   }
 
   Widget _buildChannelList(BuildContext context) {
