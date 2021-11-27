@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/channel.dart';
+import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/connection.dart';
 
@@ -17,34 +18,49 @@ class ChannelListItem extends StatelessWidget {
     Key? key,
   }) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
+  RelayBuffer buffer(RelayConnection connection) => RelayBuffer(
+    relayConnection: connection,
+    name: name,
+    bufferPointer: bufferPointer,
+  );
+
+  void _openBuffer(BuildContext context) async {
     final con = Provider.of<RelayConnection>(context, listen: false);
+    final log = EventLogger.of(context);
+
+    // create relay buffer instance for channel
+    final b = buffer(con);
+
+    log.info('Buffer sync: $name');
+    b.sync();
+
+    try {
+      // open channel page
+      await Navigator.of(context).push(
+        ChannelPage.route(
+          buffer: b,
+        ),
+      );
+    } finally {
+      // send desync when channel got closed
+      log.info('Buffer desync: $name');
+      b.desync();
+    }
+  }
+
+  @override
+  Widget build(
+    BuildContext context, {
+    ChannelListItem? prev,
+    ChannelListItem? next,
+  }) {
     final theme = Theme.of(context);
 
     return Container(
       key: key,
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       child: GestureDetector(
-        onTap: () async {
-          // create relay buffer instance for channel
-          final buffer = RelayBuffer(
-            relayConnection: con,
-            name: name,
-            bufferPointer: bufferPointer,
-          );
-          buffer.sync();
-
-          try {
-            // open channel page
-            await Navigator.of(context).push(
-              ChannelPage.route(buffer: buffer),
-            );
-          } finally {
-            // send desync when channel got closed
-            buffer.desync();
-          }
-        },
+        onTap: () => _openBuffer(context),
         child: Card(
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
