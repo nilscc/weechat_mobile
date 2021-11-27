@@ -27,6 +27,9 @@ class RelayConnection {
 
   bool get isConnected => connectionStatus.connected;
 
+  String? _relayVersion;
+  String? get relayVersion => _relayVersion;
+
   void dispose() {
     _socket?.close();
   }
@@ -158,8 +161,17 @@ class RelayConnection {
   }
 
   Future<void> init(String relayPassword) async {
+    // authenticate with relay
     relayPassword = relayPassword.replaceAll(',', '\\,');
     await command('init password=$relayPassword');
+
+    // also get version info. this also verifies authentication was successful
+    await command(
+      'info version',
+      callback: (reply) async {
+        _relayVersion = reply.objects()[0].item2;
+      },
+    );
   }
 
   Future<Duration?> ping({Duration? timeout}) async {

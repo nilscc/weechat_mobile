@@ -6,6 +6,7 @@ import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/home/channel_list_item.dart';
 import 'package:weechat/pages/log.dart';
+import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/pages/settings.dart';
 import 'package:weechat/pages/settings/config.dart';
 import 'package:weechat/relay/connection.dart';
@@ -30,6 +31,7 @@ class _HomePageState extends State<HomePage> {
   void _connect(BuildContext context) async {
     final cfg = Config.of(context);
     final con = Provider.of<RelayConnection>(context, listen: false);
+    final log = EventLogger.of(context);
 
     if (con.isConnected) {
       await con.close();
@@ -50,6 +52,8 @@ class _HomePageState extends State<HomePage> {
 
       await con.handshake();
       await con.init(cfg.relayPassword!);
+
+      log.info('Connected relay version: ${con.relayVersion}');
 
       con.startPingTimer();
 
