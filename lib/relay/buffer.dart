@@ -80,7 +80,9 @@ class RelayBuffer extends ChangeNotifier {
 
   Future<void> desync() async {
     _removeCallbacks();
-    await relayConnection.command('desync $bufferPointer buffer');
+    await relayConnection
+        .command('input $bufferPointer /buffer set hotlist -1\n'
+            'desync $bufferPointer buffer');
   }
 
   String? _lastLinePointer;

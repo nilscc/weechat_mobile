@@ -36,7 +36,7 @@ class ChannelListItem extends StatelessWidget {
     final b = buffer(con);
 
     log.info('Buffer sync: $name');
-    b.sync();
+    await b.sync();
 
     try {
       // open channel page
@@ -45,13 +45,13 @@ class ChannelListItem extends StatelessWidget {
           buffer: b,
         ),
       );
-
-      // run callback if done
-      await onBufferRouteClosed?.call();
     } finally {
       // send desync when channel got closed
       log.info('Buffer desync: $name');
-      b.desync();
+      await b.desync();
+
+      // run callback if done
+      await onBufferRouteClosed?.call();
     }
   }
 
