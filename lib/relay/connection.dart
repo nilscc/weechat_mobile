@@ -58,6 +58,7 @@ class RelayConnection {
       _socket = null;
       _pingTimer = null;
       _pingOperation = null;
+      _callbacks.clear();
       connectionStatus.reason = reason;
       connectionStatus.connected = false;
     }

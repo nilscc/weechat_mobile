@@ -16,12 +16,13 @@ class LineItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     final df = DateFormat.Hm().format(line.date);
-    final tt = Theme.of(context).textTheme;
+    final th = Theme.of(context);
+    final tt = th.textTheme;
 
     final isSystem = line.prefix.isEmpty ||
         ['<--', '-->', '--', '===', '=!='].any((e) => line.prefix.endsWith(e));
     final alpha = isSystem ? 100 : 255;
-    final defaultColor = tt.bodyText2?.color ?? Colors.black;
+    final defaultColor = tt.bodyText2?.color ?? th.colorScheme.onSurface;
 
     final isAction = [' *'].any((e) => line.prefix.endsWith(e));
     var bodyStyle = tt.bodyText2;

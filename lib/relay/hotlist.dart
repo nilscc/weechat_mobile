@@ -21,13 +21,37 @@ class RelayHotlistEntry {
 }
 
 Future<List<RelayHotlistEntry>> loadRelayHotlist(
-  RelayConnection connection,
-) async {
+  RelayConnection connection, {
+  FutureOr Function(RelayHotlistEntry changedEntry)? hotlistChanged,
+}) async {
   List<RelayHotlistEntry> hotlist = [];
+
+  var syncCmd = '';
+  if (hotlistChanged != null) {
+    connection.addCallback('_hotlist_changed', (b) async {
+      for (final RelayHData h in b.objects()) {
+        for (final o in h.objects) {
+          await hotlistChanged.call(RelayHotlistEntry(
+            creationTime: DateTime.fromMicrosecondsSinceEpoch(
+                o.values[1].toInt() * 1000000 + o.values[2].toInt()),
+            pointer: o.pPath[0],
+            buffer: o.values[3],
+            priority: o.values[0],
+            count: (o.values[4] as List).map((e) => e as int).toList(),
+          ));
+        }
+      }
+      return true;
+    });
+
+    // immediately start syncing hotlist
+    syncCmd = '\nsync * hotlist';
+  }
 
   await connection.command(
     'hdata hotlist:gui_hotlist(*) '
-    'priority,creation_time.tv_sec,creation_time.tv_usec,buffer,count',
+    'priority,creation_time.tv_sec,creation_time.tv_usec,buffer,count'
+    '$syncCmd',
     callback: (reply) async {
       for (final RelayHData h in reply.objects()) {
         for (final o in h.objects) {
