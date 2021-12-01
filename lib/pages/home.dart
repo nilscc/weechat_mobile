@@ -240,6 +240,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _saveLayout(BuildContext context) {
-    final cfg = Config.of(context);
+    //final cfg = Config.of(context);
   }
 }
