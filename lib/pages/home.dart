@@ -115,7 +115,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadHotList(BuildContext context) async {
     final con = Provider.of<RelayConnection>(context, listen: false);
 
-    final hot = await loadRelayHotlist(con, hotlistChanged: (e) {
+    final hot = await loadRelayHotlist(con, hotlistChanged: (e) async {
       setState(() {
         _hotList[e.buffer] = e;
       });

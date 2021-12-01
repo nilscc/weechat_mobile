@@ -22,7 +22,7 @@ class RelayHotlistEntry {
 
 Future<List<RelayHotlistEntry>> loadRelayHotlist(
   RelayConnection connection, {
-  FutureOr Function(RelayHotlistEntry changedEntry)? hotlistChanged,
+  Future Function(RelayHotlistEntry changedEntry)? hotlistChanged,
 }) async {
   List<RelayHotlistEntry> hotlist = [];
 
