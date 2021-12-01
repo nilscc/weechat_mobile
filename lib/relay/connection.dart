@@ -20,6 +20,7 @@ class RelayConnection {
       Provider.of<RelayConnection>(context, listen: listen);
 
   SecureSocket? _socket;
+  StreamSubscription? _streamSubscription;
 
   Map<String, RelayCallback> _callbacks = {};
 
@@ -53,9 +54,11 @@ class RelayConnection {
         _eventLogger?.error('RelayConnection.close(): $e');
       }
 
-      _socket?.close();
+      await _streamSubscription?.cancel();
+      await _socket?.close();
     } finally {
       _socket = null;
+      _streamSubscription = null;
       _pingTimer = null;
       _pingOperation = null;
       _callbacks.clear();
@@ -78,9 +81,9 @@ class RelayConnection {
       );
 
       // start listening
-      _socket!.listen((event) {
+      _streamSubscription = _socket!.listen((event) async {
         final b = RelayParser(event).body();
-        _handleMessageBody(b);
+        await _handleMessageBody(b);
       });
 
       connectionStatus.connected = true;
