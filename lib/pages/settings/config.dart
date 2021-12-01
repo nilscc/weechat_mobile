@@ -25,8 +25,11 @@ class Config extends _ConfigBackend {
       this['uiShowCompletion'] = uiShowCompletion;
 
   bool? get uiShowSend => this['uiShowSend'];
-  set uiShowSend(bool? uiShowSend) =>
-      this['uiShowSend'] = uiShowSend;
+  set uiShowSend(bool? uiShowSend) => this['uiShowSend'] = uiShowSend;
+
+  bool? get changeBufferOnConnect => this['changeBufferOnConnect'];
+  set changeBufferOnConnect(bool? value) =>
+      this['changeBufferOnConnect'] = value;
 }
 
 class _ConfigBackend {

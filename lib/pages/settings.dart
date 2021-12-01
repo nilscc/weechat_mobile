@@ -17,6 +17,7 @@ class _SettingsState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final config = Config.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -26,6 +27,20 @@ class _SettingsState extends State<SettingsPage> {
         children: [
           ..._connectionSettings(context),
           ..._uiSettings(context),
+          // change buffer on remote checkbox
+          Container(
+            padding: EdgeInsets.only(top: 20),
+            child: CheckboxListTile(
+              value: config.changeBufferOnConnect ?? false,
+              onChanged: (value) {
+                setState(() {
+                  config.changeBufferOnConnect = value;
+                });
+              },
+              title: Text(loc.settingsConnectionChangeBufferOnConnectTitle),
+              subtitle: Text(loc.settingsConnectionChangeBufferOnConnectSubtitle),
+            ),
+          ),
         ],
       ),
     );

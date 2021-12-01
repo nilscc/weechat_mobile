@@ -113,7 +113,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadHotList(BuildContext context) async {
-    final con = Provider.of<RelayConnection>(context, listen: false);
+    final con = RelayConnection.of(context);
+    final cfg = Config.of(context);
 
     final hot = await loadRelayHotlist(con, hotlistChanged: (e) async {
       setState(() {
@@ -125,6 +126,12 @@ class _HomePageState extends State<HomePage> {
       _hotList.clear();
       for (final e in hot) _hotList[e.buffer] = e;
     });
+
+    // change buffer von remote if configured
+    if (cfg.changeBufferOnConnect == true && _hotList.isNotEmpty)
+      await con.command(
+        'input ${_hotList.values.first.buffer} /buffer weechat',
+      );
   }
 
   @override

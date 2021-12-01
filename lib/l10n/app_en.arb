@@ -11,6 +11,9 @@
   "settingsConnectionPort": "Port number",
   "settingsConnectionRelayPassword": "Relay password",
   "settingsConnectionVerifyButton": "Verify connection.",
+  "settingsConnectionChangeBufferOnConnectTitle": "Change Remote Buffer",
+  "settingsConnectionChangeBufferOnConnectSubtitle":
+  "Perform the command \"/buffer weechat\" on the remote and avoid an empty hotlist on the currently opened buffer.",
 
   "settingsUiTitle": "User Interface",
   "settingsUiSubtitle": "Configure look and feel of the user interface.",
