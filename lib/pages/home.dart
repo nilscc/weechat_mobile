@@ -157,7 +157,10 @@ class _HomePageState extends State<HomePage> {
       ),
 
       // main body
-      body: _buildBody(context),
+      body: SafeArea(
+        top: false, // covered by app bar
+        child: _buildBody(context),
+      ),
 
       // the connection status floating button
       floatingActionButton: FloatingActionButton(

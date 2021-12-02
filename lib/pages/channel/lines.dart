@@ -49,18 +49,14 @@ class _ChannelLinesState extends State<ChannelLines> {
     // update build, so load buffer again and listen
     final buffer = Provider.of<RelayBuffer>(context, listen: true);
 
-    return SafeArea(
-      bottom: false,
-      top: false,
-      child: ListView.builder(
-        controller: widget.scrollController,
-        shrinkWrap: true,
-        itemBuilder: (BuildContext context, int index) =>
-            _buildLineData(context, buffer.lines[index]),
-        itemCount: buffer.lines.length,
-        reverse: true,
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      ),
+    return ListView.builder(
+      controller: widget.scrollController,
+      shrinkWrap: true,
+      itemBuilder: (BuildContext context, int index) =>
+          _buildLineData(context, buffer.lines[index]),
+      itemCount: buffer.lines.length,
+      reverse: true,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
     );
   }
 

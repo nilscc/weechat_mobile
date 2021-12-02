@@ -79,14 +79,14 @@ class _ChannelPageState extends State<ChannelPage> {
           child: Text(widget.buffer.name),
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(child: _linesWidget(context), flex: 1),
-          SafeArea(
-            top: false,
-            child: _inputWidget(context),
-          ),
-        ],
+      body: SafeArea(
+        top: false, // covered by app bar
+        child: Column(
+          children: [
+            Expanded(child: _linesWidget(context), flex: 1),
+            _inputWidget(context),
+          ],
+        ),
       ),
     );
   }
