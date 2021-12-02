@@ -83,7 +83,7 @@ class _ChannelPageState extends State<ChannelPage> {
         children: [
           Expanded(child: _linesWidget(context), flex: 1),
           SafeArea(
-            bottom: true,
+            top: false,
             child: _inputWidget(context),
           ),
         ],

@@ -50,6 +50,8 @@ class _ChannelLinesState extends State<ChannelLines> {
     final buffer = Provider.of<RelayBuffer>(context, listen: true);
 
     return SafeArea(
+      bottom: false,
+      top: false,
       child: ListView.builder(
         controller: widget.scrollController,
         shrinkWrap: true,
