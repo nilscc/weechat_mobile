@@ -159,6 +159,7 @@ class _HomePageState extends State<HomePage> {
       // main body
       body: SafeArea(
         top: false, // covered by app bar
+        bottom: false, // covered by bottom padding of channel list
         child: _buildBody(context),
       ),
 
