@@ -96,7 +96,7 @@ class _ChannelPageState extends State<ChannelPage> {
   Widget _linesWidget(BuildContext context) => ChangeNotifierProvider.value(
         value: widget.buffer,
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+          padding: EdgeInsets.symmetric(horizontal: 10),
           child: ChannelLines(scrollController: _linesController),
         ),
       );
