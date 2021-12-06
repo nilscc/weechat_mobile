@@ -37,7 +37,7 @@ void main() {
 
 final _std01 = colorCodes[1],
     _ext214 = Color.fromARGB(0xFF, 255, 175, 0),
-    _opt01 = colorOptions[1]  ?? _defaultColor,
+    _opt01 = colorOptions[1] ?? _defaultColor,
     _opt30 = colorOptions[30] ?? _defaultColor,
     _opt40 = colorOptions[40] ?? _defaultColor;
 
@@ -120,15 +120,28 @@ final _tryParseColorInputs = {
   '@12345': null,
   '@asd': null,
   '@': null,
+  '@*00000': Tuple2(Colors.black, RelayAttribute(bold: true)),
+  '@_00000': Tuple2(Colors.black, RelayAttribute(underline: true)),
+  '@|*_00000': Tuple2(
+      Colors.black,
+      RelayAttribute(
+        keepAttributes: true,
+        bold: true,
+        underline: true,
+      )),
 };
 
-void _tryParseColor(String input, Color? expected) {
+void _tryParseColor(String input, var expected) {
   print(input);
 
   final it = input.runes.iterator;
 
-  Color? c = tryParseColor(it, _defaultColor);
-  expect(c, equals(expected));
+  final c = tryParseColor(it, _defaultColor);
+  if (expected is Color) {
+    expect(c?.item1, equals(expected));
+    expect(c?.item2, equals(null));
+  } else
+    expect(c, equals(expected));
 
   if (c == null)
     expect(it.rawIndex, equals(input.isEmpty ? -1 : 0));

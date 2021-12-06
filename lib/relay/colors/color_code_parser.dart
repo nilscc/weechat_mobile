@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tuple/tuple.dart';
 import 'package:weechat/relay/colors/color_codes.dart';
 import 'package:weechat/relay/colors/extended_definition.dart';
 
@@ -34,8 +35,9 @@ Color? tryParseColorOption(RuneIterator it, Color defaultColor) {
     return result;
 }
 
-Color? tryParseColor(RuneIterator it, Color defaultColor) {
+Tuple2<Color, RelayAttribute?>? tryParseColor(RuneIterator it, Color defaultColor) {
   Color? result;
+  RelayAttribute? attribute;
 
   if (!it.moveNext()) return null;
   final cur = it.rawIndex;
@@ -44,6 +46,9 @@ Color? tryParseColor(RuneIterator it, Color defaultColor) {
   // (total 5 digits)
   if (it.currentAsString == '@') {
     String s = '';
+
+    // parse optional attribute
+    attribute = tryParseAttribute(it);
 
     // lookup next 5 characters
     for (int i = 0; i < 5 && it.moveNext(); ++i) s += it.currentAsString;
@@ -72,7 +77,7 @@ Color? tryParseColor(RuneIterator it, Color defaultColor) {
     it.moveNext();
     return null;
   } else
-    return result;
+    return Tuple2(result, attribute);
 }
 
 class RelayAttribute {
@@ -191,19 +196,20 @@ class ColorCodeParser {
         final a = tryParseAttribute(iterator);
 
         // parse color
-        Color? c = tryParseColor(iterator, defaultFgColor);
+        final c = tryParseColor(iterator, defaultFgColor);
         if (c != null) {
-          fgColor = c;
-          attributes = a;
+          fgColor = c.item1;
+          attributes = a; // TODO: handle color attribute c.item2
           success = true;
         }
       }
 
       // background mode
       else if (iterator.currentAsString == 'B') {
-        Color? c = tryParseColor(iterator, defaultBgColor ?? defaultFgColor);
+        final c = tryParseColor(iterator, defaultBgColor ?? defaultFgColor);
         if (c != null) {
-          bgColor = c;
+          bgColor = c.item1;
+          // TODO: handle color attribute
           success = true;
         }
       }
@@ -214,14 +220,14 @@ class ColorCodeParser {
         final a = tryParseAttribute(iterator);
 
         // parse colors
-        Color? c1 = tryParseColor(iterator, defaultFgColor);
+        final c1 = tryParseColor(iterator, defaultFgColor);
         if (c1 != null) {
-          fgColor = c1;
-          attributes = a;
+          fgColor = c1.item1;
+          attributes = a; // TODO: handle color attribute c1.item2
           success = true;
 
           final idx = iterator.rawIndex;
-          Color? c2;
+          Tuple2<Color, RelayAttribute?>? c2;
 
           // peek if next character is combination character
           if (iterator.moveNext()) {
@@ -230,7 +236,7 @@ class ColorCodeParser {
           }
 
           if (c2 != null)
-            bgColor = c2;
+            bgColor = c2.item1; // TODO: handle color attribute
           else {
             iterator.reset(idx);
             iterator.moveNext();
