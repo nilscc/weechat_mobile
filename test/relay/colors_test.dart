@@ -63,6 +63,11 @@ void _parseColors() {
   expect(rt03.text.toPlainText(), equals('bla'));
   expect(rt03.text.style?.fontWeight, equals(FontWeight.bold));
   expect(rt03.text.style?.color, equals(colorCodes[1]));
+
+  final rt04 = parseColors('\x1A\x01\x19F|05Ja', _defaultColor);
+  expect(rt04.text.toPlainText(), equals('Ja'));
+  expect(rt04.text.style?.fontWeight, equals(FontWeight.bold));
+  expect(rt04.text.style?.color, equals(colorCodes[5]));
 }
 
 void _parseColorsExtended() {

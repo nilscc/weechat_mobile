@@ -138,19 +138,19 @@ RelayAttribute? tryParseAttribute(RuneIterator iterator) {
   RelayAttribute? result;
 
   while (iterator.moveNext()) {
-    if (['*', '/', '_', '|', '!'].contains(iterator.currentAsString)) {
+    if (['*', '/', '_', '|', '!', '\x01', '\x02', '\x03', '\x04'].contains(iterator.currentAsString)) {
       if (result == null)
         result = RelayAttribute();
 
-      if (iterator.currentAsString == '*')
+      if (['*', '\x01'].contains(iterator.currentAsString))
         result.bold = true;
-      else if (iterator.currentAsString == '/')
+      else if (['/', '\x03'].contains(iterator.currentAsString))
         result.italic = true;
-      else if (iterator.currentAsString == '_')
+      else if (['_', '\x04'].contains(iterator.currentAsString))
         result.underline = true;
       else if (iterator.currentAsString == '|')
         result.keepAttributes = true;
-      else if (iterator.currentAsString == '!')
+      else if (['!', '\x02'].contains(iterator.currentAsString))
         result.reverse = true;
     } else {
       iterator.movePrevious();

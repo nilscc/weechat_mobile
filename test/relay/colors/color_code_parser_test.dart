@@ -55,6 +55,12 @@ final _tryParseAttributeInputs = {
   '_': RelayAttribute(underline: true),
   '|': RelayAttribute(keepAttributes: true),
   '!': RelayAttribute(reverse: true),
+
+  // alternative input (used by 0x1A command)
+  '\x01': RelayAttribute(bold: true),
+  '\x03': RelayAttribute(italic: true),
+  '\x04': RelayAttribute(underline: true),
+  '\x02': RelayAttribute(reverse: true),
 };
 
 void _tryParseAttribute(String input, RelayAttribute? expected) {
