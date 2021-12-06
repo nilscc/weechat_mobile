@@ -176,6 +176,16 @@ class ColorCodeParser {
     this.defaultBgColor,
   });
 
+  void _setAttribute(RelayAttribute? other) {
+    if (other == null)
+      return;
+
+    if (attributes != null) {
+      attributes!.set(other);
+    } else
+      attributes = other;
+  }
+
   bool parse(RuneIterator iterator) {
     bool success = false;
 
@@ -198,8 +208,13 @@ class ColorCodeParser {
         // parse color
         final c = tryParseColor(iterator, defaultFgColor);
         if (c != null) {
+          // set foreground attribute
+          _setAttribute(a);
+
+          // set color + attribute
           fgColor = c.item1;
-          attributes = a; // TODO: handle color attribute c.item2
+          _setAttribute(c.item2);
+
           success = true;
         }
       }
@@ -209,7 +224,7 @@ class ColorCodeParser {
         final c = tryParseColor(iterator, defaultBgColor ?? defaultFgColor);
         if (c != null) {
           bgColor = c.item1;
-          // TODO: handle color attribute
+          _setAttribute(c.item2);
           success = true;
         }
       }
@@ -222,8 +237,13 @@ class ColorCodeParser {
         // parse colors
         final c1 = tryParseColor(iterator, defaultFgColor);
         if (c1 != null) {
+          // set star mode attribute
+          _setAttribute(a);
+
+          // set color & attribute
           fgColor = c1.item1;
-          attributes = a; // TODO: handle color attribute c1.item2
+          _setAttribute(c1.item2);
+
           success = true;
 
           final idx = iterator.rawIndex;
@@ -235,9 +255,10 @@ class ColorCodeParser {
               c2 = tryParseColor(iterator, defaultBgColor ?? defaultFgColor);
           }
 
-          if (c2 != null)
-            bgColor = c2.item1; // TODO: handle color attribute
-          else {
+          if (c2 != null) {
+            bgColor = c2.item1;
+            _setAttribute(c2.item2);
+          } else {
             iterator.reset(idx);
             iterator.moveNext();
           }

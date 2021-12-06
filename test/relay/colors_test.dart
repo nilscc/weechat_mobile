@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:weechat/relay/colors.dart';
 import 'package:weechat/relay/colors/color_codes.dart';
+import 'package:weechat/relay/colors/extended_definition.dart';
 
 void main() {
   group('stripColors', () {
@@ -64,10 +65,15 @@ void _parseColors() {
   expect(rt03.text.style?.fontWeight, equals(FontWeight.bold));
   expect(rt03.text.style?.color, equals(colorCodes[1]));
 
-  final rt04 = parseColors('\x1A\x01\x19F|05Ja', _defaultColor);
-  expect(rt04.text.toPlainText(), equals('Ja'));
+  final rt04 = parseColors('\x1A\x01\x19F|05test', _defaultColor);
+  expect(rt04.text.toPlainText(), equals('test'));
   expect(rt04.text.style?.fontWeight, equals(FontWeight.bold));
   expect(rt04.text.style?.color, equals(colorCodes[5]));
+
+  final rt05 = parseColors('\x19F@*00001test', _defaultColor);
+  expect(rt05.text.toPlainText(), equals('test'));
+  expect(rt05.text.style?.fontWeight, equals(FontWeight.bold));
+  expect(rt05.text.style?.color, equals(getExtendedColor(1)));
 }
 
 void _parseColorsExtended() {
