@@ -50,7 +50,7 @@ void main() async {
       connection: con,
       eventLogger: log,
     ));
-  }, (error, stack) {
+  }, (error, stack) async {
     log.error('runZonedGuarded: $error');
 
     var reason;
@@ -64,7 +64,7 @@ void main() async {
     else
       throw error;
 
-    con.close(reason: reason);
+    await con.close(reason: reason);
   });
 }
 

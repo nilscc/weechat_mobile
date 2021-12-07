@@ -52,7 +52,6 @@ class _HomePageState extends State<HomePage> {
         portNumber: cfg.portNumber!,
       );
 
-      await con.handshake();
       await con.init(cfg.relayPassword!);
 
       log.info('Connected relay version: ${con.relayVersion}');

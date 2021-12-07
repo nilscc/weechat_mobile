@@ -41,8 +41,7 @@ Future<List<RelayHotlistEntry>> loadRelayHotlist(
           ));
         }
       }
-      return true;
-    });
+    }, repeat: true);
 
     // immediately start syncing hotlist
     syncCmd = '\nsync * hotlist';

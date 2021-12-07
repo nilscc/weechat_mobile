@@ -9,8 +9,6 @@ import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/relay/protocol/message_body.dart';
 import 'package:weechat/relay/protocol/parser.dart';
 
-typedef Future<bool?> RelayCallback(RelayMessageBody body);
-
 const String CONNECTION_CLOSED_REMOTE = 'Connection closed by remote.';
 const String CONNECTION_CLOSED_OS = 'Connection closed by OS.';
 const String CONNECTION_TIMEOUT = 'Connection timeout.';
@@ -22,7 +20,7 @@ class RelayConnection {
   SecureSocket? _socket;
   StreamSubscription? _streamSubscription;
 
-  Map<String, RelayCallback> _callbacks = {};
+  Map<String, Completer<RelayMessageBody?>> _callbacks = {};
 
   RelayConnectionStatus connectionStatus;
 
@@ -42,8 +40,7 @@ class RelayConnection {
 
   Future<void> close({String? reason}) async {
     try {
-      // cancel any ongoing ping futures and timers
-      _pingOperation?.cancel();
+      // cancel ping timer
       _pingTimer?.cancel();
 
       // close connection properly
@@ -54,14 +51,15 @@ class RelayConnection {
         _eventLogger?.error('RelayConnection.close(): $e');
       }
 
-      await _streamSubscription?.cancel();
+      await _socketSubscription?.cancel();
       await _socket?.close();
     } finally {
       _socket = null;
-      _streamSubscription = null;
+      _socketSubscription = null;
+      _socketCreated = null;
       _pingTimer = null;
-      _pingOperation = null;
       _callbacks.clear();
+      _id = 0;
       connectionStatus.reason = reason;
       connectionStatus.connected = false;
     }
@@ -79,9 +77,10 @@ class RelayConnection {
         onBadCertificate: (c) => ignoreInvalidCertificate,
         timeout: Duration(seconds: 1),
       );
+      _socketCreated = DateTime.now();
 
       // start listening
-      _streamSubscription = _socket!.listen((event) async {
+      _socketSubscription = _socket!.listen((event) async {
         final b = RelayParser(event).body();
         await _handleMessageBody(b);
       });
@@ -97,38 +96,41 @@ class RelayConnection {
   int _id = 0;
   String _nextId() => '__cmd_${_id++}';
 
-  Future<void> command(
+  Future<T?> command<T>(
     String command, {
-    RelayCallback? callback,
+    FutureOr<T?> Function(RelayMessageBody)? callback,
     String? responseId,
-    Duration? callbackTimeout,
-    FutureOr Function()? onTimeout,
+    Duration? timeout,
+    FutureOr<T?> Function()? onTimeout,
   }) async {
-    if (_socket == null) return;
+    if (_socket == null) return null;
 
     // get next id if not set manually
     final id = responseId ?? _nextId();
 
     // setup callback
-    Future? f;
+    Completer<RelayMessageBody?>? c;
     if (callback != null) {
-      final c = Completer();
-      _callbacks[id] = (b) async {
-        final r = await callback(b);
-        c.complete();
-        return r;
-      };
-
-      // add timeout to future, otherwise it might get stuck when connection is lost
-      f = c.future.timeout(callbackTimeout ?? Duration(seconds: 5),
-          onTimeout: onTimeout);
+      c = Completer<RelayMessageBody?>();
+      _callbacks[id] = c;
     }
 
     // run command and catch possible exception
     try {
       _socket!.write('($id) $command\n');
       await _socket!.flush();
-      if (f != null) await f;
+
+      // execute callback
+      if (c != null) {
+        final m = await c.future.timeout(
+          timeout ?? _DEFAULT_TIMEOUT,
+          onTimeout: onTimeout == null ? null : () => null,
+        );
+        if (m != null)
+          return await callback?.call(m);
+        else
+          return await onTimeout?.call();
+      }
     } catch (e) {
       _eventLogger?.error('RelayConnection.command($command): $e');
       if (e is StateError)
@@ -140,8 +142,16 @@ class RelayConnection {
     }
   }
 
-  void addCallback(String id, RelayCallback callback) {
-    _callbacks[id] = callback;
+  void addCallback(String id, FutureOr Function(RelayMessageBody) callback,
+      {bool repeat: false}) {
+    final c = Completer<RelayMessageBody?>();
+    _callbacks[id] = c;
+    c.future.then((value) async {
+      if (value != null) {
+        await callback(value);
+        if (repeat) addCallback(id, callback, repeat: repeat);
+      }
+    });
   }
 
   void removeCallback(String id) {
@@ -150,18 +160,12 @@ class RelayConnection {
 
   Future<void> _handleMessageBody(final RelayMessageBody body) async {
     if (_callbacks.containsKey(body.id)) {
-      final cb = _callbacks.remove(body.id)!;
-      final b = await cb(body);
-      if (b == true && !_callbacks.containsKey(body.id))
-        _callbacks[body.id] = cb;
+      final c = _callbacks.remove(body.id)!;
+      c.complete(body);
     } else {
       _eventLogger
           ?.warning('Unhandled message body: ${body.id} ${body.objects()}');
     }
-  }
-
-  Future<void> handshake() async {
-    await command('handshake', callback: (b) async { /* TODO */ });
   }
 
   Future<void> init(String relayPassword) async {
@@ -179,49 +183,40 @@ class RelayConnection {
   }
 
   Future<Duration?> ping({Duration? timeout}) async {
-    final c = Completer();
-    final epoch = DateTime.now().microsecondsSinceEpoch;
-
-    // send ping to relay
-    await command(
-      'ping $epoch',
+    final t1 = DateTime.now().microsecondsSinceEpoch;
+    _eventLogger?.info('Ping? $t1');
+    return await command(
+      'ping $t1',
       responseId: '_pong',
-      callback: (b) async {
-        if (b.objects()[0] == epoch.toString()) {
-          final t = DateTime.now().microsecondsSinceEpoch;
-          c.complete(Duration(microseconds: t - epoch));
-        } else
-          c.complete(null);
-      },
-      callbackTimeout: timeout,
+      timeout: timeout,
       onTimeout: () {
-        c.complete(null);
+        _eventLogger?.warning('No PONG response from relay.');
+        return null;
+      },
+      callback: (b) {
+        final tr = b.objects()[0];
+        if (tr == t1.toString()) {
+          final t2 = DateTime.now().microsecondsSinceEpoch;
+          final p = Duration(microseconds: t2 - t1);
+          _eventLogger?.info('Pong! ${p.inMilliseconds}ms');
+          return p;
+        } else
+          _eventLogger?.warning('Invalid PONG response: $tr');
       },
     );
-
-    return await c.future;
   }
 
   Timer? _pingTimer;
-  CancelableOperation? _pingOperation;
 
   void startPingTimer({Duration? interval, Duration? timeout}) {
+    final created = _socketCreated;
     if (_pingTimer == null) {
       // start pinging periodically in background
       _pingTimer = Timer.periodic(
-        interval ?? Duration(seconds: 60),
-        (t) {
-          _eventLogger?.info('Ping?');
-          _pingOperation = CancelableOperation.fromFuture(Future(() async {
-            final p = await ping(timeout: timeout);
-            if (p != null) {
-              _eventLogger?.info('Pong! ${p.inMilliseconds}ms');
-              _pingOperation = null;
-            } else {
-              _eventLogger?.info('No PONG response from relay.');
-              close();
-            }
-          }));
+        interval ?? _DEFAULT_PING_INTERVAL,
+        (t) async {
+          final p = await ping(timeout: timeout);
+          if (p == null && created == _socketCreated) await close();
         },
       );
     }

@@ -111,12 +111,15 @@ class RelayBuffer extends ChangeNotifier {
   }
 
   void _addCallbacks() {
-    relayConnection.addCallback('_buffer_line_added', (body) async {
-      for (final hdata in body.objects())
-        for (final l in _handleLineData(hdata, 0)) lines.insert(0, l);
-      notifyListeners();
-      return true; // keep callback persistent
-    });
+    relayConnection.addCallback(
+      '_buffer_line_added',
+      (body) async {
+        for (final hdata in body.objects())
+          for (final l in _handleLineData(hdata, 0)) lines.insert(0, l);
+        notifyListeners();
+      },
+      repeat: true,
+    );
   }
 
   void _removeCallbacks() {
