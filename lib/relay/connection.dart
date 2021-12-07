@@ -13,12 +13,16 @@ const String CONNECTION_CLOSED_REMOTE = 'Connection closed by remote.';
 const String CONNECTION_CLOSED_OS = 'Connection closed by OS.';
 const String CONNECTION_TIMEOUT = 'Connection timeout.';
 
+const _DEFAULT_TIMEOUT = const Duration(seconds: 5);
+const _DEFAULT_PING_INTERVAL = const Duration(seconds: 10);
+
 class RelayConnection {
   static RelayConnection of(BuildContext context, {listen: false}) =>
       Provider.of<RelayConnection>(context, listen: listen);
 
   SecureSocket? _socket;
-  StreamSubscription? _streamSubscription;
+  StreamSubscription? _socketSubscription;
+  DateTime? _socketCreated;
 
   Map<String, Completer<RelayMessageBody?>> _callbacks = {};
 
@@ -33,10 +37,6 @@ class RelayConnection {
 
   String? _relayVersion;
   String? get relayVersion => _relayVersion;
-
-  void dispose() {
-    _socket?.close();
-  }
 
   Future<void> close({String? reason}) async {
     try {
