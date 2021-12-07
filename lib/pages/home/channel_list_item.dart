@@ -27,6 +27,7 @@ class ChannelListItem extends StatelessWidget {
 
   Future<void> _openBuffer(
     BuildContext context, {
+    Future Function()? beforeBufferOpened,
     Future Function()? onBufferRouteClosed,
   }) async {
     final con = Provider.of<RelayConnection>(context, listen: false);
@@ -39,6 +40,9 @@ class ChannelListItem extends StatelessWidget {
     await b.sync();
 
     try {
+      // run callback before opening buffer
+      await beforeBufferOpened?.call();
+
       // open channel page
       await Navigator.of(context).push(
         ChannelPage.route(
@@ -59,6 +63,7 @@ class ChannelListItem extends StatelessWidget {
   Widget build(
     BuildContext context, {
     RelayHotlistEntry? hotlist,
+    Future Function()? beforeBufferOpened,
     Future Function()? onBufferRouteClosed,
   }) {
     final theme = Theme.of(context);
@@ -94,6 +99,7 @@ class ChannelListItem extends StatelessWidget {
       child: GestureDetector(
         onTap: () => _openBuffer(
           context,
+          beforeBufferOpened: beforeBufferOpened,
           onBufferRouteClosed: onBufferRouteClosed,
         ),
         child: Card(

@@ -20,6 +20,10 @@ class RelayHotlistEntry {
       'pointer: $pointer, buffer: $buffer, priority: $priority, count: $count)';
 }
 
+Future<void> desyncHotlist(RelayConnection connection) async {
+  await connection.command('desync * hotlist');
+}
+
 Future<List<RelayHotlistEntry>> loadRelayHotlist(
   RelayConnection connection, {
   Future Function(RelayHotlistEntry changedEntry)? hotlistChanged,

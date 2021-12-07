@@ -197,6 +197,9 @@ class _HomePageState extends State<HomePage> {
         ..._channelList.map((e) => e.build(
               context,
               hotlist: _hotList[e.bufferPointer],
+              beforeBufferOpened: () async {
+                await desyncHotlist(RelayConnection.of(context));
+              },
               onBufferRouteClosed: () async {
                 await _loadHotList(context);
               },
