@@ -13,8 +13,8 @@ const String CONNECTION_CLOSED_REMOTE = 'Connection closed by remote.';
 const String CONNECTION_CLOSED_OS = 'Connection closed by OS.';
 const String CONNECTION_TIMEOUT = 'Connection timeout.';
 
-const _DEFAULT_TIMEOUT = const Duration(seconds: 5);
-const _DEFAULT_PING_INTERVAL = const Duration(seconds: 10);
+const _DEFAULT_TIMEOUT = const Duration(seconds: 10);
+const _DEFAULT_PING_INTERVAL = const Duration(seconds: 60);
 
 class RelayConnection {
   static RelayConnection of(BuildContext context, {listen: false}) =>
