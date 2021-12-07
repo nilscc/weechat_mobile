@@ -25,11 +25,7 @@ class ChannelListItem extends StatelessWidget {
         bufferPointer: bufferPointer,
       );
 
-  Future<void> _openBuffer(
-    BuildContext context, {
-    Future Function()? beforeBufferOpened,
-    Future Function()? onBufferRouteClosed,
-  }) async {
+  Future<void> _openBuffer(BuildContext context) async {
     final con = Provider.of<RelayConnection>(context, listen: false);
     final log = EventLogger.of(context);
 
@@ -40,9 +36,6 @@ class ChannelListItem extends StatelessWidget {
     await b.sync();
 
     try {
-      // run callback before opening buffer
-      await beforeBufferOpened?.call();
-
       // open channel page
       await Navigator.of(context).push(
         ChannelPage.route(
@@ -53,9 +46,6 @@ class ChannelListItem extends StatelessWidget {
       // send desync when channel got closed
       log.info('Buffer desync: $name');
       await b.desync();
-
-      // run callback if done
-      await onBufferRouteClosed?.call();
     }
   }
 
@@ -64,7 +54,7 @@ class ChannelListItem extends StatelessWidget {
     BuildContext context, {
     RelayHotlistEntry? hotlist,
     Future Function()? beforeBufferOpened,
-    Future Function()? onBufferRouteClosed,
+    Future Function()? afterBufferClosed,
   }) {
     final theme = Theme.of(context);
 
@@ -97,11 +87,11 @@ class ChannelListItem extends StatelessWidget {
       key: key,
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       child: GestureDetector(
-        onTap: () => _openBuffer(
-          context,
-          beforeBufferOpened: beforeBufferOpened,
-          onBufferRouteClosed: onBufferRouteClosed,
-        ),
+        onTap: () async {
+          await beforeBufferOpened?.call();
+          await _openBuffer(context);
+          await afterBufferClosed?.call();
+        },
         child: Card(
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),

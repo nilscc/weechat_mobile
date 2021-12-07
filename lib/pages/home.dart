@@ -58,8 +58,8 @@ class _HomePageState extends State<HomePage> {
 
       con.startPingTimer();
 
-      await _loadChannelList(context);
-      await _loadHotList(context);
+      await _loadChannelList(con);
+      await _loadHotList(con);
 
       // change buffer of remote if configured
       if (cfg.changeBufferOnConnect == true)
@@ -69,12 +69,10 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _loadChannelList(BuildContext context) async {
-    final con = Provider.of<RelayConnection>(context, listen: false);
-
+  Future<void> _loadChannelList(RelayConnection connection) async {
     // https://weechat.org/files/doc/devel/weechat_plugin_api.en.html#hdata_buffer
     // https://github.com/weechat/weechat/blob/12be3b8c332c75a398f77478fd8d62304c632a1e/src/gui/gui-buffer.h#L73
-    await con.command(
+    await connection.command(
       'hdata buffer:gui_buffers(*) plugin,short_name,title,nicklist_nicks_count,type',
       callback: (body) async {
         final List<ChannelListItem> l = [];
@@ -99,7 +97,8 @@ class _HomePageState extends State<HomePage> {
         final pluginPointers = l.map((e) => e.plugin).toSet();
         pluginPointers.removeWhere((e) => e == '0x0');
         for (final s in pluginPointers) {
-          await con.command('hdata plugin:$s name', callback: (body) async {
+          await connection.command('hdata plugin:$s name',
+              callback: (body) async {
             final h = body.objects()[0] as RelayHData;
             final n = h.objects[0].values[0];
             if (n != "irc") {
@@ -117,10 +116,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _loadHotList(BuildContext context) async {
-    final con = RelayConnection.of(context);
-
-    final hot = await loadRelayHotlist(con, hotlistChanged: (e) async {
+  Future<void> _loadHotList(RelayConnection connection) async {
+    final hot = await loadRelayHotlist(connection, hotlistChanged: (e) async {
       setState(() {
         _hotList[e.buffer] = e;
       });
@@ -174,9 +171,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> refresh(BuildContext context) async {
     final log = EventLogger.of(context);
-    log.info('Refresh channel list.');
+    final con = RelayConnection.of(context);
 
-    await _loadHotList(context);
+    log.info('Refresh channel list.');
+    await _loadHotList(con);
   }
 
   Widget _buildBody(BuildContext context) {
@@ -191,18 +189,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildChannelList(BuildContext context) {
+    final con = RelayConnection.of(context);
+
     return ReorderableListView(
       children: [
         Container(height: 5, key: UniqueKey()),
         ..._channelList.map((e) => e.build(
               context,
               hotlist: _hotList[e.bufferPointer],
-              beforeBufferOpened: () async {
-                await desyncHotlist(RelayConnection.of(context));
-              },
-              onBufferRouteClosed: () async {
-                await _loadHotList(context);
-              },
+              beforeBufferOpened: () => desyncHotlist(con),
+              afterBufferClosed: () => _loadHotList(con),
             )),
         Container(height: 100, key: UniqueKey()),
       ],
