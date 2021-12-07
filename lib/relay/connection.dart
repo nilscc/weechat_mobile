@@ -45,7 +45,7 @@ class RelayConnection {
 
       // close connection properly
       try {
-        _socket?.write('(quit) quit\n');
+        _socket?.write('(desync) desync\n(quit) quit\n');
         await _socket?.flush();
       } catch (e) {
         _eventLogger?.error('RelayConnection.close(): $e');
