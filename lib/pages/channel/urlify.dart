@@ -48,7 +48,7 @@ TextSpan urlify(TextSpan input,
                   ),
                 ),
                 onTap: () {
-                  launch(u.toString());
+                  launchUrl(u, mode: LaunchMode.externalApplication);
                 },
                 onLongPress: () async {
                   await Clipboard.setData(ClipboardData(text: u.toString()));
