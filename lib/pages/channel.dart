@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/channel/lines.dart';

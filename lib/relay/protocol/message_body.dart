@@ -2,7 +2,6 @@ import 'dart:collection';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:flutter/services.dart';
 import 'package:tuple/tuple.dart';
 import 'package:weechat/relay/protocol/decode_string.dart';
 import 'package:weechat/relay/protocol/hdata.dart';

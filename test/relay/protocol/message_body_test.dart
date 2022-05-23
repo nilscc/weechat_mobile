@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:weechat/relay/protocol/decode_string.dart';
 import 'package:weechat/relay/protocol/message_body.dart';
