@@ -3,6 +3,7 @@
   "errorConnectionClosedRemotely": "Verbindung wurde unerwartet getrennt.",
   "errorConnectionTimeout": "Verbindung wurde wegen Zeitüberschreitung unterbrochen.",
   "errorConnectionFailedInit": "Initialisierung gescheitert. Möglicherweise falsches Relay-Passwort?",
+  "errorConnectionInvalidCertificate": "Verifizierung des Serverzertifikats fehlgeschlagen.",
 
   "settingsTitle": "Einstellungen",
   "settingsConnectionTitle": "Verbindung",
@@ -10,6 +11,7 @@
   "settingsConnectionHostname": "Servername",
   "settingsConnectionPort": "Portnummer",
   "settingsConnectionRelayPassword": "Relay-Passwort",
+  "settingsConnectionVerifyCert": "Serverzertifikat verifizieren",
   "settingsConnectionVerifyButton": "Verbindung testen.",
   "settingsConnectionChangeBufferOnConnectTitle": "Remote Buffer wechseln",
   "settingsConnectionChangeBufferOnConnectSubtitle":

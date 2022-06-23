@@ -50,6 +50,7 @@ class _HomePageState extends State<HomePage> {
       await con.connect(
         hostName: cfg.hostName!,
         portNumber: cfg.portNumber!,
+        ignoreInvalidCertificate: !cfg.verifyCert!,
       );
 
       await con.init(cfg.relayPassword!);
@@ -230,7 +231,10 @@ class _HomePageState extends State<HomePage> {
       reason = l.errorConnectionClosedRemotely;
     else if (reason == CONNECTION_CLOSED_OS)
       reason = l.errorNotConnected;
-    else if (reason == CONNECTION_TIMEOUT) reason = l.errorConnectionTimeout;
+    else if (reason == CONNECTION_TIMEOUT)
+      reason = l.errorConnectionTimeout;
+    else if (reason == CERTIFICATE_VERIFY_FAILED)
+      reason = l.errorConnectionInvalidCertificate;
 
     return Container(
       padding: EdgeInsets.all(10),

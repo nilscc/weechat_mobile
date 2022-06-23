@@ -107,6 +107,18 @@ class _SettingsState extends State<SettingsPage> {
           onChanged: (value) => config.relayPassword = value,
         ),
       ),
+      Container(
+        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        child: CheckboxListTile(
+          value: config.verifyCert ?? true,
+          onChanged: (newValue) {
+            setState(() {
+              config.verifyCert = newValue;
+            });
+          },
+          title: Text(loc.settingsConnectionVerifyCert),
+        ),
+      ),
     ];
   }
 
