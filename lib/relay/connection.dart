@@ -141,6 +141,7 @@ class RelayConnection {
       else
         rethrow;
     }
+    return null;
   }
 
   void addCallback(String id, FutureOr Function(RelayMessageBody) callback,
@@ -206,6 +207,7 @@ class RelayConnection {
           return p;
         } else
           _eventLogger?.warning('Invalid PONG response: $tr');
+        return null;
       },
     );
   }
