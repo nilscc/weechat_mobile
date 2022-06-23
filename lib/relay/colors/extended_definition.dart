@@ -10,6 +10,7 @@ Color? getExtendedColor(int id) {
     final rgb = o[0]["rgb"]! as Map<String, int>;
     return Color.fromARGB(0xFF, rgb["r"]!, rgb["g"]!, rgb["b"]!);
   }
+  return null;
 }
 
 const EXTENDED_COLORS = [
