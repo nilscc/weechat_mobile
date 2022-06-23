@@ -20,6 +20,10 @@ class Config extends _ConfigBackend {
   set relayPassword(String? relayPassword) =>
       this['relayPassword'] = relayPassword;
 
+  bool? get verifyCert => this['verifyCert'];
+  set verifyCert(bool? verifyCert) =>
+      this['verifyCert'] = verifyCert;
+
   bool? get uiShowCompletion => this['uiShowCompletion'];
   set uiShowCompletion(bool? uiShowCompletion) =>
       this['uiShowCompletion'] = uiShowCompletion;

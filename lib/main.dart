@@ -61,6 +61,9 @@ void main() async {
         reason = CONNECTION_CLOSED_REMOTE;
     } else if (error is TimeoutException)
       reason = CONNECTION_TIMEOUT;
+    else if (error is HandshakeException && (error.osError?.message
+        .contains("CERTIFICATE_VERIFY_FAILED") ?? false))
+      reason = CERTIFICATE_VERIFY_FAILED;
     else
       throw error;
 

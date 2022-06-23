@@ -11,6 +11,8 @@ import 'package:weechat/relay/protocol/parser.dart';
 const String CONNECTION_CLOSED_REMOTE = 'Connection closed by remote.';
 const String CONNECTION_CLOSED_OS = 'Connection closed by OS.';
 const String CONNECTION_TIMEOUT = 'Connection timeout.';
+const String CERTIFICATE_VERIFY_FAILED = 'Failed to verify the server '
+    'certificate.';
 
 const _DEFAULT_TIMEOUT = const Duration(seconds: 10);
 const _DEFAULT_PING_INTERVAL = const Duration(seconds: 60);

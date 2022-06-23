@@ -3,6 +3,7 @@
   "errorConnectionClosedRemotely": "Connection was closed unexpectedly.",
   "errorConnectionTimeout": "Connection timed out.",
   "errorConnectionFailedInit": "Initialization failed. Possibly incorrect relay password?",
+  "errorConnectionInvalidCertificate": "Failed to verify the server certificate.",
 
   "settingsTitle": "Settings",
   "settingsConnectionTitle": "Connection",
@@ -10,6 +11,7 @@
   "settingsConnectionHostname": "Host name",
   "settingsConnectionPort": "Port number",
   "settingsConnectionRelayPassword": "Relay password",
+  "settingsConnectionVerifyCert": "Verify server certificate",
   "settingsConnectionVerifyButton": "Verify connection.",
   "settingsConnectionChangeBufferOnConnectTitle": "Change Remote Buffer",
   "settingsConnectionChangeBufferOnConnectSubtitle":
