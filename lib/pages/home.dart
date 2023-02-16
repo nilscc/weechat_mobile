@@ -82,10 +82,7 @@ class _HomePageState extends State<HomePage> {
       'hdata window:gui_current_window/buffer name',
       callback: (body) async {
         final h = body.objects()[0] as RelayHData;
-        print(h);
-
         final o = h.objects[0];
-        print(o);
         final bufferPtr = o.pPath[1];
         final name = o.values[0];
 
@@ -95,7 +92,7 @@ class _HomePageState extends State<HomePage> {
           name: name,
         );
 
-        buffer.sync();
+        await buffer.sync();
 
         setState(() {
           _channelView = ChannelView(buffer: buffer);
