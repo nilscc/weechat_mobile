@@ -7,12 +7,13 @@ import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/hotlist.dart';
 
 class ChannelListItem extends StatelessWidget {
-  final String bufferPointer, name, topic, plugin;
+  final String bufferPointer, name, fullName, topic, plugin;
   final int nickCount;
 
   ChannelListItem({
     required this.bufferPointer,
     required this.name,
+    required this.fullName,
     required this.topic,
     required this.plugin,
     required this.nickCount,
@@ -50,12 +51,12 @@ class ChannelListItem extends StatelessWidget {
   }
 
   @override
-  Widget build(
-    BuildContext context, {
+  Widget build(BuildContext context,
+  {
     RelayHotlistEntry? hotlist,
-    Future Function()? beforeBufferOpened,
-    Future Function()? afterBufferClosed,
+    Future Function(BuildContext)? openBuffer,
   }) {
+
     final theme = Theme.of(context);
 
     var titleColor = theme.disabledColor;
@@ -88,9 +89,7 @@ class ChannelListItem extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       child: GestureDetector(
         onTap: () async {
-          await beforeBufferOpened?.call();
-          await _openBuffer(context);
-          await afterBufferClosed?.call();
+          await openBuffer?.call(context);
         },
         child: Card(
           child: Container(
