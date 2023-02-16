@@ -8,7 +8,6 @@ import 'package:weechat/relay/completion.dart';
 import 'package:weechat/relay/connection.dart';
 
 class ChannelView extends StatefulWidget {
-
   final RelayBuffer buffer;
 
   ChannelView({required this.buffer});
@@ -19,37 +18,25 @@ class ChannelView extends StatefulWidget {
 
 class _ChannelViewState extends State<ChannelView> {
   @override
-  Widget build(BuildContext context) {
-    final con = RelayConnection.of(context);
-    return SafeArea(
-      top: false, // covered by app bar
-      child: Column(
-        children: [
-          Expanded(child: _linesWidget(context), flex: 1),
-          _inputWidget(context),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _resetHotList(RelayConnection connection) async {
-    // TODO: check if buffer is still open in current window first
-    // reset hotlist for current buffer
-    await connection.command(
-      'input ${widget.buffer.bufferPointer} /buffer set hotlist -1',
-    );
-  }
-
+  Widget build(BuildContext context) => SafeArea(
+        top: false, // covered by app bar
+        child: Column(
+          children: [
+            Expanded(child: _linesWidget(context), flex: 1),
+            _inputWidget(context),
+          ],
+        ),
+      );
 
   final _linesController = ScrollController();
 
   Widget _linesWidget(BuildContext context) => ChangeNotifierProvider.value(
-    value: widget.buffer,
-    child: Container(
-      padding: EdgeInsets.symmetric(horizontal: 10),
-      child: ChannelLines(scrollController: _linesController),
-    ),
-  );
+        value: widget.buffer,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child: ChannelLines(scrollController: _linesController),
+        ),
+      );
 
   final _inputController = TextEditingController();
 
@@ -61,7 +48,6 @@ class _ChannelViewState extends State<ChannelView> {
       await con.command('input ${widget.buffer.bufferPointer} $text');
       _inputController.text = '';
       _linesController.jumpTo(0);
-      await _resetHotList(con);
     }
   }
 

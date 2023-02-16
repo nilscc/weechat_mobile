@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadCurrentGuiBuffer(RelayConnection connection) async {
     return connection.command(
-      'hdata window:gui_current_window/buffer name',
+      'hdata window:gui_current_window/buffer short_name',
       callback: (body) async {
         final h = body.objects()[0] as RelayHData;
         final o = h.objects[0];
