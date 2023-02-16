@@ -173,7 +173,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       drawer: _channelListDrawer(context),
       appBar: AppBar(
-        title: Text(widget.title),
+        title: _title(),
         actions: [
           IconButton(
             onPressed: () {
@@ -197,13 +197,23 @@ class _HomePageState extends State<HomePage> {
       ),
 
       // the connection status floating button
-      floatingActionButton: /* cs.connected ? null : */ FloatingActionButton(
-        onPressed: () => _connect(context),
-        tooltip: 'Increment',
-        backgroundColor: cs.connected ? Colors.green : Colors.red,
-        child: cs.connected ? Icon(Feather.log_out) : Icon(Feather.log_in),
-      ),
+      floatingActionButton: cs.connected
+          ? null
+          : FloatingActionButton(
+              onPressed: () => _connect(context),
+              tooltip: 'Increment',
+              backgroundColor: cs.connected ? Colors.green : Colors.red,
+              child:
+                  cs.connected ? Icon(Feather.log_out) : Icon(Feather.log_in),
+            ),
     );
+  }
+
+  Widget _title() {
+    if (_channelView != null)
+      return Text(_channelView!.buffer.name);
+    else
+      return Text(widget.title);
   }
 
   Widget _buildBody(BuildContext context) {
@@ -214,23 +224,23 @@ class _HomePageState extends State<HomePage> {
       return _showConnectionErrors(context, reason: cs.reason);
   }
 
-  Drawer? _channelListDrawer(BuildContext context) {
+  Widget? _channelListDrawer(BuildContext context) {
     final con = RelayConnection.of(context, listen: false);
     if (!con.isConnected) return null;
 
-    return Drawer(
-      child: ListView(
-        children: [
-          Container(height: 5, key: UniqueKey()),
-          ..._channelList.map((e) => e.build(
-                context,
-                hotlist: _hotList[e.bufferPointer],
-                openBuffer: (_) => _openBuffer(context, e),
-                //beforeBufferOpened: () => desyncHotlist(con),
-                //afterBufferClosed: () => _loadHotList(con),
-              )),
-          Container(height: 100, key: UniqueKey()),
-        ],
+    return Builder(
+      builder: (context) => Drawer(
+        child: ListView(
+          children: [
+            Container(height: 5, key: UniqueKey()),
+            ..._channelList.map((e) => e.build(
+                  context,
+                  hotlist: _hotList[e.bufferPointer],
+                  openBuffer: (context) => _openBuffer(context, e),
+                )),
+            Container(height: 100, key: UniqueKey()),
+          ],
+        ),
       ),
     );
   }
