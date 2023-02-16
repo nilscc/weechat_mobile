@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
-import 'package:weechat/pages/channel/urlify.dart';
+import 'package:weechat/widgets/channel/urlify.dart';
 import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/colors.dart';
 

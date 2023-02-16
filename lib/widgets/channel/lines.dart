@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weechat/pages/channel/line_item.dart';
+import 'package:weechat/widgets/channel/line_item.dart';
 import 'package:weechat/relay/buffer.dart';
 
 class ChannelLines extends StatefulWidget {

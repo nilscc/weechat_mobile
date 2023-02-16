@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:weechat/pages/channel/lines.dart';
+import 'package:weechat/widgets/channel/lines.dart';
 import 'package:weechat/pages/home.dart';
 import 'package:weechat/pages/settings/config.dart';
 import 'package:weechat/relay/buffer.dart';
