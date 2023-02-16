@@ -9,10 +9,12 @@ import 'package:weechat/pages/log.dart';
 import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/pages/settings.dart';
 import 'package:weechat/pages/settings/config.dart';
+import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/relay/hotlist.dart';
 import 'package:weechat/relay/protocol/hdata.dart';
+import 'package:weechat/widgets/channel_view.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -30,16 +32,25 @@ class _HomePageState extends State<HomePage> {
   final List<ChannelListItem> _channelList = [];
   final Map<String, RelayHotlistEntry> _hotList = {};
 
+  ChannelView? _channelView;
+
+  void _disconnect(BuildContext context) async {
+    final con = Provider.of<RelayConnection>(context, listen: false);
+
+    await con.close();
+    setState(() {
+      _channelList.clear();
+      _channelView = null;
+    });
+  }
+
   void _connect(BuildContext context) async {
     final cfg = Config.of(context);
     final con = Provider.of<RelayConnection>(context, listen: false);
     final log = EventLogger.of(context);
 
     if (con.isConnected) {
-      await con.close();
-      setState(() {
-        _channelList.clear();
-      });
+      _disconnect(context);
     } else {
       if ((cfg.hostName ?? '').isEmpty ||
           cfg.portNumber == null ||
@@ -59,15 +70,38 @@ class _HomePageState extends State<HomePage> {
 
       con.startPingTimer();
 
-      await _loadChannelList(con);
-      await _loadHotList(con);
+      await _loadCurrentGuiBuffer(con);
 
-      // change buffer of remote if configured
-      if (cfg.changeBufferOnConnect == true)
-        await con.command(
-          'input core.weechat /buffer weechat',
-        );
+      //await _loadChannelList(con);
+      //await _loadHotList(con);
     }
+  }
+
+  Future<void> _loadCurrentGuiBuffer(RelayConnection connection) async {
+    return connection.command(
+      'hdata window:gui_current_window/buffer name',
+      callback: (body) async {
+        final h = body.objects()[0] as RelayHData;
+        print(h);
+
+        final o = h.objects[0];
+        print(o);
+        final bufferPtr = o.pPath[1];
+        final name = o.values[0];
+
+        final buffer = RelayBuffer(
+          relayConnection: connection,
+          bufferPointer: bufferPtr,
+          name: name,
+        );
+
+        buffer.sync();
+
+        setState(() {
+          _channelView = ChannelView(buffer: buffer);
+        });
+      },
+    );
   }
 
   Future<void> _loadChannelList(RelayConnection connection) async {
@@ -180,11 +214,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildBody(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
-    if (cs.connected)
-      return RefreshIndicator(
-        onRefresh: () => refresh(context),
-        child: _buildChannelList(context),
-      );
+    if (cs.connected && _channelView != null)
+      return _channelView!;
     else
       return _showConnectionErrors(context, reason: cs.reason);
   }
