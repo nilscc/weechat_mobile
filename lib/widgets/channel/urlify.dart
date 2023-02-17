@@ -39,23 +39,26 @@ TextSpan urlify(TextSpan input,
 
             // widget for the URL
             WidgetSpan(
-              child: GestureDetector(
-                child: RichText(
-                  text: TextSpan(
-                    style: (input.style ?? TextStyle())
-                        .copyWith(color: Colors.blue),
-                    text: words[idx],
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  child: RichText(
+                    text: TextSpan(
+                      style: (input.style ?? TextStyle())
+                          .copyWith(color: Colors.blue),
+                      text: words[idx],
+                    ),
                   ),
+                  onTap: () {
+                    launchUrl(u, mode: LaunchMode.externalApplication);
+                  },
+                  onLongPress: () async {
+                    await Clipboard.setData(ClipboardData(text: u.toString()));
+                    onNotification?.call(
+                        localizations?.urlifyCopiedMessage(u.toString()) ??
+                            u.toString());
+                  },
                 ),
-                onTap: () {
-                  launchUrl(u, mode: LaunchMode.externalApplication);
-                },
-                onLongPress: () async {
-                  await Clipboard.setData(ClipboardData(text: u.toString()));
-                  onNotification?.call(
-                      localizations?.urlifyCopiedMessage(u.toString()) ??
-                          u.toString());
-                },
               ),
             ),
           ];
