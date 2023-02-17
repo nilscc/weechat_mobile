@@ -69,7 +69,6 @@ class _ChannelLinesState extends State<ChannelLines> {
               _buildLineData(context, buffer.lines[index]),
           itemCount: buffer.lines.length,
           reverse: true,
-          //keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         ),
       ),
     );
