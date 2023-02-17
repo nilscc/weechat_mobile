@@ -47,6 +47,7 @@ class _ChannelViewState extends State<ChannelView> {
   void initState() {
     super.initState();
 
+    // handle tab events in focus node of input field
     _inputFocusNode = FocusNode(
       debugLabel: "_inputFocusNode",
       onKey: (node, event) {
@@ -59,6 +60,9 @@ class _ChannelViewState extends State<ChannelView> {
         }
       },
     );
+
+    // automatically focus on the input field when opening a new channel
+    _inputFocusNode.requestFocus();
   }
 
   RelayCompletion? _completion;
@@ -80,12 +84,12 @@ class _ChannelViewState extends State<ChannelView> {
         _inputController.selection.base.offset);
 
     if (_completion != null) {
-    final n = _completion!.next();
-    _inputController.text = n.item1;
-    _inputController.selection = TextSelection(
-      baseOffset: n.item2,
-      extentOffset: n.item2,
-    );
+      final n = _completion!.next();
+      _inputController.text = n.item1;
+      _inputController.selection = TextSelection(
+        baseOffset: n.item2,
+        extentOffset: n.item2,
+      );
     }
   }
 
