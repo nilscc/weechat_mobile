@@ -22,10 +22,10 @@ class LineItem extends StatelessWidget {
     final isSystem = line.prefix.isEmpty ||
         ['<--', '-->', '--', '===', '=!='].any((e) => line.prefix.endsWith(e));
     final alpha = isSystem ? 100 : 255;
-    final defaultColor = tt.bodyText2?.color ?? th.colorScheme.onSurface;
+    final defaultColor = tt.bodyMedium?.color ?? th.colorScheme.onSurface;
 
     final isAction = [' *'].any((e) => line.prefix.endsWith(e));
-    var bodyStyle = tt.bodyText2;
+    var bodyStyle = tt.bodyMedium;
     if (isAction) bodyStyle = bodyStyle?.copyWith(fontStyle: FontStyle.italic);
 
     //print('<${line.prefix}> ${line.message} (${line.message.codeUnits.map((e) => e.toRadixString(16)).toList()})');
@@ -41,7 +41,7 @@ class LineItem extends StatelessWidget {
       child: RichText(
         text: TextSpan(
           text: '$df',
-          style: tt.bodyText2?.copyWith(
+          style: tt.bodyMedium?.copyWith(
             fontFeatures: [FontFeature.tabularFigures()],
             color: line.highlight ? Colors.white : Colors.grey.withAlpha(100),
           ),
@@ -53,10 +53,10 @@ class LineItem extends StatelessWidget {
       text: TextSpan(
         style: bodyStyle,
         children: [
-          if (!(isSystem || isAction)) TextSpan(text: '<', style: tt.bodyText2),
+          if (!(isSystem || isAction)) TextSpan(text: '<', style: tt.bodyMedium),
           if (!isAction) prefixRT,
           if (!isAction && line.prefix.isNotEmpty)
-            TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyText2),
+            TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyMedium),
           urlify(messageRT, onNotification: (msg) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(msg),

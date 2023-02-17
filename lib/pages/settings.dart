@@ -17,7 +17,6 @@ class _SettingsState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final config = Config.of(context);
 
     return Scaffold(
       appBar: AppBar(

@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 class Config extends _ConfigBackend {
   Config({required String path}) : super(path: path);
 
-  static Config of(BuildContext context, {bool listen: false}) =>
+  static Config of(BuildContext context, {bool listen = false}) =>
       Provider.of(context, listen: listen);
 
   String? get hostName => this['hostName'];

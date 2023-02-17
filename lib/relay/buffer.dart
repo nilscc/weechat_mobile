@@ -87,7 +87,7 @@ class RelayBuffer extends ChangeNotifier {
 
   String? _lastLinePointer;
 
-  Future<void> sync({int lastLineCount: 50}) async {
+  Future<void> sync({int lastLineCount = 50}) async {
     _addCallbacks();
 
     // hdata command to receive recent lines
@@ -126,7 +126,7 @@ class RelayBuffer extends ChangeNotifier {
     relayConnection.removeCallback('_buffer_line_added');
   }
 
-  Future<void> loadNext({int lineCount: 50}) async {
+  Future<void> loadNext({int lineCount = 50}) async {
     // hdata command to receive recent lines
     final hdataCmd = 'hdata'
         ' line:$_lastLinePointer/prev_line(-$lineCount)/data'

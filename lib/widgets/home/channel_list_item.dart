@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:weechat/pages/channel.dart';
-import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/hotlist.dart';
@@ -25,30 +22,6 @@ class ChannelListItem extends StatelessWidget {
         name: name,
         bufferPointer: bufferPointer,
       );
-
-  Future<void> _openBuffer(BuildContext context) async {
-    final con = Provider.of<RelayConnection>(context, listen: false);
-    final log = EventLogger.of(context);
-
-    // create relay buffer instance for channel
-    final b = buffer(con);
-
-    log.info('Buffer sync: $name');
-    await b.sync();
-
-    try {
-      // open channel page
-      await Navigator.of(context).push(
-        ChannelPage.route(
-          buffer: b,
-        ),
-      );
-    } finally {
-      // send desync when channel got closed
-      log.info('Buffer desync: $name');
-      await b.desync();
-    }
-  }
 
   @override
   Widget build(BuildContext context,
@@ -77,10 +50,10 @@ class ChannelListItem extends StatelessWidget {
         break;
     }
 
-    var titleStyle = theme.textTheme.headline6?.copyWith(
+    var titleStyle = theme.textTheme.titleLarge?.copyWith(
       color: titleColor,
     );
-    var captionStyle = theme.textTheme.caption?.copyWith(
+    var captionStyle = theme.textTheme.bodySmall?.copyWith(
       color: captionColor,
     );
 

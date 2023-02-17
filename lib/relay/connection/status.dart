@@ -7,7 +7,7 @@ class RelayConnectionStatus extends ChangeNotifier {
 
   RelayConnectionStatus({this.eventLogger});
 
-  static RelayConnectionStatus of(BuildContext context, {bool listen: false}) =>
+  static RelayConnectionStatus of(BuildContext context, {bool listen = false}) =>
       Provider.of(context, listen: listen);
 
   bool _connected = false;

@@ -13,7 +13,7 @@ class EventLogger extends ChangeNotifier {
 
   List<Tuple3<DateTime, LogType, String>> get messages => _messages;
 
-  static EventLogger of(BuildContext context, {bool listen: false}) =>
+  static EventLogger of(BuildContext context, {bool listen = false}) =>
       Provider.of<EventLogger>(context, listen: listen);
 
   void log(LogType type, String message, {DateTime? dateTime}) {

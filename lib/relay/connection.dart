@@ -18,7 +18,7 @@ const _DEFAULT_TIMEOUT = const Duration(seconds: 10);
 const _DEFAULT_PING_INTERVAL = const Duration(seconds: 60);
 
 class RelayConnection {
-  static RelayConnection of(BuildContext context, {listen: false}) =>
+  static RelayConnection of(BuildContext context, {listen = false}) =>
       Provider.of<RelayConnection>(context, listen: listen);
 
   SecureSocket? _socket;
@@ -69,7 +69,7 @@ class RelayConnection {
   Future<void> connect({
     required String hostName,
     required int portNumber,
-    bool ignoreInvalidCertificate: true,
+    bool ignoreInvalidCertificate = true,
   }) async {
     try {
       _socket = await SecureSocket.connect(
@@ -145,7 +145,7 @@ class RelayConnection {
   }
 
   void addCallback(String id, FutureOr Function(RelayMessageBody) callback,
-      {bool repeat: false}) {
+      {bool repeat = false}) {
     final c = Completer<RelayMessageBody?>();
     _callbacks[id] = c;
     c.future.then((value) async {

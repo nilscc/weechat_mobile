@@ -133,9 +133,11 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
+    final con = RelayConnection.of(context);
 
     return Scaffold(
       drawer: _channelListDrawer(context),
+      onDrawerChanged: (isOpen) => _channelListDrawerChanged(con, isOpen),
       appBar: AppBar(
         title: _title(),
         actions: [
@@ -191,15 +193,22 @@ class _HomePageState extends State<HomePage> {
   Future<Tuple2<List<ChannelListItem>, List<RelayHotlistEntry>>>?
       _channelFuture;
 
+  void _channelListDrawerChanged(RelayConnection connection, bool isOpened) {
+    setState(() {
+      if (isOpened)
+        _channelFuture = Future(() async {
+          final l = await _loadChannelList(connection);
+          final h = await _loadHotList(connection);
+          return Tuple2(l, h);
+        });
+      else
+        _channelFuture = null;
+    });
+  }
+
   Widget? _channelListDrawer(BuildContext context) {
     final con = RelayConnection.of(context, listen: false);
     if (!con.isConnected) return null;
-
-    _channelFuture = Future(() async {
-      final l = await _loadChannelList(con);
-      final h = await _loadHotList(con);
-      return Tuple2(l, h);
-    });
 
     return Drawer(
       child: FutureBuilder(
