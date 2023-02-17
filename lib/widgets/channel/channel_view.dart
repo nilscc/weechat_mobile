@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/widgets/channel/lines.dart';
@@ -40,6 +41,26 @@ class _ChannelViewState extends State<ChannelView> {
 
   final _inputController = TextEditingController();
 
+  late final FocusNode _inputFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _inputFocusNode = FocusNode(
+      debugLabel: "_inputFocusNode",
+      onKey: (node, event) {
+        if (event is RawKeyDownEvent && event.logicalKey.keyLabel == 'Tab') {
+          final con = RelayConnection.of(node.context!);
+          _complete(con);
+          return KeyEventResult.handled;
+        } else {
+          return KeyEventResult.ignored;
+        }
+      },
+    );
+  }
+
   RelayCompletion? _completion;
 
   void _send(RelayConnection con) async {
@@ -49,6 +70,21 @@ class _ChannelViewState extends State<ChannelView> {
       _inputController.text = '';
       _linesController.jumpTo(0);
     }
+  }
+
+  void _complete(RelayConnection connection) async {
+    _completion ??= await RelayCompletion.load(
+        connection,
+        widget.buffer.bufferPointer,
+        _inputController.text,
+        _inputController.selection.base.offset);
+
+    final n = _completion!.next();
+    _inputController.text = n.item1;
+    _inputController.selection = TextSelection(
+      baseOffset: n.item2,
+      extentOffset: n.item2,
+    );
   }
 
   Widget _inputWidget(BuildContext context) {
@@ -74,6 +110,7 @@ class _ChannelViewState extends State<ChannelView> {
                   _completion = null;
                 },
                 onEditingComplete: () => _send(con),
+                focusNode: _inputFocusNode,
               ),
             ),
             if (cfg.uiShowCompletion ?? true)
@@ -81,22 +118,7 @@ class _ChannelViewState extends State<ChannelView> {
                 padding: EdgeInsets.zero,
                 child: IconButton(
                   icon: const Icon(Icons.keyboard_tab),
-                  onPressed: () async {
-                    _completion ??= await RelayCompletion.load(
-                        con,
-                        widget.buffer.bufferPointer,
-                        _inputController.text,
-                        _inputController.selection.base.offset);
-
-                    if (_completion != null) {
-                      final n = _completion!.next();
-                      _inputController.text = n.item1;
-                      _inputController.selection = TextSelection(
-                        baseOffset: n.item2,
-                        extentOffset: n.item2,
-                      );
-                    }
-                  },
+                  onPressed: () => _complete(con),
                 ),
               ),
             if (cfg.uiShowSend ?? false)
