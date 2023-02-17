@@ -10,7 +10,7 @@ import 'package:weechat/relay/connection.dart';
 class ChannelView extends StatefulWidget {
   final RelayBuffer buffer;
 
-  ChannelView({required this.buffer});
+  ChannelView({required this.buffer, Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ChannelViewState();

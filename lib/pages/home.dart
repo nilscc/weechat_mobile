@@ -124,22 +124,6 @@ class _HomePageState extends State<HomePage> {
           }
         }
 
-        // https://weechat.org/files/doc/devel/weechat_plugin_api.en.html#hdata_plugin
-        // https://github.com/weechat/weechat/blob/5ae4af1549b9ec3c160b7d5d1118b3aa38d8e03d/src/plugins/weechat-plugin.h#L251
-
-        // final pluginPointers = l.map((e) => e.plugin).toSet();
-        // pluginPointers.removeWhere((e) => e == '0x0');
-        // for (final s in pluginPointers) {
-        //   await connection.command('hdata plugin:$s name',
-        //       callback: (body) async {
-        //     final h = body.objects()[0] as RelayHData;
-        //     final n = h.objects[0].values[0];
-        //     if (n != "irc") {
-        //       l.removeWhere((e) => e.plugin == s);
-        //     }
-        //   });
-        // }
-
         setState(() {
           // store channel list
           _channelList.clear();
@@ -270,12 +254,15 @@ class _HomePageState extends State<HomePage> {
 
     await buffer.sync();
 
-    setState(() {
-      _channelView = ChannelView(buffer: buffer);
-    });
-
-    // finally, close the drawer
+    // close the drawer
     Scaffold.of(context).closeDrawer();
+
+    setState(() {
+      _channelView = ChannelView(
+        buffer: buffer,
+        key: ValueKey(bufferFullName),
+      );
+    });
   }
 
   // Widget _buildChannelList(BuildContext context) {
