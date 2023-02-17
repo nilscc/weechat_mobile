@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:weechat/pages/channel.dart';
-import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/hotlist.dart';
 
 class ChannelListItem extends StatelessWidget {
-  final String bufferPointer, name, topic, plugin;
+  final String bufferPointer, name, fullName, topic, plugin;
   final int nickCount;
 
-  ChannelListItem({
+  const ChannelListItem({
     required this.bufferPointer,
     required this.name,
+    required this.fullName,
     required this.topic,
     required this.plugin,
     required this.nickCount,
@@ -25,37 +23,13 @@ class ChannelListItem extends StatelessWidget {
         bufferPointer: bufferPointer,
       );
 
-  Future<void> _openBuffer(BuildContext context) async {
-    final con = Provider.of<RelayConnection>(context, listen: false);
-    final log = EventLogger.of(context);
-
-    // create relay buffer instance for channel
-    final b = buffer(con);
-
-    log.info('Buffer sync: $name');
-    await b.sync();
-
-    try {
-      // open channel page
-      await Navigator.of(context).push(
-        ChannelPage.route(
-          buffer: b,
-        ),
-      );
-    } finally {
-      // send desync when channel got closed
-      log.info('Buffer desync: $name');
-      await b.desync();
-    }
-  }
-
   @override
-  Widget build(
-    BuildContext context, {
+  Widget build(BuildContext context,
+  {
     RelayHotlistEntry? hotlist,
-    Future Function()? beforeBufferOpened,
-    Future Function()? afterBufferClosed,
+    Future Function(BuildContext)? openBuffer,
   }) {
+
     final theme = Theme.of(context);
 
     var titleColor = theme.disabledColor;
@@ -76,39 +50,35 @@ class ChannelListItem extends StatelessWidget {
         break;
     }
 
-    var titleStyle = theme.textTheme.headline6?.copyWith(
+    var titleStyle = theme.textTheme.titleLarge?.copyWith(
       color: titleColor,
     );
-    var captionStyle = theme.textTheme.caption?.copyWith(
+    var captionStyle = theme.textTheme.bodySmall?.copyWith(
       color: captionColor,
     );
 
     return Container(
       key: key,
-      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       child: GestureDetector(
         onTap: () async {
-          await beforeBufferOpened?.call();
-          await _openBuffer(context);
-          await afterBufferClosed?.call();
+          await openBuffer?.call(context);
         },
         child: Card(
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  child: Text(
-                    this.name,
-                    style: titleStyle,
-                  ),
+                Text(
+                  name,
+                  style: titleStyle,
                 ),
-                if (this.topic.isNotEmpty)
+                if (topic.isNotEmpty)
                   Container(
-                    padding: EdgeInsets.only(top: 5),
+                    padding: const EdgeInsets.only(top: 5),
                     child: Text(
-                      this.topic,
+                      topic,
                       style: captionStyle,
                     ),
                   ),

@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
@@ -13,10 +15,11 @@ class EventLogger extends ChangeNotifier {
 
   List<Tuple3<DateTime, LogType, String>> get messages => _messages;
 
-  static EventLogger of(BuildContext context, {bool listen: false}) =>
+  static EventLogger of(BuildContext context, {bool listen = false}) =>
       Provider.of<EventLogger>(context, listen: listen);
 
   void log(LogType type, String message, {DateTime? dateTime}) {
+    // ignore: avoid_print
     print('[$type] $message');
     _messages.add(Tuple3(dateTime ?? DateTime.now(), type, message));
     notifyListeners();

@@ -17,7 +17,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
   // check if locale is part of supported locales
-  Locale locale = Locale('en');
+  Locale locale = const Locale('en');
   for (final l in window.locales) {
     final lang = Locale(l.languageCode);
     if (AppLocalizations.supportedLocales.contains(lang)) {
@@ -53,19 +53,21 @@ void main() async {
   }, (error, stack) async {
     log.error('runZonedGuarded: $error');
 
-    var reason;
+    String reason;
     if (error is SocketException) {
-      if (error.osError?.errorCode == 9)
+      if (error.osError?.errorCode == 9) {
         reason = CONNECTION_CLOSED_OS;
-      else
+      } else {
         reason = CONNECTION_CLOSED_REMOTE;
-    } else if (error is TimeoutException)
+      }
+    } else if (error is TimeoutException) {
       reason = CONNECTION_TIMEOUT;
-    else if (error is HandshakeException && (error.osError?.message
-        .contains("CERTIFICATE_VERIFY_FAILED") ?? false))
+    } else if (error is HandshakeException && (error.osError?.message
+        .contains("CERTIFICATE_VERIFY_FAILED") ?? false)) {
       reason = CERTIFICATE_VERIFY_FAILED;
-    else
+    } else {
       throw error;
+    }
 
     await con.close(reason: reason);
   });
@@ -80,9 +82,10 @@ class MyApp extends StatelessWidget {
     required this.config,
     required this.connection,
     required this.eventLogger,
-  }) {
+    Key? key,
+  }) : super(key: key) {
     // link up connection status with event logger
-    this.connection.connectionStatus.eventLogger = eventLogger;
+    connection.connectionStatus.eventLogger = eventLogger;
   }
 
   // This widget is the root of your application.
@@ -109,6 +112,6 @@ class MyApp extends StatelessWidget {
         supportedLocales: AppLocalizations.supportedLocales,
 
         // Pages
-        home: HomePage(),
+        home: const HomePage(),
       );
 }

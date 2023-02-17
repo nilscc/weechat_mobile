@@ -23,8 +23,9 @@ class RelayHData {
         if (ty == 'chr') v = v.codeUnits.toString();
         val.add('${keys![i].name}: [$ty] $v');
       }
-      if (val.isNotEmpty)
-        obj.add(o.pPath.toString() + ' {\n\t' + val.join(',\n\t') + '\n}');
+      if (val.isNotEmpty) {
+        obj.add('${o.pPath} {\n\t${val.join(',\n\t')}\n}');
+      }
     }
 
     return 'RelayHData(hPath: $hPath, objects: {\n${obj.join(",\n\n")}\n})'; // keys: $keys, objects: $objects)';

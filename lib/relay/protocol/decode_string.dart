@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-int stringLength(ByteData data, {int offset: 0, int lengthSize: 4}) {
+int stringLength(ByteData data, {int offset = 0, int lengthSize = 4}) {
   if (lengthSize == 1) return data.getInt8(offset);
   if (lengthSize == 4) return data.getInt32(offset);
 
   throw 'Impossible string length size: $lengthSize';
 }
 
-String? decodeString(ByteData data, {int offset = 0, int lengthSize: 4}) {
+String? decodeString(ByteData data, {int offset = 0, int lengthSize = 4}) {
   final len = stringLength(data, offset: offset, lengthSize: lengthSize);
   if (len == -1) return null;
 
@@ -17,7 +17,7 @@ String? decodeString(ByteData data, {int offset = 0, int lengthSize: 4}) {
   return utf8.decode(data.buffer.asUint8List().sublist(offset, offset + len));
 }
 
-List<int> encodeString(String s, {lengthSize: 4}) {
+List<int> encodeString(String s, {lengthSize = 4}) {
   if (lengthSize == 4) {
     int l = s.length;
     return [
@@ -28,8 +28,9 @@ List<int> encodeString(String s, {lengthSize: 4}) {
         ] +
         s.codeUnits;
   }
-  else if (lengthSize == 1)
+  else if (lengthSize == 1) {
     return [ (s.length & 0xFF) ] + s.codeUnits;
-  else
+  } else {
     throw 'Impossible encode for length size: $lengthSize';
+  }
 }

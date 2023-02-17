@@ -12,10 +12,10 @@ bool _validUrl(String text) => isURL(
     );
 
 TextSpan urlify(TextSpan input,
-    {void onNotification(String text)?, AppLocalizations? localizations}) {
+    {void Function(String text)? onNotification, AppLocalizations? localizations}) {
   var words = input.text?.split(' ');
 
-  var text;
+  String? text;
   List<InlineSpan>? children;
 
   var idx = words?.indexWhere(_validUrl) ?? -1;
@@ -25,7 +25,7 @@ TextSpan urlify(TextSpan input,
     children = [];
     String addSpace = '';
 
-    while ((words ?? []).length > 0 && idx != -1) {
+    while ((words ?? []).isNotEmpty && idx != -1) {
       final u = Uri.parse(words![idx]);
 
       children = children! +
@@ -33,29 +33,32 @@ TextSpan urlify(TextSpan input,
             // the text up to the URL
             if (idx > 0)
               TextSpan(
-                text: addSpace + words.sublist(0, idx).join(' ') + ' ',
+                text: '$addSpace${words.sublist(0, idx).join(' ')} ',
                 style: input.style,
               ),
 
             // widget for the URL
             WidgetSpan(
-              child: GestureDetector(
-                child: RichText(
-                  text: TextSpan(
-                    style: (input.style ?? TextStyle())
-                        .copyWith(color: Colors.blue),
-                    text: words[idx],
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  child: RichText(
+                    text: TextSpan(
+                      style: (input.style ?? const TextStyle())
+                          .copyWith(color: Colors.blue),
+                      text: words[idx],
+                    ),
                   ),
+                  onTap: () {
+                    launchUrl(u, mode: LaunchMode.externalApplication);
+                  },
+                  onLongPress: () async {
+                    await Clipboard.setData(ClipboardData(text: u.toString()));
+                    onNotification?.call(
+                        localizations?.urlifyCopiedMessage(u.toString()) ??
+                            u.toString());
+                  },
                 ),
-                onTap: () {
-                  launchUrl(u, mode: LaunchMode.externalApplication);
-                },
-                onLongPress: () async {
-                  await Clipboard.setData(ClipboardData(text: u.toString()));
-                  onNotification?.call(
-                      localizations?.urlifyCopiedMessage(u.toString()) ??
-                          u.toString());
-                },
               ),
             ),
           ];
@@ -67,12 +70,13 @@ TextSpan urlify(TextSpan input,
     }
 
     // add remaining words if no more URLs have been found
-    if (words!.length > 0)
+    if (words!.isNotEmpty) {
       children = children! + [TextSpan(text: addSpace + words.join(' '))];
+    }
   }
 
   // urlify all children of input
-  if (input.children?.isNotEmpty == true)
+  if (input.children?.isNotEmpty == true) {
     children = (children ?? []) +
         input.children!
             .map((e) => (e is TextSpan)
@@ -81,6 +85,7 @@ TextSpan urlify(TextSpan input,
                     onNotification: onNotification)
                 : e)
             .toList();
+  }
 
   return TextSpan(
     text: text,

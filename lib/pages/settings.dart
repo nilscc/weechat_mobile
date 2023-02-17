@@ -4,10 +4,10 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:weechat/pages/settings/config.dart';
 
 class SettingsPage extends StatefulWidget {
-  SettingsPage({Key? key}) : super(key: key);
+  const SettingsPage({super.key});
 
   @override
-  _SettingsState createState() => _SettingsState();
+  State<SettingsPage> createState() => _SettingsState();
 
   static MaterialPageRoute route({Key? key}) =>
       MaterialPageRoute(builder: (context) => SettingsPage(key: key));
@@ -17,7 +17,6 @@ class _SettingsState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final config = Config.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -27,20 +26,6 @@ class _SettingsState extends State<SettingsPage> {
         children: [
           ..._connectionSettings(context),
           ..._uiSettings(context),
-          // change buffer on remote checkbox
-          Container(
-            padding: EdgeInsets.only(top: 20),
-            child: CheckboxListTile(
-              value: config.changeBufferOnConnect ?? false,
-              onChanged: (value) {
-                setState(() {
-                  config.changeBufferOnConnect = value;
-                });
-              },
-              title: Text(loc.settingsConnectionChangeBufferOnConnectTitle),
-              subtitle: Text(loc.settingsConnectionChangeBufferOnConnectSubtitle),
-            ),
-          ),
         ],
       ),
     );
@@ -62,53 +47,53 @@ class _SettingsState extends State<SettingsPage> {
 
     return [
       Container(
-        padding: EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: 20),
         child: ListTile(
           title: Text(loc.settingsConnectionTitle),
           subtitle: Text(loc.settingsConnectionSubtitle),
         ),
       ),
       Container(
-        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
         child: TextField(
           controller: hostNameController,
           keyboardType: TextInputType.url,
           decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            icon: Icon(Feather.server),
+            border: const OutlineInputBorder(),
+            icon: const Icon(Feather.server),
             labelText: loc.settingsConnectionHostname,
           ),
           onChanged: (value) => config.hostName = value,
         ),
       ),
       Container(
-        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
         child: TextField(
           controller: portNumberController,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
             labelText: loc.settingsConnectionPort,
-            icon: Icon(Feather.hash),
+            icon: const Icon(Feather.hash),
           ),
           onChanged: (value) => config.portNumber = int.tryParse(value),
         ),
       ),
       Container(
-        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
         child: TextField(
           controller: relayPasswordController,
           obscureText: true,
           decoration: InputDecoration(
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
             labelText: loc.settingsConnectionRelayPassword,
-            icon: Icon(Feather.lock),
+            icon: const Icon(Feather.lock),
           ),
           onChanged: (value) => config.relayPassword = value,
         ),
       ),
       Container(
-        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
         child: CheckboxListTile(
           value: config.verifyCert ?? true,
           onChanged: (newValue) {
@@ -128,14 +113,14 @@ class _SettingsState extends State<SettingsPage> {
 
     return [
       Container(
-        padding: EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: 20),
         child: ListTile(
           title: Text(loc.settingsUiTitle),
           subtitle: Text(loc.settingsUiSubtitle),
         ),
       ),
       Container(
-        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
         child: CheckboxListTile(
           value: config.uiShowCompletion ?? true,
           onChanged: (newValue) {
@@ -144,11 +129,11 @@ class _SettingsState extends State<SettingsPage> {
             });
           },
           title: Text(loc.settingsUiShowCompletion),
-          secondary: Icon(Icons.keyboard_tab),
+          secondary: const Icon(Icons.keyboard_tab),
         ),
       ),
       Container(
-        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
         child: CheckboxListTile(
           value: config.uiShowSend ?? false,
           onChanged: (newValue) {
@@ -157,7 +142,7 @@ class _SettingsState extends State<SettingsPage> {
             });
           },
           title: Text(loc.settingsUiShowSend),
-          secondary: Icon(Feather.arrow_up),
+          secondary: const Icon(Feather.arrow_up),
         ),
       ),
     ];

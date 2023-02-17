@@ -19,9 +19,10 @@ class RelayParser {
   }
 
   RelayMessageBody body() {
-    if (compressed())
+    if (compressed()) {
       return RelayMessageBody(ByteData.sublistView(zlib.decode(_input.sublist(5)) as Uint8List));
-    else
+    } else {
       return RelayMessageBody(ByteData.sublistView(_input.sublist(5)));
+    }
   }
 }

@@ -4,31 +4,43 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:weechat/pages/home/channel_list_item.dart';
+import 'package:tuple/tuple.dart';
+import 'package:weechat/widgets/home/channel_list_item.dart';
 import 'package:weechat/pages/log.dart';
 import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/pages/settings.dart';
 import 'package:weechat/pages/settings/config.dart';
+import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/relay/hotlist.dart';
 import 'package:weechat/relay/protocol/hdata.dart';
+import 'package:weechat/widgets/channel/channel_view.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   final String title = "WeeChat Mobile";
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 
   static MaterialPageRoute route({Key? key}) =>
-      MaterialPageRoute(builder: (BuildContext context) => HomePage());
+      MaterialPageRoute(builder: (BuildContext context) => const HomePage());
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<ChannelListItem> _channelList = [];
-  final Map<String, RelayHotlistEntry> _hotList = {};
+  ChannelView? _channelView;
+
+  void _disconnect(BuildContext context) async {
+    final con = Provider.of<RelayConnection>(context, listen: false);
+
+    await con.close();
+
+    setState(() {
+      _channelView = null;
+    });
+  }
 
   void _connect(BuildContext context) async {
     final cfg = Config.of(context);
@@ -36,10 +48,7 @@ class _HomePageState extends State<HomePage> {
     final log = EventLogger.of(context);
 
     if (con.isConnected) {
-      await con.close();
-      setState(() {
-        _channelList.clear();
-      });
+      _disconnect(context);
     } else {
       if ((cfg.hostName ?? '').isEmpty ||
           cfg.portNumber == null ||
@@ -59,25 +68,43 @@ class _HomePageState extends State<HomePage> {
 
       con.startPingTimer();
 
-      await _loadChannelList(con);
-      await _loadHotList(con);
-
-      // change buffer of remote if configured
-      if (cfg.changeBufferOnConnect == true)
-        await con.command(
-          'input core.weechat /buffer weechat',
-        );
+      await _loadCurrentGuiBuffer(con);
     }
   }
 
-  Future<void> _loadChannelList(RelayConnection connection) async {
+  Future<void> _loadCurrentGuiBuffer(RelayConnection connection) async {
+    return connection.command(
+      'hdata window:gui_current_window/buffer short_name',
+      callback: (body) async {
+        final h = body.objects()[0] as RelayHData;
+        final o = h.objects[0];
+        final bufferPtr = o.pPath[1];
+        final name = o.values[0];
+
+        final buffer = RelayBuffer(
+          relayConnection: connection,
+          bufferPointer: bufferPtr,
+          name: name,
+        );
+
+        await buffer.sync();
+
+        setState(() {
+          _channelView = ChannelView(buffer: buffer);
+        });
+      },
+    );
+  }
+
+  Future<List<ChannelListItem>> _loadChannelList(
+      RelayConnection connection) async {
+    final List<ChannelListItem> l = [];
+
     // https://weechat.org/files/doc/devel/weechat_plugin_api.en.html#hdata_buffer
     // https://github.com/weechat/weechat/blob/12be3b8c332c75a398f77478fd8d62304c632a1e/src/gui/gui-buffer.h#L73
     await connection.command(
-      'hdata buffer:gui_buffers(*) plugin,short_name,title,nicklist_nicks_count,type',
+      'hdata buffer:gui_buffers(*) plugin,short_name,full_name,title,nicklist_nicks_count,type',
       callback: (body) async {
-        final List<ChannelListItem> l = [];
-
         final h = body.objects()[0] as RelayHData;
         for (final o in h.objects) {
           if (o.values[1] != null) {
@@ -85,71 +112,46 @@ class _HomePageState extends State<HomePage> {
               bufferPointer: o.pPath[0],
               plugin: o.values[0],
               name: o.values[1] ?? '',
-              topic: o.values[2] ?? '',
-              nickCount: o.values[3],
+              fullName: o.values[2] ?? '',
+              topic: o.values[3] ?? '',
+              nickCount: o.values[4],
               key: ValueKey('ChannelListItem ${o.pPath[0]}'),
             ));
           }
         }
-
-        // https://weechat.org/files/doc/devel/weechat_plugin_api.en.html#hdata_plugin
-        // https://github.com/weechat/weechat/blob/5ae4af1549b9ec3c160b7d5d1118b3aa38d8e03d/src/plugins/weechat-plugin.h#L251
-
-        final pluginPointers = l.map((e) => e.plugin).toSet();
-        pluginPointers.removeWhere((e) => e == '0x0');
-        for (final s in pluginPointers) {
-          await connection.command('hdata plugin:$s name',
-              callback: (body) async {
-            final h = body.objects()[0] as RelayHData;
-            final n = h.objects[0].values[0];
-            if (n != "irc") {
-              l.removeWhere((e) => e.plugin == s);
-            }
-          });
-        }
-
-        setState(() {
-          // store channel list
-          _channelList.clear();
-          _channelList.addAll(l);
-        });
       },
     );
+
+    return l;
   }
 
-  Future<void> _loadHotList(RelayConnection connection) async {
-    final hot = await loadRelayHotlist(connection, hotlistChanged: (e) async {
-      setState(() {
-        _hotList[e.buffer] = e;
-      });
-    });
-
-    setState(() {
-      _hotList.clear();
-      for (final e in hot) _hotList[e.buffer] = e;
-    });
+  Future<List<RelayHotlistEntry>> _loadHotList(
+      RelayConnection connection) async {
+    return await loadRelayHotlist(connection);
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
-    if (!cs.connected) _channelList.clear();
+    final con = RelayConnection.of(context);
 
     return Scaffold(
+      drawer: _channelListDrawer(context),
+      onDrawerChanged: (isOpen) => _channelListDrawerChanged(con, isOpen),
       appBar: AppBar(
-        title: Text(widget.title),
+        title: _title(),
         actions: [
           IconButton(
             onPressed: () {
               Navigator.of(context).push(LogPage.route());
             },
-            icon: Icon(Feather.info),
+            icon: const Icon(Feather.info),
           ),
           IconButton(
               onPressed: () {
                 Navigator.of(context).push(SettingsPage.route());
               },
-              icon: Icon(Icons.settings)),
+              icon: const Icon(Icons.settings)),
         ],
       ),
 
@@ -161,91 +163,179 @@ class _HomePageState extends State<HomePage> {
       ),
 
       // the connection status floating button
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _connect(context),
-        tooltip: 'Increment',
-        backgroundColor: cs.connected ? Colors.green : Colors.red,
-        child: cs.connected ? Icon(Feather.log_out) : Icon(Feather.log_in),
-      ),
+      floatingActionButton: cs.connected
+          ? null
+          : FloatingActionButton(
+              onPressed: () => _connect(context),
+              tooltip: 'Increment',
+              backgroundColor: cs.connected ? Colors.green : Colors.red,
+              child:
+                  cs.connected ? const Icon(Feather.log_out) : const Icon(Feather.log_in),
+            ),
     );
   }
 
-  Future<void> refresh(BuildContext context) async {
-    final log = EventLogger.of(context);
-    final con = RelayConnection.of(context);
-
-    log.info('Refresh channel list.');
-    await _loadHotList(con);
+  Widget _title() {
+    if (_channelView != null) {
+      return Text(_channelView!.buffer.name);
+    } else {
+      return Text(widget.title);
+    }
   }
 
   Widget _buildBody(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
-    if (cs.connected)
-      return RefreshIndicator(
-        onRefresh: () => refresh(context),
-        child: _buildChannelList(context),
-      );
-    else
+    if (cs.connected && _channelView != null) {
+      return _channelView!;
+    } else {
       return _showConnectionErrors(context, reason: cs.reason);
+    }
   }
 
-  Widget _buildChannelList(BuildContext context) {
-    final con = RelayConnection.of(context);
+  Future<Tuple2<List<ChannelListItem>, List<RelayHotlistEntry>>>?
+      _channelFuture;
 
-    return ReorderableListView(
-      children: [
-        Container(height: 5, key: UniqueKey()),
-        ..._channelList.map((e) => e.build(
-              context,
-              hotlist: _hotList[e.bufferPointer],
-              beforeBufferOpened: () => desyncHotlist(con),
-              afterBufferClosed: () => _loadHotList(con),
-            )),
-        Container(height: 100, key: UniqueKey()),
-      ],
-      onReorder: (int oldIndex, int newIndex) async {
-        // subtract 1 from both indexes for the first container child
-        oldIndex -= 1;
-        newIndex -= 1;
-
-        // check if both indexes are in range
-        final l = _channelList.length;
-        if (0 <= oldIndex && oldIndex < l && 0 <= newIndex && newIndex < l) {
-          setState(() {
-            _channelList.insert(newIndex, _channelList[oldIndex]);
-            _channelList
-                .removeAt(oldIndex < newIndex ? oldIndex : oldIndex + 1);
-          });
-
-          // save new layout
-          _saveLayout(context);
-        }
-      },
-    );
+  void _channelListDrawerChanged(RelayConnection connection, bool isOpened) {
+    setState(() {
+      if (isOpened) {
+        _channelFuture = Future(() async {
+          final l = await _loadChannelList(connection);
+          final h = await _loadHotList(connection);
+          return Tuple2(l, h);
+        });
+      } else {
+        _channelFuture = null;
+      }
+    });
   }
 
-  Widget _showConnectionErrors(context, {String? reason}) {
-    final l = AppLocalizations.of(context)!;
+  Widget? _channelListDrawer(BuildContext context) {
+    final con = RelayConnection.of(context, listen: false);
+    if (!con.isConnected) return null;
 
-    if (reason == CONNECTION_CLOSED_REMOTE)
-      reason = l.errorConnectionClosedRemotely;
-    else if (reason == CONNECTION_CLOSED_OS)
-      reason = l.errorNotConnected;
-    else if (reason == CONNECTION_TIMEOUT)
-      reason = l.errorConnectionTimeout;
-    else if (reason == CERTIFICATE_VERIFY_FAILED)
-      reason = l.errorConnectionInvalidCertificate;
+    return Drawer(
+      child: FutureBuilder(
+        future: _channelFuture,
+        builder: (context, snapshot) {
+          final scaffoldState = Scaffold.of(
+            context
+          );
+          if (snapshot.hasData) {
+            final t = snapshot.data as Tuple2;
+            final l = t.item1 as List<ChannelListItem>;
+            final h = t.item2 as List<RelayHotlistEntry>;
 
-    return Container(
-      padding: EdgeInsets.all(10),
-      child: Container(
-        padding: EdgeInsets.all(5),
-        child: Text(reason ?? l.errorNotConnected),
+            // convert into lookup map
+            final m =
+                h.asMap().map((key, value) => MapEntry(value.buffer, value));
+
+            return ListView(
+              children: l
+                  .map((e) => e.build(
+                        context,
+                        hotlist: m[e.bufferPointer],
+                        openBuffer: (context) => _openBuffer(scaffoldState, con, e),
+                      ))
+                  .toList(),
+            );
+          } else {
+            return Container();
+          }
+        },
       ),
     );
   }
 
-  void _saveLayout(BuildContext context) {
-    //final cfg = Config.of(context);
+  Future _openBuffer(
+    ScaffoldState scaffoldState,
+    RelayConnection connection,
+    ChannelListItem channelListItem,
+  ) async {
+
+    if (!connection.isConnected || _channelView == null) return;
+
+    await _channelView!.buffer.desync();
+
+    final bufferFullName = channelListItem.fullName;
+    final bufferName = channelListItem.name;
+    final bufferPtr = channelListItem.bufferPointer;
+
+    // switch buffer on remote weechat
+    await connection.command('input core.weechat /buffer $bufferFullName');
+
+    final buffer = RelayBuffer(
+      relayConnection: connection,
+      bufferPointer: bufferPtr,
+      name: bufferName,
+    );
+
+    await buffer.sync();
+
+    // close the drawer
+    scaffoldState.closeDrawer();
+
+    setState(() {
+      _channelView = ChannelView(
+        buffer: buffer,
+        key: ValueKey(bufferFullName),
+      );
+    });
+  }
+
+  // Widget _buildChannelList(BuildContext context) {
+  //   final con = RelayConnection.of(context);
+  //
+  //   return ReorderableListView(
+  //     children: [
+  //       Container(height: 5, key: UniqueKey()),
+  //       ..._channelList.map((e) => e.build(
+  //             context,
+  //             hotlist: _hotList[e.bufferPointer],
+  //             beforeBufferOpened: () => desyncHotlist(con),
+  //             afterBufferClosed: () => _loadHotList(con),
+  //           )),
+  //       Container(height: 100, key: UniqueKey()),
+  //     ],
+  //     onReorder: (int oldIndex, int newIndex) async {
+  //       // subtract 1 from both indexes for the first container child
+  //       oldIndex -= 1;
+  //       newIndex -= 1;
+  //
+  //       // check if both indexes are in range
+  //       final l = _channelList.length;
+  //       if (0 <= oldIndex && oldIndex < l && 0 <= newIndex && newIndex < l) {
+  //         setState(() {
+  //           _channelList.insert(newIndex, _channelList[oldIndex]);
+  //           _channelList
+  //               .removeAt(oldIndex < newIndex ? oldIndex : oldIndex + 1);
+  //         });
+  //
+  //         // save new layout
+  //         _saveLayout(context);
+  //       }
+  //     },
+  //   );
+  // }
+
+  Widget _showConnectionErrors(context, {String? reason}) {
+    final l = AppLocalizations.of(context)!;
+
+    if (reason == CONNECTION_CLOSED_REMOTE) {
+      reason = l.errorConnectionClosedRemotely;
+    } else if (reason == CONNECTION_CLOSED_OS) {
+      reason = l.errorNotConnected;
+    } else if (reason == CONNECTION_TIMEOUT) {
+      reason = l.errorConnectionTimeout;
+    } else if (reason == CERTIFICATE_VERIFY_FAILED) {
+      reason = l.errorConnectionInvalidCertificate;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        child: Text(reason ?? l.errorNotConnected),
+      ),
+    );
   }
 }

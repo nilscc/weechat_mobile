@@ -64,7 +64,7 @@ class RelayMessageBody {
   int ptrLength(int offset) =>
       1 + stringLength(_data, offset: offset, lengthSize: 1);
   String ptrObject(int offset) =>
-      '0x' + decodeString(_data, offset: offset, lengthSize: 1)!;
+      '0x${decodeString(_data, offset: offset, lengthSize: 1)!}';
 
   int timLength(int offset) =>
       1 + stringLength(_data, offset: offset, lengthSize: 1);
@@ -193,8 +193,9 @@ class RelayMessageBody {
         keys: keyTypes,
         objects: objects,
       );
-    } else
+    } else {
       return RelayHData(hPath: null, keys: null, objects: []);
+    }
   }
 
   int infLength(int offset) {

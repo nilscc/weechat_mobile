@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tuple/tuple.dart';
@@ -35,13 +37,13 @@ void main() {
   });
 }
 
-final _std01 = colorCodes[1],
-    _ext214 = Color.fromARGB(0xFF, 255, 175, 0),
-    _opt01 = colorOptions[1] ?? _defaultColor,
-    _opt30 = colorOptions[30] ?? _defaultColor,
-    _opt40 = colorOptions[40] ?? _defaultColor;
+final _std01 = defaultColorCodes[1],
+    _ext214 = const Color.fromARGB(0xFF, 255, 175, 0),
+    _opt01 = defaultColorCodes[defaultColorOptions[1]] ?? _defaultColor,
+    _opt30 = defaultColorCodes[defaultColorOptions[30]] ?? _defaultColor,
+    _opt40 = defaultColorCodes[defaultColorOptions[40]] ?? _defaultColor;
 
-final _tsBold = TextStyle(fontWeight: FontWeight.bold);
+const _tsBold = TextStyle(fontWeight: FontWeight.bold);
 
 final _tryParseAttributeInputs = {
   // empty input
@@ -69,14 +71,14 @@ void _tryParseAttribute(String input, RelayAttribute? expected) {
   expect(ts, equals(expected));
 }
 
-final _defaultColor = Colors.black;
+const _defaultColor = Colors.black;
 
 /*
  * COLOR CODE OPTIONS
  *
  */
 
-final _tryParseColorOptionInputs = {
+final Map<String, Color?> _tryParseColorOptionInputs = {
   '': null,
   '0': null,
   '00': _defaultColor,
@@ -95,13 +97,20 @@ void _tryParseColorOptions(String input, Color? expected) {
   it.moveNext();
   final idx = it.rawIndex;
 
-  Color? c = tryParseColorOption(it, _defaultColor);
+  Color? c = tryParseColorOption(
+    it,
+    _defaultColor,
+    colorCodes: defaultColorCodes,
+    colorOptions: defaultColorOptions,
+  );
+
   expect(c, equals(expected));
 
-  if (c == null)
+  if (c == null) {
     expect(it.rawIndex, equals(idx));
-  else
+  } else {
     expect(it.rawIndex, equals(input.length - 1));
+  }
 }
 
 /*
@@ -113,15 +122,15 @@ final _tryParseColorInputs = {
   '': null,
   '0': null,
   '00': _defaultColor,
-  '01': colorCodes[1],
-  '02': colorCodes[2],
-  '03': colorCodes[3],
-  '04': colorCodes[4],
-  '05': colorCodes[5],
+  '01': defaultColorCodes[1],
+  '02': defaultColorCodes[2],
+  '03': defaultColorCodes[3],
+  '04': defaultColorCodes[4],
+  '05': defaultColorCodes[5],
   '99': null,
   '@00000': Colors.black,
-  '@00214': Color.fromARGB(0xFF, 255, 175, 0),
-  '@00255': Color.fromARGB(0xFF, 238, 238, 238),
+  '@00214': const Color.fromARGB(0xFF, 255, 175, 0),
+  '@00255': const Color.fromARGB(0xFF, 238, 238, 238),
   '@00256': null,
   '@12345': null,
   '@asd': null,
@@ -142,17 +151,19 @@ void _tryParseColor(String input, var expected) {
 
   final it = input.runes.iterator;
 
-  final c = tryParseColor(it, _defaultColor);
+  final c = tryParseColor(it, _defaultColor, colorCodes: defaultColorCodes);
   if (expected is Color) {
     expect(c?.item1, equals(expected));
     expect(c?.item2, equals(null));
-  } else
+  } else {
     expect(c, equals(expected));
+  }
 
-  if (c == null)
+  if (c == null) {
     expect(it.rawIndex, equals(input.isEmpty ? -1 : 0));
-  else
+  } else {
     expect(it.rawIndex, equals(input.length - 1));
+  }
 }
 
 /*
@@ -162,7 +173,7 @@ void _tryParseColor(String input, var expected) {
 
 final _colorCodeParserInputs = {
   // 0x19 + STD => color options!
-  '\x1900': Tuple3(_defaultColor, null, null),
+  '\x1900': const Tuple3(_defaultColor, null, null),
   '\x1901': Tuple3(_opt01, null, null),
   '\x1930': Tuple3(_opt30, null, null),
   '\x1940': Tuple3(_opt40, null, null),
@@ -214,7 +225,11 @@ void _colorCodeParser01(
   assert(it.moveNext() && it.rawIndex == 0);
 
   final c = ColorCodeParser(defaultFgColor: _defaultColor);
-  c.parse(it);
+  c.parse(
+    it,
+    colorCodes: defaultColorCodes,
+    colorOptions: defaultColorOptions,
+  );
 
   if (expected != null) {
     expect(c.fgColor, equals(expected.item1));

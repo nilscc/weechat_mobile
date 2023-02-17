@@ -17,7 +17,7 @@ void main() {
   test('parseColorsExtended', _parseColorsExtended);
 }
 
-final _defaultColor = Colors.black;
+const _defaultColor = Colors.black;
 
 final _cols01 = [
   '\x1901',
@@ -44,9 +44,10 @@ final _cols01 = [
 ];
 
 void _stripColors(int idx) {
-  final testString = _cols01[idx] + "test";
-  final expected = "test";
+  final testString = "${_cols01[idx]}test";
+  const expected = "test";
 
+  // ignore: avoid_print
   print('Input: $testString (expected: $expected)');
 
   expect(stripColors(testString), equals(expected));
@@ -55,7 +56,7 @@ void _stripColors(int idx) {
 void _parseColors() {
   final rt01 = parseColors('\x19F00\x19F01test', _defaultColor);
   expect(rt01.text.toPlainText(), equals('test'));
-  expect(rt01.text.style?.color, equals(colorCodes[1]));
+  expect(rt01.text.style?.color, equals(defaultColorCodes[1]));
 
   final rt02 = parseColors('\x19F00~\x19F@00151f0ck', _defaultColor);
   expect(rt02.text.toPlainText(), equals('~f0ck'));
@@ -63,12 +64,12 @@ void _parseColors() {
   final rt03 = parseColors('\x1A*\x19F|01bla', _defaultColor);
   expect(rt03.text.toPlainText(), equals('bla'));
   expect(rt03.text.style?.fontWeight, equals(FontWeight.bold));
-  expect(rt03.text.style?.color, equals(colorCodes[1]));
+  expect(rt03.text.style?.color, equals(defaultColorCodes[1]));
 
   final rt04 = parseColors('\x1A\x01\x19F|05test', _defaultColor);
   expect(rt04.text.toPlainText(), equals('test'));
   expect(rt04.text.style?.fontWeight, equals(FontWeight.bold));
-  expect(rt04.text.style?.color, equals(colorCodes[5]));
+  expect(rt04.text.style?.color, equals(defaultColorCodes[5]));
 
   final rt05 = parseColors('\x19F@*00001test', _defaultColor);
   expect(rt05.text.toPlainText(), equals('test'));
@@ -79,5 +80,5 @@ void _parseColors() {
 void _parseColorsExtended() {
   final rt01 = parseColors('\x19F00\x19F01test', _defaultColor);
   expect(rt01.text.toPlainText(), equals('test'));
-  expect(rt01.text.style?.color, equals(colorCodes[1]));
+  expect(rt01.text.style?.color, equals(defaultColorCodes[1]));
 }

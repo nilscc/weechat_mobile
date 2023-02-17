@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-final colorCodes = {
+typedef ColorCodes = Map<int, Color>;
+
+final ColorCodes defaultColorCodes = {
   1: Colors.black,
   2: Colors.grey.shade800,
   3: Colors.red.shade900,
@@ -19,30 +21,30 @@ final colorCodes = {
   16: Colors.white,
 };
 
-final _default = null;
+const _default = null;
 
 final
     //_black = colorCodes[1],
     //_darkgray = colorCodes[2],
-    _darkred = colorCodes[3],
+    _darkred = 3,
     _red = _darkred,
-    _lightred = colorCodes[4],
-    _darkgreen = colorCodes[5],
+    _lightred = 4,
+    _darkgreen = 5,
     _green = _darkgreen,
-    _lightgreen = colorCodes[6],
-    _brown = colorCodes[7],
-    _yellow = colorCodes[8],
-    _darkblue = colorCodes[9],
+    _lightgreen = 6,
+    _brown = 7,
+    _yellow = 8,
+    _darkblue = 9,
     _blue = _darkblue,
-    // _lightblue = colorCodes[10],
-    _darkmagenta = colorCodes[11],
+    // _lightblue = 10,
+    _darkmagenta = 11,
     _magenta = _darkmagenta,
-    _lightmagenta = colorCodes[12],
-    _darkcyan = colorCodes[13],
+    _lightmagenta = 12,
+    _darkcyan = 13,
     _cyan = _darkcyan,
-    _lightcyan = colorCodes[14],
-    // _gray = colorCodes[15],
-    _white = colorCodes[16];
+    _lightcyan = 14,
+    // _grey = 15,
+    _white = null; //16; disable white color => causes issues with bright theme
 
 // Color options taken from:
 // https://weechat.org/files/doc/stable/weechat_dev.en.html#color_codes_in_strings
@@ -114,5 +116,8 @@ final _colorOptions = {
   // 'weechat.color.status_time': _default,
 };
 
-final Map<int, Color?> colorOptions =
+typedef ColorCode = int;
+typedef ColorOptions = Map<int, ColorCode?>;
+
+final ColorOptions defaultColorOptions =
     _colorOptions.map((key, value) => MapEntry(key, value.values.first));
