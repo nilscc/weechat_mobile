@@ -117,6 +117,7 @@ final _colorOptions = {
 };
 
 typedef ColorCode = int;
+typedef ColorOptions = Map<int, ColorCode?>;
 
-final Map<int, ColorCode?> colorOptions =
+final ColorOptions defaultColorOptions =
     _colorOptions.map((key, value) => MapEntry(key, value.values.first));

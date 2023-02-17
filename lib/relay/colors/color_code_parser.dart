@@ -4,11 +4,12 @@ import 'package:weechat/relay/colors/color_codes.dart';
 import 'package:weechat/relay/colors/extended_definition.dart';
 
 Color? tryParseColorOption(RuneIterator it, Color defaultColor,
-    {ColorCodes? colorCodes}) {
+    {ColorCodes? colorCodes, ColorOptions? colorOptions}) {
   Color? result;
   bool success = false;
 
-  colorCodes = colorCodes ?? defaultColorCodes;
+  colorCodes ??= defaultColorCodes;
+  colorOptions ??= defaultColorOptions;
 
   // before consuming iterator, store index so we can restore iterator position
   // if parsing fails
@@ -150,7 +151,6 @@ RelayAttribute? tryParseAttribute(RuneIterator iterator) {
   while (iterator.moveNext()) {
     if (['*', '/', '_', '|', '!', '\x01', '\x02', '\x03', '\x04']
         .contains(iterator.currentAsString)) {
-
       result ??= RelayAttribute();
 
       if (['*', '\x01'].contains(iterator.currentAsString)) {
@@ -198,9 +198,11 @@ class ColorCodeParser {
     }
   }
 
-  bool parse(RuneIterator iterator, {ColorCodes? colorCodes}) {
+  bool parse(RuneIterator iterator,
+      {ColorCodes? colorCodes, ColorOptions? colorOptions}) {
     bool success = false;
-    colorCodes = colorCodes ?? defaultColorCodes;
+    colorCodes ??= defaultColorCodes;
+    colorOptions ??= defaultColorOptions;
 
     // before consuming iterator, store index so we can restore iterator position
     // if parsing fails
@@ -220,7 +222,8 @@ class ColorCodeParser {
         final a = tryParseAttribute(iterator);
 
         // parse color
-        final c = tryParseColor(iterator, defaultFgColor, colorCodes: colorCodes);
+        final c =
+            tryParseColor(iterator, defaultFgColor, colorCodes: colorCodes);
         if (c != null) {
           // set foreground attribute
           _setAttribute(a);
@@ -235,7 +238,8 @@ class ColorCodeParser {
 
       // background mode
       else if (iterator.currentAsString == 'B') {
-        final c = tryParseColor(iterator, defaultBgColor ?? defaultFgColor, colorCodes: colorCodes);
+        final c = tryParseColor(iterator, defaultBgColor ?? defaultFgColor,
+            colorCodes: colorCodes);
         if (c != null) {
           bgColor = c.item1;
           _setAttribute(c.item2);
@@ -249,7 +253,8 @@ class ColorCodeParser {
         final a = tryParseAttribute(iterator);
 
         // parse colors
-        final c1 = tryParseColor(iterator, defaultFgColor, colorCodes: colorCodes);
+        final c1 =
+            tryParseColor(iterator, defaultFgColor, colorCodes: colorCodes);
         if (c1 != null) {
           // set star mode attribute
           _setAttribute(a);
@@ -266,7 +271,8 @@ class ColorCodeParser {
           // peek if next character is combination character
           if (iterator.moveNext()) {
             if ([',', '~'].contains(iterator.currentAsString)) {
-              c2 = tryParseColor(iterator, defaultBgColor ?? defaultFgColor, colorCodes: colorCodes);
+              c2 = tryParseColor(iterator, defaultBgColor ?? defaultFgColor,
+                  colorCodes: colorCodes);
             }
           }
 

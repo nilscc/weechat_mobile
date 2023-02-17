@@ -39,9 +39,9 @@ void main() {
 
 final _std01 = defaultColorCodes[1],
     _ext214 = const Color.fromARGB(0xFF, 255, 175, 0),
-    _opt01 = defaultColorCodes[colorOptions[1]] ?? _defaultColor,
-    _opt30 = defaultColorCodes[colorOptions[30]] ?? _defaultColor,
-    _opt40 = defaultColorCodes[colorOptions[40]] ?? _defaultColor;
+    _opt01 = defaultColorCodes[defaultColorOptions[1]] ?? _defaultColor,
+    _opt30 = defaultColorCodes[defaultColorOptions[30]] ?? _defaultColor,
+    _opt40 = defaultColorCodes[defaultColorOptions[40]] ?? _defaultColor;
 
 const _tsBold = TextStyle(fontWeight: FontWeight.bold);
 

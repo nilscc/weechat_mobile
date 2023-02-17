@@ -13,7 +13,12 @@ RichText parseColors(
   Color defaultColor, {
   TextStyle? textStyle,
   int? alpha,
+  ColorCodes? colorCodes,
+  ColorOptions? colorOptions,
 }) {
+  colorCodes ??= defaultColorCodes;
+  colorOptions ??= defaultColorOptions;
+
   final it = raw.runes.iterator;
 
   final p = RichTextParser(defaultFgColor: defaultColor, defaultAlpha: alpha);
@@ -43,7 +48,7 @@ RichText parseColors(
     else if (it.current == 0x19) {
       p.finalizeCurrentSpan();
       ColorCodeParser ccp = ColorCodeParser(defaultFgColor: defaultColor);
-      if (ccp.parse(it, colorCodes: defaultColorCodes)) {
+      if (ccp.parse(it, colorCodes: colorCodes, colorOptions: colorOptions)) {
         if (ccp.fgColor != null) p.fgColor = ccp.fgColor;
         if (ccp.bgColor != null) p.bgColor = ccp.bgColor;
         if (ccp.attributes != null) p.attributes.set(ccp.attributes!);
