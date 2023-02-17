@@ -79,12 +79,14 @@ class _ChannelViewState extends State<ChannelView> {
         _inputController.text,
         _inputController.selection.base.offset);
 
+    if (_completion != null) {
     final n = _completion!.next();
     _inputController.text = n.item1;
     _inputController.selection = TextSelection(
       baseOffset: n.item2,
       extentOffset: n.item2,
     );
+    }
   }
 
   Widget _inputWidget(BuildContext context) {
