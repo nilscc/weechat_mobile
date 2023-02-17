@@ -3,13 +3,14 @@ import 'package:tuple/tuple.dart';
 import 'package:weechat/relay/colors/color_codes.dart';
 import 'package:weechat/relay/colors/extended_definition.dart';
 
-Color? tryParseColorOption(RuneIterator it, Color defaultColor,
-    {ColorCodes? colorCodes, ColorOptions? colorOptions}) {
+Color? tryParseColorOption(
+  RuneIterator it,
+  Color defaultColor, {
+  required ColorCodes colorCodes,
+  required ColorOptions colorOptions,
+}) {
   Color? result;
   bool success = false;
-
-  colorCodes ??= defaultColorCodes;
-  colorOptions ??= defaultColorOptions;
 
   // before consuming iterator, store index so we can restore iterator position
   // if parsing fails
@@ -41,11 +42,12 @@ Color? tryParseColorOption(RuneIterator it, Color defaultColor,
 }
 
 Tuple2<Color, RelayAttribute?>? tryParseColor(
-    RuneIterator it, Color defaultColor,
-    {ColorCodes? colorCodes}) {
+  RuneIterator it,
+  Color defaultColor, {
+  required ColorCodes colorCodes,
+}) {
   Color? result;
   RelayAttribute? attribute;
-  colorCodes = colorCodes ?? defaultColorCodes;
 
   if (!it.moveNext()) return null;
   final cur = it.rawIndex;
@@ -198,11 +200,12 @@ class ColorCodeParser {
     }
   }
 
-  bool parse(RuneIterator iterator,
-      {ColorCodes? colorCodes, ColorOptions? colorOptions}) {
+  bool parse(
+    RuneIterator iterator, {
+    required ColorCodes colorCodes,
+    required ColorOptions colorOptions,
+  }) {
     bool success = false;
-    colorCodes ??= defaultColorCodes;
-    colorOptions ??= defaultColorOptions;
 
     // before consuming iterator, store index so we can restore iterator position
     // if parsing fails
@@ -288,7 +291,13 @@ class ColorCodeParser {
 
       // color option mode
       else {
-        Color? c = tryParseColorOption(iterator, defaultFgColor);
+        Color? c = tryParseColorOption(
+          iterator,
+          defaultFgColor,
+          colorCodes: colorCodes,
+          colorOptions: colorOptions,
+        );
+
         if (c != null) {
           fgColor = c;
           success = true;

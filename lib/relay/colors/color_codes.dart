@@ -43,8 +43,8 @@ final
     _darkcyan = 13,
     _cyan = _darkcyan,
     _lightcyan = 14,
-    // _gray = 15,
-    _white = 16;
+    // _grey = 15,
+    _white = null; //16; disable white color => causes issues with bright theme
 
 // Color options taken from:
 // https://weechat.org/files/doc/stable/weechat_dev.en.html#color_codes_in_strings

@@ -97,7 +97,13 @@ void _tryParseColorOptions(String input, Color? expected) {
   it.moveNext();
   final idx = it.rawIndex;
 
-  Color? c = tryParseColorOption(it, _defaultColor);
+  Color? c = tryParseColorOption(
+    it,
+    _defaultColor,
+    colorCodes: defaultColorCodes,
+    colorOptions: defaultColorOptions,
+  );
+
   expect(c, equals(expected));
 
   if (c == null) {
@@ -145,7 +151,7 @@ void _tryParseColor(String input, var expected) {
 
   final it = input.runes.iterator;
 
-  final c = tryParseColor(it, _defaultColor);
+  final c = tryParseColor(it, _defaultColor, colorCodes: defaultColorCodes);
   if (expected is Color) {
     expect(c?.item1, equals(expected));
     expect(c?.item2, equals(null));
@@ -219,7 +225,11 @@ void _colorCodeParser01(
   assert(it.moveNext() && it.rawIndex == 0);
 
   final c = ColorCodeParser(defaultFgColor: _defaultColor);
-  c.parse(it);
+  c.parse(
+    it,
+    colorCodes: defaultColorCodes,
+    colorOptions: defaultColorOptions,
+  );
 
   if (expected != null) {
     expect(c.fgColor, equals(expected.item1));
