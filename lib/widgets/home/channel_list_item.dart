@@ -7,7 +7,7 @@ class ChannelListItem extends StatelessWidget {
   final String bufferPointer, name, fullName, topic, plugin;
   final int nickCount;
 
-  ChannelListItem({
+  const ChannelListItem({
     required this.bufferPointer,
     required this.name,
     required this.fullName,
@@ -59,28 +59,26 @@ class ChannelListItem extends StatelessWidget {
 
     return Container(
       key: key,
-      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
       child: GestureDetector(
         onTap: () async {
           await openBuffer?.call(context);
         },
         child: Card(
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  child: Text(
-                    this.name,
-                    style: titleStyle,
-                  ),
+                Text(
+                  name,
+                  style: titleStyle,
                 ),
-                if (this.topic.isNotEmpty)
+                if (topic.isNotEmpty)
                   Container(
-                    padding: EdgeInsets.only(top: 5),
+                    padding: const EdgeInsets.only(top: 5),
                     child: Text(
-                      this.topic,
+                      topic,
                       style: captionStyle,
                     ),
                   ),

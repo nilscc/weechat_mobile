@@ -28,8 +28,9 @@ List<int> encodeString(String s, {lengthSize = 4}) {
         ] +
         s.codeUnits;
   }
-  else if (lengthSize == 1)
+  else if (lengthSize == 1) {
     return [ (s.length & 0xFF) ] + s.codeUnits;
-  else
+  } else {
     throw 'Impossible encode for length size: $lengthSize';
+  }
 }

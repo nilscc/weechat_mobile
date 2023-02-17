@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'dart:async';
 import 'dart:io';
 
@@ -14,8 +16,8 @@ const String CONNECTION_TIMEOUT = 'Connection timeout.';
 const String CERTIFICATE_VERIFY_FAILED = 'Failed to verify the server '
     'certificate.';
 
-const _DEFAULT_TIMEOUT = const Duration(seconds: 10);
-const _DEFAULT_PING_INTERVAL = const Duration(seconds: 60);
+const _DEFAULT_TIMEOUT = Duration(seconds: 10);
+const _DEFAULT_PING_INTERVAL = Duration(seconds: 60);
 
 class RelayConnection {
   static RelayConnection of(BuildContext context, {listen = false}) =>
@@ -25,7 +27,7 @@ class RelayConnection {
   StreamSubscription? _socketSubscription;
   DateTime? _socketCreated;
 
-  Map<String, Completer<RelayMessageBody?>> _callbacks = {};
+  final Map<String, Completer<RelayMessageBody?>> _callbacks = {};
 
   RelayConnectionStatus connectionStatus;
 
@@ -76,7 +78,7 @@ class RelayConnection {
         hostName,
         portNumber,
         onBadCertificate: (c) => ignoreInvalidCertificate,
-        timeout: Duration(seconds: 1),
+        timeout: const Duration(seconds: 1),
       );
       _socketCreated = DateTime.now();
 
@@ -127,19 +129,21 @@ class RelayConnection {
           timeout ?? _DEFAULT_TIMEOUT,
           onTimeout: onTimeout == null ? null : () => null,
         );
-        if (m != null)
+        if (m != null) {
           return await callback?.call(m);
-        else
+        } else {
           return await onTimeout?.call();
+        }
       }
     } catch (e) {
       _eventLogger?.error('RelayConnection.command($command): $e');
-      if (e is StateError)
+      if (e is StateError) {
         await close(reason: CONNECTION_CLOSED_REMOTE);
-      else if (e is TimeoutException)
+      } else if (e is TimeoutException) {
         await close(reason: CONNECTION_TIMEOUT);
-      else
+      } else {
         rethrow;
+      }
     }
     return null;
   }
@@ -205,8 +209,9 @@ class RelayConnection {
           final p = Duration(microseconds: t2 - t1);
           _eventLogger?.info('Pong! ${p.inMilliseconds}ms');
           return p;
-        } else
+        } else {
           _eventLogger?.warning('Invalid PONG response: $tr');
+        }
         return null;
       },
     );
@@ -216,16 +221,14 @@ class RelayConnection {
 
   void startPingTimer({Duration? interval, Duration? timeout}) {
     final created = _socketCreated;
-    if (_pingTimer == null) {
-      // start pinging periodically in background
-      _pingTimer = Timer.periodic(
-        interval ?? _DEFAULT_PING_INTERVAL,
-        (t) async {
-          final p = await ping(timeout: timeout);
-          if (p == null && created == _socketCreated) await close();
-        },
-      );
-    }
+    // start pinging periodically in background
+    _pingTimer ??= Timer.periodic(
+      interval ?? _DEFAULT_PING_INTERVAL,
+      (t) async {
+        final p = await ping(timeout: timeout);
+        if (p == null && created == _socketCreated) await close();
+      },
+    );
   }
 
   Future<void> test() async => command('test');

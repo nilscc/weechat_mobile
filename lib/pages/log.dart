@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:weechat/pages/log/event_logger.dart';
 
 class LogPage extends StatelessWidget {
+  const LogPage({super.key});
+
   static MaterialPageRoute route() =>
-      MaterialPageRoute(builder: (context) => LogPage());
+      MaterialPageRoute(builder: (context) => const LogPage());
 
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
-          title: Text('Logs'),
+          title: const Text('Logs'),
         ),
         body: Container(
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           child: ListView(
             children: EventLogger.of(context, listen: true)
                 .messages

@@ -10,7 +10,7 @@ import 'package:weechat/relay/connection.dart';
 class ChannelView extends StatefulWidget {
   final RelayBuffer buffer;
 
-  ChannelView({required this.buffer, Key? key}) : super(key: key);
+  const ChannelView({required this.buffer, Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ChannelViewState();
@@ -22,7 +22,7 @@ class _ChannelViewState extends State<ChannelView> {
         top: false, // covered by app bar
         child: Column(
           children: [
-            Expanded(child: _linesWidget(context), flex: 1),
+            Expanded(flex: 1, child: _linesWidget(context)),
             _inputWidget(context),
           ],
         ),
@@ -33,7 +33,7 @@ class _ChannelViewState extends State<ChannelView> {
   Widget _linesWidget(BuildContext context) => ChangeNotifierProvider.value(
         value: widget.buffer,
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: ChannelLines(scrollController: _linesController),
         ),
       );
@@ -57,9 +57,9 @@ class _ChannelViewState extends State<ChannelView> {
     final cfg = Config.of(context);
 
     return Card(
-      margin: EdgeInsets.all(10),
+      margin: const EdgeInsets.all(10),
       child: Container(
-        padding: EdgeInsets.only(left: 10),
+        padding: const EdgeInsets.only(left: 10),
         child: Row(
           children: [
             Expanded(
@@ -67,7 +67,7 @@ class _ChannelViewState extends State<ChannelView> {
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.send,
                 controller: _inputController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   border: InputBorder.none,
                 ),
                 onChanged: (text) {
@@ -80,14 +80,13 @@ class _ChannelViewState extends State<ChannelView> {
               Container(
                 padding: EdgeInsets.zero,
                 child: IconButton(
-                  icon: Icon(Icons.keyboard_tab),
+                  icon: const Icon(Icons.keyboard_tab),
                   onPressed: () async {
-                    if (_completion == null)
-                      _completion = await RelayCompletion.load(
-                          con,
-                          widget.buffer.bufferPointer,
-                          _inputController.text,
-                          _inputController.selection.base.offset);
+                    _completion ??= await RelayCompletion.load(
+                        con,
+                        widget.buffer.bufferPointer,
+                        _inputController.text,
+                        _inputController.selection.base.offset);
 
                     if (_completion != null) {
                       final n = _completion!.next();
@@ -101,11 +100,9 @@ class _ChannelViewState extends State<ChannelView> {
                 ),
               ),
             if (cfg.uiShowSend ?? false)
-              Container(
-                child: IconButton(
-                  icon: Icon(Feather.arrow_up),
-                  onPressed: () => _send(con),
-                ),
+              IconButton(
+                icon: const Icon(Feather.arrow_up),
+                onPressed: () => _send(con),
               ),
           ],
         ),

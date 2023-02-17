@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:weechat/relay/colors/color_code_parser.dart';
+import 'package:weechat/relay/colors/color_codes.dart';
 import 'package:weechat/relay/colors/rich_text_parser.dart';
 
 RichText parseColors(
@@ -42,12 +43,14 @@ RichText parseColors(
     else if (it.current == 0x19) {
       p.finalizeCurrentSpan();
       ColorCodeParser ccp = ColorCodeParser(defaultFgColor: defaultColor);
-      if (ccp.parse(it)) {
+      if (ccp.parse(it, colorCodes: defaultColorCodes)) {
         if (ccp.fgColor != null) p.fgColor = ccp.fgColor;
         if (ccp.bgColor != null) p.bgColor = ccp.bgColor;
         if (ccp.attributes != null) p.attributes.set(ccp.attributes!);
       }
-    } else if (it.current > 0) p.addText(it.currentAsString);
+    } else if (it.current > 0) {
+      p.addText(it.currentAsString);
+    }
   }
 
   p.finalizeCurrentSpan();

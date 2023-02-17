@@ -20,8 +20,9 @@ class RelayConnectionStatus extends ChangeNotifier {
       _connected = connected;
 
       // delete reason if successfully connected
-      if (connected)
+      if (connected) {
         _reason = null;
+      }
 
       notifyListeners();
     }

@@ -18,15 +18,15 @@ import 'package:weechat/relay/protocol/hdata.dart';
 import 'package:weechat/widgets/channel/channel_view.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   final String title = "WeeChat Mobile";
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 
   static MaterialPageRoute route({Key? key}) =>
-      MaterialPageRoute(builder: (BuildContext context) => HomePage());
+      MaterialPageRoute(builder: (BuildContext context) => const HomePage());
 }
 
 class _HomePageState extends State<HomePage> {
@@ -145,13 +145,13 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               Navigator.of(context).push(LogPage.route());
             },
-            icon: Icon(Feather.info),
+            icon: const Icon(Feather.info),
           ),
           IconButton(
               onPressed: () {
                 Navigator.of(context).push(SettingsPage.route());
               },
-              icon: Icon(Icons.settings)),
+              icon: const Icon(Icons.settings)),
         ],
       ),
 
@@ -170,24 +170,26 @@ class _HomePageState extends State<HomePage> {
               tooltip: 'Increment',
               backgroundColor: cs.connected ? Colors.green : Colors.red,
               child:
-                  cs.connected ? Icon(Feather.log_out) : Icon(Feather.log_in),
+                  cs.connected ? const Icon(Feather.log_out) : const Icon(Feather.log_in),
             ),
     );
   }
 
   Widget _title() {
-    if (_channelView != null)
+    if (_channelView != null) {
       return Text(_channelView!.buffer.name);
-    else
+    } else {
       return Text(widget.title);
+    }
   }
 
   Widget _buildBody(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
-    if (cs.connected && _channelView != null)
+    if (cs.connected && _channelView != null) {
       return _channelView!;
-    else
+    } else {
       return _showConnectionErrors(context, reason: cs.reason);
+    }
   }
 
   Future<Tuple2<List<ChannelListItem>, List<RelayHotlistEntry>>>?
@@ -195,14 +197,15 @@ class _HomePageState extends State<HomePage> {
 
   void _channelListDrawerChanged(RelayConnection connection, bool isOpened) {
     setState(() {
-      if (isOpened)
+      if (isOpened) {
         _channelFuture = Future(() async {
           final l = await _loadChannelList(connection);
           final h = await _loadHotList(connection);
           return Tuple2(l, h);
         });
-      else
+      } else {
         _channelFuture = null;
+      }
     });
   }
 
@@ -214,6 +217,9 @@ class _HomePageState extends State<HomePage> {
       child: FutureBuilder(
         future: _channelFuture,
         builder: (context, snapshot) {
+          final scaffoldState = Scaffold.of(
+            context
+          );
           if (snapshot.hasData) {
             final t = snapshot.data as Tuple2;
             final l = t.item1 as List<ChannelListItem>;
@@ -228,24 +234,25 @@ class _HomePageState extends State<HomePage> {
                   .map((e) => e.build(
                         context,
                         hotlist: m[e.bufferPointer],
-                        openBuffer: (context) => _openBuffer(context, e),
+                        openBuffer: (context) => _openBuffer(scaffoldState, con, e),
                       ))
                   .toList(),
             );
-          } else
+          } else {
             return Container();
+          }
         },
       ),
     );
   }
 
   Future _openBuffer(
-    BuildContext context,
+    ScaffoldState scaffoldState,
+    RelayConnection connection,
     ChannelListItem channelListItem,
   ) async {
-    final con = RelayConnection.of(context);
 
-    if (!con.isConnected || _channelView == null) return;
+    if (!connection.isConnected || _channelView == null) return;
 
     await _channelView!.buffer.desync();
 
@@ -254,10 +261,10 @@ class _HomePageState extends State<HomePage> {
     final bufferPtr = channelListItem.bufferPointer;
 
     // switch buffer on remote weechat
-    await con.command('input core.weechat /buffer $bufferFullName');
+    await connection.command('input core.weechat /buffer $bufferFullName');
 
     final buffer = RelayBuffer(
-      relayConnection: con,
+      relayConnection: connection,
       bufferPointer: bufferPtr,
       name: bufferName,
     );
@@ -265,7 +272,7 @@ class _HomePageState extends State<HomePage> {
     await buffer.sync();
 
     // close the drawer
-    Scaffold.of(context).closeDrawer();
+    scaffoldState.closeDrawer();
 
     setState(() {
       _channelView = ChannelView(
@@ -313,19 +320,20 @@ class _HomePageState extends State<HomePage> {
   Widget _showConnectionErrors(context, {String? reason}) {
     final l = AppLocalizations.of(context)!;
 
-    if (reason == CONNECTION_CLOSED_REMOTE)
+    if (reason == CONNECTION_CLOSED_REMOTE) {
       reason = l.errorConnectionClosedRemotely;
-    else if (reason == CONNECTION_CLOSED_OS)
+    } else if (reason == CONNECTION_CLOSED_OS) {
       reason = l.errorNotConnected;
-    else if (reason == CONNECTION_TIMEOUT)
+    } else if (reason == CONNECTION_TIMEOUT) {
       reason = l.errorConnectionTimeout;
-    else if (reason == CERTIFICATE_VERIFY_FAILED)
+    } else if (reason == CERTIFICATE_VERIFY_FAILED) {
       reason = l.errorConnectionInvalidCertificate;
+    }
 
     return Container(
-      padding: EdgeInsets.all(10),
+      padding: const EdgeInsets.all(10),
       child: Container(
-        padding: EdgeInsets.all(5),
+        padding: const EdgeInsets.all(5),
         child: Text(reason ?? l.errorNotConnected),
       ),
     );

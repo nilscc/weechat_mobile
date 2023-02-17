@@ -6,10 +6,10 @@ import 'package:weechat/relay/buffer.dart';
 class ChannelLines extends StatefulWidget {
   final ScrollController? scrollController;
 
-  ChannelLines({this.scrollController});
+  const ChannelLines({super.key, this.scrollController});
 
   @override
-  _ChannelLinesState createState() => _ChannelLinesState();
+  State<ChannelLines> createState() => _ChannelLinesState();
 }
 
 class _ChannelLinesState extends State<ChannelLines> {
@@ -31,8 +31,9 @@ class _ChannelLinesState extends State<ChannelLines> {
     final d = p.viewportDimension;
     final o = widget.scrollController!.offset;
     final r = p.maxScrollExtent;
-    if ((o > (r - d)) && _nextLinesFuture == null)
+    if ((o > (r - d)) && _nextLinesFuture == null) {
       _nextLinesFuture = Future(_nextLines);
+    }
   }
 
   @override
@@ -50,8 +51,7 @@ class _ChannelLinesState extends State<ChannelLines> {
   @override
   Widget build(BuildContext context) {
     // load buffer required by _nextLines()
-    if (_buffer == null)
-      _buffer = Provider.of<RelayBuffer>(context, listen: false);
+    _buffer ??= Provider.of<RelayBuffer>(context, listen: false);
 
     // update build, so load buffer again and listen
     final buffer = Provider.of<RelayBuffer>(context, listen: true);

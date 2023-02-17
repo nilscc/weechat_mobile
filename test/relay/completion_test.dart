@@ -26,7 +26,7 @@ void _validCompletions() {
     posEnd: 1,
   );
 
-  expect(c01.next(), equals(Tuple2('asd', 3)));
+  expect(c01.next(), equals(const Tuple2('asd', 3)));
 
   final c02 = RelayCompletion(
     text: 'a',
@@ -38,7 +38,7 @@ void _validCompletions() {
     posEnd: 1,
   );
 
-  expect(c02.next(), equals(Tuple2('asd ', 4)));
+  expect(c02.next(), equals(const Tuple2('asd ', 4)));
 }
 
 void _byteOffsets() {

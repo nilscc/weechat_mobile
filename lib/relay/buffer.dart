@@ -102,8 +102,9 @@ class RelayBuffer extends ChangeNotifier {
       callback: (body) async {
         for (final RelayHData hdata in body.objects()) {
           lines.addAll(_handleLineData(hdata, 3));
-          if (hdata.objects.isNotEmpty)
+          if (hdata.objects.isNotEmpty) {
             _lastLinePointer = hdata.objects.last.pPath[2];
+          }
         }
         notifyListeners();
       },
@@ -114,8 +115,11 @@ class RelayBuffer extends ChangeNotifier {
     relayConnection.addCallback(
       '_buffer_line_added',
       (body) async {
-        for (final hdata in body.objects())
-          for (final l in _handleLineData(hdata, 0)) lines.insert(0, l);
+        for (final hdata in body.objects()) {
+          for (final l in _handleLineData(hdata, 0)) {
+            lines.insert(0, l);
+          }
+        }
         notifyListeners();
       },
       repeat: true,
@@ -135,14 +139,15 @@ class RelayBuffer extends ChangeNotifier {
     var success = false;
 
     await relayConnection.command(
-      '$hdataCmd',
+      hdataCmd,
       callback: (body) async {
         final o = body.objects();
         for (final RelayHData hdata in o) {
           success = success || hdata.objects.isNotEmpty;
           lines.addAll(_handleLineData(hdata, 2));
-          if (hdata.objects.isNotEmpty)
+          if (hdata.objects.isNotEmpty) {
             _lastLinePointer = hdata.objects.last.pPath[1];
+          }
         }
       },
     );

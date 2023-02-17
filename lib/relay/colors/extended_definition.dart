@@ -13,6 +13,7 @@ Color? getExtendedColor(int id) {
   return null;
 }
 
+// ignore: constant_identifier_names
 const EXTENDED_COLORS = [
   {
     "colorId": 0,
