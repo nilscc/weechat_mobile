@@ -195,7 +195,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     return Scaffold(
       drawer: _channelListDrawer(context),
-      onDrawerChanged: (isOpen) => _channelListDrawerChanged(con, isOpen),
+      onDrawerChanged: (isOpen) => _channelListDrawerChanged(_relayConnection!, isOpen),
       appBar: AppBar(
         title: _title(),
         actions: [
