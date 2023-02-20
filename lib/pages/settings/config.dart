@@ -36,14 +36,14 @@ class Config extends _ConfigBackend {
   set uiShowSend(bool? uiShowSend) => this['uiShowSend'] = uiShowSend;
 }
 
-class _ConfigBackend {
+class _ConfigBackend extends ChangeNotifier {
   final String path;
 
   _ConfigBackend({required this.path}) {
     load();
   }
 
-  Map<String, dynamic> values = {};
+  final Map<String, dynamic> values = {};
 
   dynamic operator [](String key) => values[key];
   void operator []=(String key, dynamic value) {
@@ -54,7 +54,10 @@ class _ConfigBackend {
   Future<void> load() async {
     final f = File(path);
     final exists = await f.exists();
-    if (exists) values = json.decode(await f.readAsString());
+    if (exists) {
+      values.addAll(json.decode(await f.readAsString()));
+    }
+    notifyListeners();
   }
 
   Future<void> save() async {
