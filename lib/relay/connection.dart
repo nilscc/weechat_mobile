@@ -176,7 +176,7 @@ class RelayConnection {
 
   Future<void> init(String relayPassword) async {
     // perform handshake
-    await command('handshake compression=zlib');
+    await command('handshake compression=zlib', callback: (_) {});
 
     // authenticate with relay
     relayPassword = relayPassword.replaceAll(',', '\\,');
