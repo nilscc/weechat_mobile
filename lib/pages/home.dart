@@ -63,11 +63,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         }
       case AppLifecycleState.paused:
         {
-          _relayConnection?.close();
-          setState(() {
-            _channelView = null;
-          });
-          return;
+          return _disconnect();
         }
       case AppLifecycleState.detached:
         {
@@ -80,11 +76,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-  void _disconnect(BuildContext context) async {
-    final con = Provider.of<RelayConnection>(context, listen: false);
-
-    await con.close();
-
+  void _disconnect() async {
+    await _relayConnection?.close();
     setState(() {
       _channelView = null;
     });
