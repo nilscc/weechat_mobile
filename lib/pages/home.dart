@@ -52,22 +52,31 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _eventLogger?.info('Lifecycle state: $state');
 
     switch (state) {
-      case AppLifecycleState.resumed: {
-        if (_relayConnection != null && _config != null && _config!.autoconnect) {
-          _connect(_relayConnection!);
+      case AppLifecycleState.resumed:
+        {
+          if (_relayConnection != null &&
+              _config != null &&
+              _config!.autoconnect) {
+            _connect(_relayConnection!);
+          }
+          return;
         }
-        return;
-      }
-      case AppLifecycleState.paused: {
-        _relayConnection?.close();
-        return;
-      }
-      case AppLifecycleState.detached: {
-        return;
-      }
-      case AppLifecycleState.inactive: {
-        return;
-      }
+      case AppLifecycleState.paused:
+        {
+          _relayConnection?.close();
+          setState(() {
+            _channelView = null;
+          });
+          return;
+        }
+      case AppLifecycleState.detached:
+        {
+          return;
+        }
+      case AppLifecycleState.inactive:
+        {
+          return;
+        }
     }
   }
 
@@ -87,19 +96,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       (cfg.relayPassword ?? '').isNotEmpty;
 
   void _connect(RelayConnection connection) async {
-      await connection.connect(
-        hostName: _config!.hostName!,
-        portNumber: _config!.portNumber!,
-        ignoreInvalidCertificate: !_config!.verifyCert!,
-      );
+    await connection.connect(
+      hostName: _config!.hostName!,
+      portNumber: _config!.portNumber!,
+      ignoreInvalidCertificate: !_config!.verifyCert!,
+    );
 
-      await connection.init(_config!.relayPassword!);
+    await connection.init(_config!.relayPassword!);
 
-      _eventLogger?.info('Connected relay version: ${connection.relayVersion}');
+    _eventLogger?.info('Connected relay version: ${connection.relayVersion}');
 
-      connection.startPingTimer();
+    connection.startPingTimer();
 
-      await _loadCurrentGuiBuffer(connection);
+    await _loadCurrentGuiBuffer(connection);
   }
 
   void _toggleConnect(BuildContext context) async {
@@ -190,12 +199,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             !_relayConnection!.connectionStatus.connected) {
           _connect(_relayConnection!);
         }
-       });
+      });
     }
 
     return Scaffold(
       drawer: _channelListDrawer(context),
-      onDrawerChanged: (isOpen) => _channelListDrawerChanged(_relayConnection!, isOpen),
+      onDrawerChanged: (isOpen) =>
+          _channelListDrawerChanged(_relayConnection!, isOpen),
       appBar: AppBar(
         title: _title(),
         actions: [
