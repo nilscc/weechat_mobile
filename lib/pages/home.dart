@@ -108,7 +108,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final con = Provider.of<RelayConnection>(context, listen: false);
 
     if (con.isConnected) {
-      _disconnect(context);
+      _disconnect();
     } else {
       if (!_connectionConfigured(_config!)) {
         await Navigator.of(context).push(SettingsPage.route());
