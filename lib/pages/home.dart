@@ -54,73 +54,93 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.resumed:
         {
-          if (_relayConnection != null &&
-              !_relayConnection!.isConnected &&
-              _config != null &&
-              _config!.autoconnect) {
-            await _connect(_relayConnection!);
-          }
-          return;
+          return _resume();
         }
       case AppLifecycleState.paused:
         {
-          return await _disconnect();
+          return _suspend();
         }
       case AppLifecycleState.detached:
         {
-          return;
+          break;
         }
       case AppLifecycleState.inactive:
         {
-          return;
+          break;
         }
     }
   }
 
+  bool _suspended = false;
+  Future<void> _suspend() async {
+    _suspended = true;
+    await _disconnect();
+  }
+
+  Future<void> _resume() async {
+    if (_relayConnection == null || _config == null) {
+      return; // do nothing
+    }
+
+    // check if we're already connected or if we don't have autoconnect
+    // configured
+    if (_suspended && _connectionConfigured(_config!) && _config!.autoconnect) {
+      await _connect();
+      await _loadCurrentGuiBuffer();
+    }
+  }
 
   static bool _connectionConfigured(Config cfg) =>
       (cfg.hostName ?? '').isNotEmpty &&
       cfg.portNumber != null &&
       (cfg.relayPassword ?? '').isNotEmpty;
 
-  Future<void> _connect(RelayConnection connection) async {
-    await connection.connect(
+  Future<void> _connect() async {
+    if (_relayConnection == null ||
+        _config == null ||
+        !_connectionConfigured(_config!)) {
+      _eventLogger
+          ?.error('Home._connect() called without connection or config');
+      return;
+    }
+
+    await _relayConnection!.connect(
       hostName: _config!.hostName!,
       portNumber: _config!.portNumber!,
       ignoreInvalidCertificate: !_config!.verifyCert!,
     );
 
-    await connection.init(_config!.relayPassword!);
+    await _relayConnection!.init(_config!.relayPassword!);
 
-    _eventLogger?.info('Connected relay version: ${connection.relayVersion}');
+    _eventLogger
+        ?.info('Connected relay version: ${_relayConnection!.relayVersion}');
 
-    connection.startPingTimer();
-
-    await _loadCurrentGuiBuffer(connection);
+    _relayConnection!.startPingTimer();
   }
 
   Future<void> _disconnect() async {
     await _relayConnection?.close();
-    setState(() {
-      _channelView = null;
-    });
   }
 
   Future<void> _toggleConnect(BuildContext context) async {
     final con = Provider.of<RelayConnection>(context, listen: false);
 
     if (con.isConnected) {
-      _disconnect();
+      await _disconnect();
+      setState(() {
+        _channelView = null;
+      });
     } else {
       if (!_connectionConfigured(_config!)) {
         await Navigator.of(context).push(SettingsPage.route());
       }
-      _connect(con);
+      await _connect();
+      await _loadCurrentGuiBuffer();
     }
   }
 
-  Future<void> _loadCurrentGuiBuffer(RelayConnection connection) async {
-    return connection.command(
+  Future<void> _loadCurrentGuiBuffer() async {
+    return _relayConnection?.command(
       'hdata window:gui_current_window/buffer short_name',
       callback: (body) async {
         final h = body.objects()[0] as RelayHData;
@@ -129,7 +149,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         final name = o.values[0];
 
         final buffer = RelayBuffer(
-          relayConnection: connection,
+          relayConnection: _relayConnection!,
           bufferPointer: bufferPtr,
           name: name,
         );
@@ -137,7 +157,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         await buffer.sync();
 
         setState(() {
-          _channelView = ChannelView(buffer: buffer);
+          //if (_channelView == null) {
+          _channelView = ChannelView(
+            buffer: buffer,
+            key: ValueKey('ChannelView(buffer: $bufferPtr)'),
+          );
+          //} else {
+          //_channelView.resume(buffer: buffer);
+          //}
         });
       },
     );
@@ -177,19 +204,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return await loadRelayHotlist(connection);
   }
 
+  Future<void> _autoconnect() async {
+    if (_config!.autoconnect &&
+        _connectionConfigured(_config!) &&
+        !_relayConnection!.connectionStatus.connected) {
+      await _connect();
+      if (_channelView == null) {
+        await _loadCurrentGuiBuffer();
+      }
+    }
+  }
+
   void _init(BuildContext context) {
     _relayConnection ??= RelayConnection.of(context);
 
     // wait for config being loaded and then autoconnect
     if (_config == null) {
       _config = Config.of(context);
-      _config!.addListener(() {
-        if (_config!.autoconnect &&
-            _connectionConfigured(_config!) &&
-            !_relayConnection!.connectionStatus.connected) {
-          _connect(_relayConnection!);
-        }
-      });
+      _config!.addListener(_autoconnect);
     }
   }
 

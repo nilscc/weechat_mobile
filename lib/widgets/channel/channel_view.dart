@@ -11,37 +11,20 @@ import 'package:weechat/relay/connection.dart';
 class ChannelView extends StatefulWidget {
   final RelayBuffer buffer;
 
-  const ChannelView({required this.buffer, Key? key}) : super(key: key);
+  const ChannelView({required this.buffer, super.key});
 
   @override
   State<StatefulWidget> createState() => _ChannelViewState();
 }
 
 class _ChannelViewState extends State<ChannelView> {
-  @override
-  Widget build(BuildContext context) => SafeArea(
-        top: false, // covered by app bar
-        child: Column(
-          children: [
-            Expanded(flex: 1, child: _linesWidget(context)),
-            _inputWidget(context),
-          ],
-        ),
-      );
-
-  final _linesController = ScrollController();
-
-  Widget _linesWidget(BuildContext context) => ChangeNotifierProvider.value(
-        value: widget.buffer,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: ChannelLines(scrollController: _linesController),
-        ),
-      );
-
   final _inputController = TextEditingController();
 
   late final FocusNode _inputFocusNode;
+
+  final _linesController = ScrollController();
+
+  RelayCompletion? _completion;
 
   @override
   void initState() {
@@ -65,7 +48,26 @@ class _ChannelViewState extends State<ChannelView> {
     _inputFocusNode.requestFocus();
   }
 
-  RelayCompletion? _completion;
+  @override
+  Widget build(BuildContext context) => SafeArea(
+        top: false, // covered by app bar
+        child: Column(
+          children: [
+            Expanded(flex: 1, child: _linesWidget(context)),
+            _inputWidget(context),
+          ],
+        ),
+      );
+
+  void resume() {}
+
+  Widget _linesWidget(BuildContext context) => ChangeNotifierProvider.value(
+        value: widget.buffer,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: ChannelLines(scrollController: _linesController),
+        ),
+      );
 
   void _send(RelayConnection con) async {
     final text = _inputController.text;
