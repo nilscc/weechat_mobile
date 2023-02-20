@@ -48,22 +48,23 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     _eventLogger?.info('Lifecycle state: $state');
 
     switch (state) {
       case AppLifecycleState.resumed:
         {
           if (_relayConnection != null &&
+              !_relayConnection!.isConnected &&
               _config != null &&
               _config!.autoconnect) {
-            _connect(_relayConnection!);
+            await _connect(_relayConnection!);
           }
           return;
         }
       case AppLifecycleState.paused:
         {
-          return _disconnect();
+          return await _disconnect();
         }
       case AppLifecycleState.detached:
         {
@@ -76,19 +77,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-  void _disconnect() async {
-    await _relayConnection?.close();
-    setState(() {
-      _channelView = null;
-    });
-  }
 
   static bool _connectionConfigured(Config cfg) =>
       (cfg.hostName ?? '').isNotEmpty &&
       cfg.portNumber != null &&
       (cfg.relayPassword ?? '').isNotEmpty;
 
-  void _connect(RelayConnection connection) async {
+  Future<void> _connect(RelayConnection connection) async {
     await connection.connect(
       hostName: _config!.hostName!,
       portNumber: _config!.portNumber!,
@@ -104,7 +99,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     await _loadCurrentGuiBuffer(connection);
   }
 
-  void _toggleConnect(BuildContext context) async {
+  Future<void> _disconnect() async {
+    await _relayConnection?.close();
+    setState(() {
+      _channelView = null;
+    });
+  }
+
+  Future<void> _toggleConnect(BuildContext context) async {
     final con = Provider.of<RelayConnection>(context, listen: false);
 
     if (con.isConnected) {
@@ -113,7 +115,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       if (!_connectionConfigured(_config!)) {
         await Navigator.of(context).push(SettingsPage.route());
       }
-
       _connect(con);
     }
   }
@@ -176,12 +177,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return await loadRelayHotlist(connection);
   }
 
-  @override
-  Widget build(BuildContext context) {
+  void _init(BuildContext context) {
     _relayConnection ??= RelayConnection.of(context);
-
-    // get current connection status
-    final cs = RelayConnectionStatus.of(context, listen: true);
 
     // wait for config being loaded and then autoconnect
     if (_config == null) {
@@ -194,11 +191,22 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         }
       });
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _init(context);
+
+    // get current connection status
+    final cs = RelayConnectionStatus.of(context, listen: true);
 
     return Scaffold(
       drawer: _channelListDrawer(context),
-      onDrawerChanged: (isOpen) =>
-          _channelListDrawerChanged(_relayConnection!, isOpen),
+      onDrawerChanged: (isOpen) {
+        if (_relayConnection != null) {
+          _channelListDrawerChanged(_relayConnection!, isOpen);
+        }
+      },
       appBar: AppBar(
         title: _title(),
         actions: [
