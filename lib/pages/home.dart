@@ -29,8 +29,47 @@ class HomePage extends StatefulWidget {
       MaterialPageRoute(builder: (BuildContext context) => const HomePage());
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   ChannelView? _channelView;
+  EventLogger? _eventLogger;
+  Config? _config;
+  RelayConnection? _relayConnection;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _eventLogger?.info('Lifecycle state: $state');
+
+    switch (state) {
+      case AppLifecycleState.resumed: {
+        if (_relayConnection != null && _config != null && _config!.autoconnect) {
+          _connect(_relayConnection!);
+        }
+        return;
+      }
+      case AppLifecycleState.paused: {
+        _relayConnection?.close();
+        return;
+      }
+      case AppLifecycleState.detached: {
+        return;
+      }
+      case AppLifecycleState.inactive: {
+        return;
+      }
+    }
+  }
 
   void _disconnect(BuildContext context) async {
     final con = Provider.of<RelayConnection>(context, listen: false);
@@ -42,36 +81,38 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  bool _connectionConfigured(Config cfg) =>
+  static bool _connectionConfigured(Config cfg) =>
       (cfg.hostName ?? '').isNotEmpty &&
       cfg.portNumber != null &&
       (cfg.relayPassword ?? '').isNotEmpty;
 
-  void _connect(BuildContext context) async {
-    final cfg = Config.of(context);
+  void _connect(RelayConnection connection) async {
+      await connection.connect(
+        hostName: _config!.hostName!,
+        portNumber: _config!.portNumber!,
+        ignoreInvalidCertificate: !_config!.verifyCert!,
+      );
+
+      await connection.init(_config!.relayPassword!);
+
+      _eventLogger?.info('Connected relay version: ${connection.relayVersion}');
+
+      connection.startPingTimer();
+
+      await _loadCurrentGuiBuffer(connection);
+  }
+
+  void _toggleConnect(BuildContext context) async {
     final con = Provider.of<RelayConnection>(context, listen: false);
-    final log = EventLogger.of(context);
 
     if (con.isConnected) {
       _disconnect(context);
     } else {
-      if (!_connectionConfigured(cfg)) {
+      if (!_connectionConfigured(_config!)) {
         await Navigator.of(context).push(SettingsPage.route());
       }
 
-      await con.connect(
-        hostName: cfg.hostName!,
-        portNumber: cfg.portNumber!,
-        ignoreInvalidCertificate: !cfg.verifyCert!,
-      );
-
-      await con.init(cfg.relayPassword!);
-
-      log.info('Connected relay version: ${con.relayVersion}');
-
-      con.startPingTimer();
-
-      await _loadCurrentGuiBuffer(con);
+      _connect(con);
     }
   }
 
@@ -133,23 +174,23 @@ class _HomePageState extends State<HomePage> {
     return await loadRelayHotlist(connection);
   }
 
-  bool _configListenerInstalled = false;
-
   @override
   Widget build(BuildContext context) {
-    final cs = RelayConnectionStatus.of(context, listen: true);
-    final con = RelayConnection.of(context);
+    _relayConnection ??= RelayConnection.of(context);
 
-    final cfg = Config.of(context);
-    if (!_configListenerInstalled) {
-      cfg.addListener(() {
-        if (cfg.autoconnect &&
-            _connectionConfigured(cfg) &&
-            !con.connectionStatus.connected) {
-          _connect(context);
+    // get current connection status
+    final cs = RelayConnectionStatus.of(context, listen: true);
+
+    // wait for config being loaded and then autoconnect
+    if (_config == null) {
+      _config = Config.of(context);
+      _config!.addListener(() {
+        if (_config!.autoconnect &&
+            _connectionConfigured(_config!) &&
+            !_relayConnection!.connectionStatus.connected) {
+          _connect(_relayConnection!);
         }
-      });
-      _configListenerInstalled = true;
+       });
     }
 
     return Scaffold(
@@ -183,7 +224,7 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: cs.connected
           ? null
           : FloatingActionButton(
-              onPressed: () => _connect(context),
+              onPressed: () => _toggleConnect(context),
               tooltip: 'Increment',
               backgroundColor: cs.connected ? Colors.green : Colors.red,
               child: cs.connected
