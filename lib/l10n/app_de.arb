@@ -13,9 +13,7 @@
   "settingsConnectionRelayPassword": "Relay-Passwort",
   "settingsConnectionVerifyCert": "Serverzertifikat verifizieren",
   "settingsConnectionVerifyButton": "Verbindung testen.",
-  "settingsConnectionChangeBufferOnConnectTitle": "Remote Buffer wechseln",
-  "settingsConnectionChangeBufferOnConnectSubtitle":
-  "Führt den Befehl \"/buffer weechat\" nach dem Verbinden auf dem Remote aus und verhindert so eine leere Hotlist auf dem zuvor geöffneten Buffer.",
+  "settingsConnectAutomatically": "Automatisch Verbinden",
 
   "settingsUiTitle": "Benutzerinterface",
   "settingsUiSubtitle": "Konfiguriere Aussehen und Verhalten des Benutzerinterfaces.",

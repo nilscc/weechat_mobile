@@ -24,6 +24,10 @@ class Config extends _ConfigBackend {
   set verifyCert(bool? verifyCert) =>
       this['verifyCert'] = verifyCert;
 
+  bool get autoconnect => this['autoconnect'] ?? true;
+  set autoconnect(bool autoconnect) =>
+      this['autoconnect'] = autoconnect;
+
   bool? get uiShowCompletion => this['uiShowCompletion'];
   set uiShowCompletion(bool? uiShowCompletion) =>
       this['uiShowCompletion'] = uiShowCompletion;
