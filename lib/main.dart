@@ -92,7 +92,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MultiProvider(
         providers: [
-          Provider<Config>.value(value: config),
+          ChangeNotifierProvider.value(value: config),
           ChangeNotifierProvider.value(value: connection.connectionStatus),
           Provider<RelayConnection>.value(value: connection),
           ChangeNotifierProvider.value(value: eventLogger),

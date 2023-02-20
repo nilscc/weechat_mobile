@@ -42,6 +42,11 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  bool _connectionConfigured(Config cfg) =>
+      (cfg.hostName ?? '').isNotEmpty &&
+      cfg.portNumber != null &&
+      (cfg.relayPassword ?? '').isNotEmpty;
+
   void _connect(BuildContext context) async {
     final cfg = Config.of(context);
     final con = Provider.of<RelayConnection>(context, listen: false);
@@ -50,9 +55,7 @@ class _HomePageState extends State<HomePage> {
     if (con.isConnected) {
       _disconnect(context);
     } else {
-      if ((cfg.hostName ?? '').isEmpty ||
-          cfg.portNumber == null ||
-          (cfg.relayPassword ?? '').isEmpty) {
+      if (!_connectionConfigured(cfg)) {
         await Navigator.of(context).push(SettingsPage.route());
       }
 
@@ -130,10 +133,24 @@ class _HomePageState extends State<HomePage> {
     return await loadRelayHotlist(connection);
   }
 
+  bool _configListenerInstalled = false;
+
   @override
   Widget build(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
     final con = RelayConnection.of(context);
+
+    final cfg = Config.of(context);
+    if (!_configListenerInstalled) {
+      cfg.addListener(() {
+        if (cfg.autoconnect &&
+            _connectionConfigured(cfg) &&
+            !con.connectionStatus.connected) {
+          _connect(context);
+        }
+      });
+      _configListenerInstalled = true;
+    }
 
     return Scaffold(
       drawer: _channelListDrawer(context),
@@ -169,8 +186,9 @@ class _HomePageState extends State<HomePage> {
               onPressed: () => _connect(context),
               tooltip: 'Increment',
               backgroundColor: cs.connected ? Colors.green : Colors.red,
-              child:
-                  cs.connected ? const Icon(Feather.log_out) : const Icon(Feather.log_in),
+              child: cs.connected
+                  ? const Icon(Feather.log_out)
+                  : const Icon(Feather.log_in),
             ),
     );
   }
@@ -217,9 +235,7 @@ class _HomePageState extends State<HomePage> {
       child: FutureBuilder(
         future: _channelFuture,
         builder: (context, snapshot) {
-          final scaffoldState = Scaffold.of(
-            context
-          );
+          final scaffoldState = Scaffold.of(context);
           if (snapshot.hasData) {
             final t = snapshot.data as Tuple2;
             final l = t.item1 as List<ChannelListItem>;
@@ -234,7 +250,8 @@ class _HomePageState extends State<HomePage> {
                   .map((e) => e.build(
                         context,
                         hotlist: m[e.bufferPointer],
-                        openBuffer: (context) => _openBuffer(scaffoldState, con, e),
+                        openBuffer: (context) =>
+                            _openBuffer(scaffoldState, con, e),
                       ))
                   .toList(),
             );
@@ -251,7 +268,6 @@ class _HomePageState extends State<HomePage> {
     RelayConnection connection,
     ChannelListItem channelListItem,
   ) async {
-
     if (!connection.isConnected || _channelView == null) return;
 
     await _channelView!.buffer.desync();

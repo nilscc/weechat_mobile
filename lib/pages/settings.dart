@@ -104,6 +104,16 @@ class _SettingsState extends State<SettingsPage> {
           title: Text(loc.settingsConnectionVerifyCert),
         ),
       ),
+      Container(
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        child: CheckboxListTile(
+          title: Text(loc.settingsConnectAutomatically),
+          value: config.autoconnect,
+          onChanged: (newValue) => setState(() {
+            config.autoconnect = newValue ?? true;
+          }),
+        ),
+      )
     ];
   }
 
