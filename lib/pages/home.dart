@@ -283,7 +283,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Widget _buildBody(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
     if (cs.connected && _relayBuffer != null) {
-      return const ChannelView();
+      return ChannelView(key: ValueKey('ChannelView(buffer: ${_relayBuffer!.bufferPointer})'));
     } else {
       return _showConnectionErrors(context, reason: cs.reason);
     }
