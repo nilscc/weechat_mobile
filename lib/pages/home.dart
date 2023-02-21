@@ -212,6 +212,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   void _init(BuildContext context) {
+    _eventLogger ??= EventLogger.of(context);
     _relayConnection ??= RelayConnection.of(context);
 
     // wait for config being loaded and then auto connect
