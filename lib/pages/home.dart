@@ -257,10 +257,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       body: SafeArea(
         top: false, // covered by app bar
         bottom: false, // covered by bottom padding of channel list
-        child: ChangeNotifierProvider.value(
-          value: _relayBuffer,
-          child: _buildBody(context),
-        ),
+        child: _buildBody(context),
       ),
 
       // the connection status floating button
@@ -283,8 +280,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Widget _buildBody(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
-    if (cs.connected && _relayBuffer != null) {
-      return ChannelView(key: ValueKey('ChannelView(buffer: ${_relayBuffer!.bufferPointer})'));
+    if ((cs.connected || _suspended) && _relayBuffer != null) {
+      return ChangeNotifierProvider.value(
+        value: _relayBuffer,
+        child: ChannelView(
+          key: ValueKey('ChannelView(buffer: ${_relayBuffer?.bufferPointer})'),
+        ),
+      );
     } else {
       return _showConnectionErrors(context, reason: cs.reason);
     }
