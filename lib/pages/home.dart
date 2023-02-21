@@ -82,14 +82,20 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Future<void> _resume() async {
     if (_relayConnection == null || _config == null) {
-      return; // do nothing
+      setState(() {
+        _suspended = false;
+      });
+      return;
     }
-
+    
     // check if we're already connected or if we don't have autoconnect
     // configured
     if (_suspended && _connectionConfigured(_config!) && _config!.autoconnect) {
       await _connect();
       await _relayBuffer?.resume();
+      setState(() {
+        _suspended = false;
+      });
     }
   }
 
@@ -261,7 +267,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       ),
 
       // the connection status floating button
-      floatingActionButton: cs.connected
+      floatingActionButton: (cs.connected || _suspended)
           ? null
           : FloatingActionButton(
               onPressed: () => _toggleConnect(context),
