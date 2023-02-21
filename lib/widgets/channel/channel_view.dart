@@ -9,9 +9,7 @@ import 'package:weechat/relay/completion.dart';
 import 'package:weechat/relay/connection.dart';
 
 class ChannelView extends StatefulWidget {
-  final RelayBuffer buffer;
-
-  const ChannelView({required this.buffer, super.key});
+  const ChannelView({super.key});
 
   @override
   State<StatefulWidget> createState() => _ChannelViewState();
@@ -36,7 +34,8 @@ class _ChannelViewState extends State<ChannelView> {
       onKey: (node, event) {
         if (event is RawKeyDownEvent && event.logicalKey.keyLabel == 'Tab') {
           final con = RelayConnection.of(node.context!);
-          _complete(con);
+          final buffer = Provider.of<RelayBuffer>(node.context!);
+          _complete(con, buffer);
           return KeyEventResult.handled;
         } else {
           return KeyEventResult.ignored;
@@ -59,29 +58,24 @@ class _ChannelViewState extends State<ChannelView> {
         ),
       );
 
-  void resume() {}
-
-  Widget _linesWidget(BuildContext context) => ChangeNotifierProvider.value(
-        value: widget.buffer,
-        child: Container(
+  Widget _linesWidget(BuildContext context) => Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: ChannelLines(scrollController: _linesController),
-        ),
       );
 
-  void _send(RelayConnection con) async {
+  void _send(RelayConnection con, RelayBuffer buffer) async {
     final text = _inputController.text;
     if (text.isNotEmpty) {
-      await con.command('input ${widget.buffer.bufferPointer} $text');
+      await con.command('input ${buffer.bufferPointer} $text');
       _inputController.text = '';
       _linesController.jumpTo(0);
     }
   }
 
-  void _complete(RelayConnection connection) async {
+  void _complete(RelayConnection connection, RelayBuffer buffer) async {
     _completion ??= await RelayCompletion.load(
         connection,
-        widget.buffer.bufferPointer,
+        buffer.bufferPointer,
         _inputController.text,
         _inputController.selection.base.offset);
 
@@ -96,9 +90,10 @@ class _ChannelViewState extends State<ChannelView> {
   }
 
   Widget _inputWidget(BuildContext context) {
-    //final loc = AppLocalizations.of(context)!;
     final con = Provider.of<RelayConnection>(context);
     final cfg = Config.of(context);
+
+    final buffer = Provider.of<RelayBuffer>(context, listen: true);
 
     return Card(
       margin: const EdgeInsets.all(10),
@@ -117,7 +112,7 @@ class _ChannelViewState extends State<ChannelView> {
                 onChanged: (text) {
                   _completion = null;
                 },
-                onEditingComplete: () => _send(con),
+                onEditingComplete: buffer.active ? () => _send(con, buffer) : null,
                 focusNode: _inputFocusNode,
               ),
             ),
@@ -126,13 +121,13 @@ class _ChannelViewState extends State<ChannelView> {
                 padding: EdgeInsets.zero,
                 child: IconButton(
                   icon: const Icon(Icons.keyboard_tab),
-                  onPressed: () => _complete(con),
+                  onPressed: buffer.active ? () => _complete(con, buffer) : null,
                 ),
               ),
             if (cfg.uiShowSend ?? false)
               IconButton(
                 icon: const Icon(Feather.arrow_up),
-                onPressed: () => _send(con),
+                onPressed: () => _send(con, buffer),
               ),
           ],
         ),

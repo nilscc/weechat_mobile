@@ -72,6 +72,9 @@ class RelayBuffer extends ChangeNotifier {
   final String bufferPointer, name;
   final List<LineData> lines = [];
 
+  bool get active => _active;
+  bool _active = false;
+
   RelayBuffer({
     required this.relayConnection,
     required this.bufferPointer,
@@ -80,12 +83,11 @@ class RelayBuffer extends ChangeNotifier {
 
   Future<void> desync() async {
     _removeCallbacks();
-    await relayConnection
-        .command('input $bufferPointer /buffer set hotlist -1\n'
-            'desync $bufferPointer buffer');
+    await relayConnection.command('desync $bufferPointer buffer');
+    _active = false;
   }
 
-  String? _lastLinePointer;
+  String? _lastLinePointer, _firstLinePointer;
 
   Future<void> sync({int lastLineCount = 50}) async {
     _addCallbacks();
@@ -100,13 +102,22 @@ class RelayBuffer extends ChangeNotifier {
     await relayConnection.command(
       '$hdataCmd\n$syncCmd',
       callback: (body) async {
+        var success = false;
         for (final RelayHData hdata in body.objects()) {
-          lines.addAll(_handleLineData(hdata, 3));
           if (hdata.objects.isNotEmpty) {
+            lines.addAll(_handleLineData(hdata, 3));
+            // set first line only while we haven't been successful yet
+            if (!success) {
+              _firstLinePointer = hdata.objects.first.pPath[2];
+            }
             _lastLinePointer = hdata.objects.last.pPath[2];
+            success = true;
           }
         }
-        notifyListeners();
+        if (success) {
+          _active = true;
+          notifyListeners();
+        }
       },
     );
   }
@@ -115,9 +126,15 @@ class RelayBuffer extends ChangeNotifier {
     relayConnection.addCallback(
       '_buffer_line_added',
       (body) async {
-        for (final hdata in body.objects()) {
-          for (final l in _handleLineData(hdata, 0)) {
-            lines.insert(0, l);
+        for (final RelayHData obj in body.objects()) {
+          if (obj.hPath == 'line') {
+            // store information about last line
+            _firstLinePointer = obj.objects.first.pPath[0];
+          } else if (obj.hPath == 'line_data') {
+            // add lines to buffer
+            for (final l in _handleLineData(obj, 0)) {
+              lines.insert(0, l);
+            }
           }
         }
         notifyListeners();
@@ -136,22 +153,52 @@ class RelayBuffer extends ChangeNotifier {
         ' line:$_lastLinePointer/prev_line(-$lineCount)/data'
         ' $_lineDataSelected';
 
-    var success = false;
-
     await relayConnection.command(
       hdataCmd,
       callback: (body) async {
+        var success = false;
+
         final o = body.objects();
         for (final RelayHData hdata in o) {
-          success = success || hdata.objects.isNotEmpty;
-          lines.addAll(_handleLineData(hdata, 2));
           if (hdata.objects.isNotEmpty) {
+            success = true;
+            lines.addAll(_handleLineData(hdata, 2));
             _lastLinePointer = hdata.objects.last.pPath[1];
           }
         }
+
+        if (success) notifyListeners();
       },
     );
+  }
 
-    if (success) notifyListeners();
+  Future<void> suspend() async {
+    _active = false;
+  }
+
+  Future<void> resume() async {
+    final hdataCmd = 'hdata'
+        ' line:$_firstLinePointer/next_line(*)/data'
+        ' $_lineDataSelected';
+
+    final syncCmd = 'sync $bufferPointer buffer';
+
+    _addCallbacks();
+    await relayConnection.command('$hdataCmd\n$syncCmd',
+        callback: (body) async {
+      final o = body.objects();
+      for (final RelayHData hdata in o) {
+        if (hdata.objects.isNotEmpty) {
+          for (final l in _handleLineData(hdata, 0)) {
+            lines.insert(0, l);
+          }
+          // next_line is sorted oldest to newest, so the first line is always the last one!
+          _firstLinePointer = hdata.objects.last.pPath[1];
+        }
+      }
+      // always notify listeners about active state change => no "success" variable needed
+      _active = true;
+      notifyListeners();
+    });
   }
 }

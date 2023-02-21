@@ -30,7 +30,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  ChannelView? _channelView;
+  RelayBuffer? _relayBuffer;
   EventLogger? _eventLogger;
   Config? _config;
   RelayConnection? _relayConnection;
@@ -73,7 +73,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   bool _suspended = false;
   Future<void> _suspend() async {
-    _suspended = true;
+    setState(() {
+      _suspended = true;
+    });
+    await _relayBuffer?.suspend();
     await _disconnect();
   }
 
@@ -86,7 +89,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // configured
     if (_suspended && _connectionConfigured(_config!) && _config!.autoconnect) {
       await _connect();
-      await _loadCurrentGuiBuffer();
+      await _relayBuffer?.resume();
     }
   }
 
@@ -128,7 +131,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (con.isConnected) {
       await _disconnect();
       setState(() {
-        _channelView = null;
+        _relayBuffer = null;
       });
     } else {
       if (!_connectionConfigured(_config!)) {
@@ -140,7 +143,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Future<void> _loadCurrentGuiBuffer() async {
-    return _relayConnection?.command(
+    await _relayConnection?.command(
       'hdata window:gui_current_window/buffer short_name',
       callback: (body) async {
         final h = body.objects()[0] as RelayHData;
@@ -157,14 +160,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         await buffer.sync();
 
         setState(() {
-          //if (_channelView == null) {
-          _channelView = ChannelView(
-            buffer: buffer,
-            key: ValueKey('ChannelView(buffer: $bufferPtr)'),
-          );
-          //} else {
-          //_channelView.resume(buffer: buffer);
-          //}
+          _relayBuffer = buffer;
         });
       },
     );
@@ -204,12 +200,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return await loadRelayHotlist(connection);
   }
 
-  Future<void> _autoconnect() async {
+  Future<void> _autoConnect() async {
     if (_config!.autoconnect &&
         _connectionConfigured(_config!) &&
         !_relayConnection!.connectionStatus.connected) {
       await _connect();
-      if (_channelView == null) {
+      if (_relayBuffer == null) {
         await _loadCurrentGuiBuffer();
       }
     }
@@ -218,10 +214,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void _init(BuildContext context) {
     _relayConnection ??= RelayConnection.of(context);
 
-    // wait for config being loaded and then autoconnect
+    // wait for config being loaded and then auto connect
     if (_config == null) {
       _config = Config.of(context);
-      _config!.addListener(_autoconnect);
+      _config!.addListener(_autoConnect);
     }
   }
 
@@ -260,7 +256,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       body: SafeArea(
         top: false, // covered by app bar
         bottom: false, // covered by bottom padding of channel list
-        child: _buildBody(context),
+        child: ChangeNotifierProvider.value(
+          value: _relayBuffer,
+          child: _buildBody(context),
+        ),
       ),
 
       // the connection status floating button
@@ -278,17 +277,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget _title() {
-    if (_channelView != null) {
-      return Text(_channelView!.buffer.name);
-    } else {
-      return Text(widget.title);
-    }
+    return Text(_relayBuffer?.name ?? widget.title);
   }
 
   Widget _buildBody(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
-    if (cs.connected && _channelView != null) {
-      return _channelView!;
+    if (cs.connected && _relayBuffer != null) {
+      return const ChannelView();
     } else {
       return _showConnectionErrors(context, reason: cs.reason);
     }
@@ -352,17 +347,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     RelayConnection connection,
     ChannelListItem channelListItem,
   ) async {
-    if (!connection.isConnected || _channelView == null) return;
+    if (!connection.isConnected) return;
 
-    await _channelView!.buffer.desync();
+    await _relayBuffer?.desync();
 
     final bufferFullName = channelListItem.fullName;
     final bufferName = channelListItem.name;
     final bufferPtr = channelListItem.bufferPointer;
-
-    // switch buffer on remote weechat
-    await connection.command('input core.weechat /buffer $bufferFullName');
-
     final buffer = RelayBuffer(
       relayConnection: connection,
       bufferPointer: bufferPtr,
@@ -374,48 +365,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // close the drawer
     scaffoldState.closeDrawer();
 
+    // switch buffer on remote weechat
+    await connection.command('input core.weechat /buffer $bufferFullName');
+
     setState(() {
-      _channelView = ChannelView(
-        buffer: buffer,
-        key: ValueKey(bufferFullName),
-      );
+      _relayBuffer = buffer;
     });
   }
-
-  // Widget _buildChannelList(BuildContext context) {
-  //   final con = RelayConnection.of(context);
-  //
-  //   return ReorderableListView(
-  //     children: [
-  //       Container(height: 5, key: UniqueKey()),
-  //       ..._channelList.map((e) => e.build(
-  //             context,
-  //             hotlist: _hotList[e.bufferPointer],
-  //             beforeBufferOpened: () => desyncHotlist(con),
-  //             afterBufferClosed: () => _loadHotList(con),
-  //           )),
-  //       Container(height: 100, key: UniqueKey()),
-  //     ],
-  //     onReorder: (int oldIndex, int newIndex) async {
-  //       // subtract 1 from both indexes for the first container child
-  //       oldIndex -= 1;
-  //       newIndex -= 1;
-  //
-  //       // check if both indexes are in range
-  //       final l = _channelList.length;
-  //       if (0 <= oldIndex && oldIndex < l && 0 <= newIndex && newIndex < l) {
-  //         setState(() {
-  //           _channelList.insert(newIndex, _channelList[oldIndex]);
-  //           _channelList
-  //               .removeAt(oldIndex < newIndex ? oldIndex : oldIndex + 1);
-  //         });
-  //
-  //         // save new layout
-  //         _saveLayout(context);
-  //       }
-  //     },
-  //   );
-  // }
 
   Widget _showConnectionErrors(context, {String? reason}) {
     final l = AppLocalizations.of(context)!;
