@@ -126,6 +126,9 @@ class RelayBuffer extends ChangeNotifier {
     relayConnection.addCallback(
       '_buffer_line_added',
       (body) async {
+        // invalidate pointer to first line
+        _firstLinePointer = null;
+
         for (final RelayHData obj in body.objects()) {
           if (obj.hPath == 'line') {
             // store information about last line
@@ -137,6 +140,7 @@ class RelayBuffer extends ChangeNotifier {
             }
           }
         }
+
         notifyListeners();
       },
       repeat: true,
@@ -177,6 +181,13 @@ class RelayBuffer extends ChangeNotifier {
   }
 
   Future<void> resume() async {
+    if (_firstLinePointer == null) {
+      // perform full sync if first line pointer is not available
+      lines.clear();
+      await sync();
+      return;
+    }
+
     final hdataCmd = 'hdata'
         ' line:$_firstLinePointer/next_line(*)/data'
         ' $_lineDataSelected';
