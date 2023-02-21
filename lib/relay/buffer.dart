@@ -195,21 +195,24 @@ class RelayBuffer extends ChangeNotifier {
     final syncCmd = 'sync $bufferPointer buffer';
 
     _addCallbacks();
-    await relayConnection.command('$hdataCmd\n$syncCmd',
-        callback: (body) async {
-      final o = body.objects();
-      for (final RelayHData hdata in o) {
-        if (hdata.objects.isNotEmpty) {
-          for (final l in _handleLineData(hdata, 0)) {
-            lines.insert(0, l);
+
+    await relayConnection.command(
+      '$hdataCmd\n$syncCmd',
+      callback: (body) async {
+        final o = body.objects();
+        for (final RelayHData hdata in o) {
+          if (hdata.objects.isNotEmpty) {
+            for (final l in _handleLineData(hdata, 0)) {
+              lines.insert(0, l);
+            }
+            // next_line is sorted oldest to newest, so the first line is always the last one!
+            _firstLinePointer = hdata.objects.last.pPath[1];
           }
-          // next_line is sorted oldest to newest, so the first line is always the last one!
-          _firstLinePointer = hdata.objects.last.pPath[1];
         }
-      }
-      // always notify listeners about active state change => no "success" variable needed
-      _active = true;
-      notifyListeners();
-    });
+        // always notify listeners about active state change => no "success" variable needed
+        _active = true;
+        notifyListeners();
+      },
+    );
   }
 }
