@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
+import 'package:weechat/pages/home/channel_drawer.dart';
 import 'package:weechat/widgets/home/channel_list_item.dart';
 import 'package:weechat/pages/log.dart';
 import 'package:weechat/pages/log/event_logger.dart';
@@ -307,7 +308,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final cs = RelayConnectionStatus.of(context, listen: true);
 
     return Scaffold(
-      drawer: _channelListDrawer(context),
+      drawer: ChannelListDrawer(
+        openBuffer: _openBuffer,
+        channelFuture: _channelFuture,
+      ),
       onDrawerChanged: (isOpen) {
         if (_relayConnection != null) {
           _channelListDrawerChanged(_relayConnection!, isOpen);
@@ -387,42 +391,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     });
   }
 
-  Widget? _channelListDrawer(BuildContext context) {
-    final con = RelayConnection.of(context, listen: false);
-    if (!con.isConnected) return null;
-
-    return Drawer(
-      child: FutureBuilder(
-        future: _channelFuture,
-        builder: (context, snapshot) {
-          final scaffoldState = Scaffold.of(context);
-          if (snapshot.hasData) {
-            final t = snapshot.data as Tuple2;
-            final l = t.item1 as List<ChannelListItem>;
-            final h = t.item2 as List<RelayHotlistEntry>;
-
-            // convert into lookup map
-            final m =
-                h.asMap().map((key, value) => MapEntry(value.buffer, value));
-
-            return ListView(
-              children: l
-                  .map((e) => e.build(
-                        context,
-                        hotlist: m[e.bufferPointer],
-                        openBuffer: (context) =>
-                            _openBuffer(scaffoldState, con, e),
-                      ))
-                  .toList(),
-            );
-          } else {
-            return Container();
-          }
-        },
-      ),
-    );
-  }
-
   Future _openBuffer(
     ScaffoldState scaffoldState,
     RelayConnection connection,
@@ -430,28 +398,34 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   ) async {
     if (!connection.isConnected) return;
 
-    await _relayBuffer?.desync();
+    // close the drawer
+    scaffoldState.closeDrawer();
 
+    // close old buffer
+    await _relayBuffer?.desync();
+    setState(() {
+      _relayBuffer = null;
+    });
+
+    // get info from current list item
     final bufferFullName = channelListItem.fullName;
     final bufferName = channelListItem.name;
     final bufferPtr = channelListItem.bufferPointer;
+
+    // create new buffer
     final buffer = RelayBuffer(
       relayConnection: connection,
       bufferPointer: bufferPtr,
       name: bufferName,
     );
-
     await buffer.sync();
-
-    // close the drawer
-    scaffoldState.closeDrawer();
-
-    // switch buffer on remote weechat
-    await connection.command('input core.weechat /buffer $bufferFullName');
 
     setState(() {
       _relayBuffer = buffer;
     });
+
+    // switch buffer on remote weechat
+    await connection.command('input core.weechat /buffer $bufferFullName');
   }
 
   Widget _showConnectionErrors(context, {String? reason}) {
