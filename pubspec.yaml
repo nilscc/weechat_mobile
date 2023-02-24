@@ -45,11 +45,11 @@ dependencies:
   cupertino_icons:
 
   # open files and images
-  #file_picker:
-  #image_picker:
+  file_picker:
+  image_picker:
 
   # ssh upload
-  #dartssh2:
+  dartssh2:
 
 dev_dependencies:
   flutter_lints: any
