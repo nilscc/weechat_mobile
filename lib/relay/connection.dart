@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:async/async.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/log/event_logger.dart';
@@ -45,6 +46,11 @@ class RelayConnection {
     try {
       // cancel ping timer
       _pingTimer?.cancel();
+
+      // cancel running commands
+      for (var c in _runningCommands) {
+        c.cancel();
+      }
 
       // close connection properly
       try {
@@ -99,6 +105,10 @@ class RelayConnection {
   int _id = 0;
   String _nextId() => '__cmd_${_id++}';
 
+  // Store running commands in a list so we can cancel them if the connection is
+  // closed
+  final List<CancelableOperation> _runningCommands = [];
+
   Future<T?> command<T>(
     String command, {
     FutureOr<T?> Function(RelayMessageBody)? callback,
@@ -125,10 +135,19 @@ class RelayConnection {
 
       // execute callback
       if (c != null) {
-        final m = await c.future.timeout(
+        final co = CancelableOperation.fromFuture(c.future.timeout(
           timeout ?? _DEFAULT_TIMEOUT,
           onTimeout: onTimeout == null ? null : () => null,
-        );
+        ));
+        _runningCommands.add(co);
+
+        RelayMessageBody? m;
+        try {
+          m = await co.valueOrCancellation();
+        } finally {
+          _runningCommands.remove(co);
+        }
+
         if (m != null) {
           return await callback?.call(m);
         } else {
@@ -176,7 +195,7 @@ class RelayConnection {
 
   Future<void> init(String relayPassword) async {
     // perform handshake
-    await command('handshake compression=zlib');
+    await command('handshake compression=zlib', callback: (_) {});
 
     // authenticate with relay
     relayPassword = relayPassword.replaceAll(',', '\\,');

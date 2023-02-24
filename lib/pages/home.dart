@@ -29,74 +29,218 @@ class HomePage extends StatefulWidget {
       MaterialPageRoute(builder: (BuildContext context) => const HomePage());
 }
 
-class _HomePageState extends State<HomePage> {
-  ChannelView? _channelView;
+class _GuiCurrentWindowBuffer {
+  final String bufferPointer;
+  final String shortName;
+  final String name;
+  final String fullName;
 
-  void _disconnect(BuildContext context) async {
-    final con = Provider.of<RelayConnection>(context, listen: false);
+  _GuiCurrentWindowBuffer({
+    required this.bufferPointer,
+    required this.shortName,
+    required this.name,
+    required this.fullName,
+  });
 
-    await con.close();
+  RelayBuffer toRelayBuffer(RelayConnection relayConnection) => RelayBuffer(
+        relayConnection: relayConnection,
+        bufferPointer: bufferPointer,
+        name: shortName,
+      );
 
-    setState(() {
-      _channelView = null;
-    });
+  static Future<_GuiCurrentWindowBuffer?> load(
+      RelayConnection relayConnection) async {
+    return relayConnection.command(
+      'hdata window:gui_current_window/buffer full_name,name,short_name',
+      callback: (body) {
+        final h = body.objects()[0] as RelayHData;
+        final o = h.objects[0];
+
+        final bufferPtr = o.pPath[1];
+        final fullName = o.values[0];
+        final name = o.values[1];
+        final shortName = o.values[2];
+
+        return _GuiCurrentWindowBuffer(
+          bufferPointer: bufferPtr,
+          shortName: shortName,
+          name: name,
+          fullName: fullName,
+        );
+      },
+    );
+  }
+}
+
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  RelayBuffer? _relayBuffer;
+  EventLogger? _eventLogger;
+  Config? _config;
+  RelayConnection? _relayConnection;
+
+  // UI control
+  final _inputFocusNode = FocusNode();
+  bool _inputHadFocus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
   }
 
-  bool _connectionConfigured(Config cfg) =>
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    _eventLogger?.info('Lifecycle state: $state');
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        {
+          return _resume();
+        }
+      case AppLifecycleState.paused:
+        {
+          return _suspend();
+        }
+      case AppLifecycleState.detached:
+        {
+          break;
+        }
+      case AppLifecycleState.inactive:
+        {
+          break;
+        }
+    }
+  }
+
+  bool _suspended = false;
+  Future<void> _suspend() async {
+    setState(() {
+      _suspended = true;
+      _inputHadFocus = _inputFocusNode.hasFocus;
+    });
+    await _relayBuffer?.suspend();
+    await _disconnect();
+  }
+
+  Future<void> _resume() async {
+    if (_relayConnection == null || _config == null) {
+      return setState(() {
+        _suspended = false;
+      });
+    }
+
+    // check if we're already connected or if we don't have autoconnect
+    // configured
+    if (_suspended && _connectionConfigured(_config!) && _config!.autoconnect) {
+      await _connect();
+
+      // check if weechat gui has still the same buffer opened
+      final wb = await _GuiCurrentWindowBuffer.load(_relayConnection!);
+
+      // check if current and previous buffer pointer still are the same.
+      // this will prevent not only issues when switching buffers in the UI, but also if
+      // e.g. the weechat instance was upgraded to a new software version and prevents
+      // accessing (and crashing weechat) illegal pointer addresses.
+      if (wb != null) {
+        if (wb.bufferPointer == _relayBuffer?.bufferPointer) {
+          await _relayBuffer?.resume();
+          if (_inputHadFocus) {
+            _inputFocusNode.requestFocus();
+          }
+        } else {
+          setState(() {
+            _relayBuffer = wb.toRelayBuffer(_relayConnection!);
+          });
+          await _relayBuffer!.sync();
+        }
+      } else {
+        _disconnect();
+        setState(() {
+          _relayBuffer = null;
+        });
+      }
+
+      // unset suspended state in any case
+      setState(() {
+        _suspended = false;
+      });
+    }
+  }
+
+  static bool _connectionConfigured(Config cfg) =>
       (cfg.hostName ?? '').isNotEmpty &&
       cfg.portNumber != null &&
       (cfg.relayPassword ?? '').isNotEmpty;
 
-  void _connect(BuildContext context) async {
-    final cfg = Config.of(context);
+  Future<void> _connect() async {
+    if (_relayConnection == null ||
+        _config == null ||
+        !_connectionConfigured(_config!)) {
+      _eventLogger
+          ?.error('Home._connect() called without connection or config');
+      return;
+    }
+
+    await _relayConnection!.connect(
+      hostName: _config!.hostName!,
+      portNumber: _config!.portNumber!,
+      ignoreInvalidCertificate: !_config!.verifyCert!,
+    );
+
+    await _relayConnection!.init(_config!.relayPassword!);
+
+    _eventLogger
+        ?.info('Connected relay version: ${_relayConnection!.relayVersion}');
+
+    _relayConnection!.startPingTimer();
+  }
+
+  Future<void> _disconnect() async {
+    await _relayConnection?.close();
+  }
+
+  Future<void> _toggleConnect(BuildContext context) async {
     final con = Provider.of<RelayConnection>(context, listen: false);
-    final log = EventLogger.of(context);
 
     if (con.isConnected) {
-      _disconnect(context);
+      await _disconnect();
+      setState(() {
+        _relayBuffer = null;
+      });
     } else {
-      if (!_connectionConfigured(cfg)) {
+      if (!_connectionConfigured(_config!)) {
         await Navigator.of(context).push(SettingsPage.route());
       }
-
-      await con.connect(
-        hostName: cfg.hostName!,
-        portNumber: cfg.portNumber!,
-        ignoreInvalidCertificate: !cfg.verifyCert!,
-      );
-
-      await con.init(cfg.relayPassword!);
-
-      log.info('Connected relay version: ${con.relayVersion}');
-
-      con.startPingTimer();
-
-      await _loadCurrentGuiBuffer(con);
+      await _connect();
+      await _loadCurrentGuiBuffer();
     }
   }
 
-  Future<void> _loadCurrentGuiBuffer(RelayConnection connection) async {
-    return connection.command(
-      'hdata window:gui_current_window/buffer short_name',
-      callback: (body) async {
-        final h = body.objects()[0] as RelayHData;
-        final o = h.objects[0];
-        final bufferPtr = o.pPath[1];
-        final name = o.values[0];
+  Future<void> _loadCurrentGuiBuffer() async {
+    // require connection
+    if (_relayConnection == null) {
+      return;
+    }
 
-        final buffer = RelayBuffer(
-          relayConnection: connection,
-          bufferPointer: bufferPtr,
-          name: name,
-        );
+    // require window buffer
+    final wb = await _GuiCurrentWindowBuffer.load(_relayConnection!);
+    if (wb == null) {
+      return;
+    }
 
-        await buffer.sync();
+    // connect and sync buffer
+    final buffer = wb.toRelayBuffer(_relayConnection!);
+    await buffer.sync();
 
-        setState(() {
-          _channelView = ChannelView(buffer: buffer);
-        });
-      },
-    );
+    setState(() {
+      _relayBuffer = buffer;
+    });
   }
 
   Future<List<ChannelListItem>> _loadChannelList(
@@ -133,28 +277,42 @@ class _HomePageState extends State<HomePage> {
     return await loadRelayHotlist(connection);
   }
 
-  bool _configListenerInstalled = false;
+  Future<void> _autoConnect() async {
+    if (_config!.autoconnect &&
+        _connectionConfigured(_config!) &&
+        !_relayConnection!.connectionStatus.connected) {
+      await _connect();
+      if (_relayBuffer == null) {
+        await _loadCurrentGuiBuffer();
+      }
+    }
+  }
+
+  void _init(BuildContext context) {
+    _eventLogger ??= EventLogger.of(context);
+    _relayConnection ??= RelayConnection.of(context);
+
+    // wait for config being loaded and then auto connect
+    if (_config == null) {
+      _config = Config.of(context);
+      _config!.addListener(_autoConnect);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cs = RelayConnectionStatus.of(context, listen: true);
-    final con = RelayConnection.of(context);
+    _init(context);
 
-    final cfg = Config.of(context);
-    if (!_configListenerInstalled) {
-      cfg.addListener(() {
-        if (cfg.autoconnect &&
-            _connectionConfigured(cfg) &&
-            !con.connectionStatus.connected) {
-          _connect(context);
-        }
-      });
-      _configListenerInstalled = true;
-    }
+    // get current connection status
+    final cs = RelayConnectionStatus.of(context, listen: true);
 
     return Scaffold(
       drawer: _channelListDrawer(context),
-      onDrawerChanged: (isOpen) => _channelListDrawerChanged(con, isOpen),
+      onDrawerChanged: (isOpen) {
+        if (_relayConnection != null) {
+          _channelListDrawerChanged(_relayConnection!, isOpen);
+        }
+      },
       appBar: AppBar(
         title: _title(),
         actions: [
@@ -180,10 +338,10 @@ class _HomePageState extends State<HomePage> {
       ),
 
       // the connection status floating button
-      floatingActionButton: cs.connected
+      floatingActionButton: (cs.connected || _suspended)
           ? null
           : FloatingActionButton(
-              onPressed: () => _connect(context),
+              onPressed: () => _toggleConnect(context),
               tooltip: 'Increment',
               backgroundColor: cs.connected ? Colors.green : Colors.red,
               child: cs.connected
@@ -194,17 +352,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _title() {
-    if (_channelView != null) {
-      return Text(_channelView!.buffer.name);
-    } else {
-      return Text(widget.title);
-    }
+    return Text(_relayBuffer?.name ?? widget.title);
   }
 
   Widget _buildBody(BuildContext context) {
     final cs = RelayConnectionStatus.of(context, listen: true);
-    if (cs.connected && _channelView != null) {
-      return _channelView!;
+    if ((cs.connected || _suspended) && _relayBuffer != null) {
+      return ChangeNotifierProvider.value(
+        value: _relayBuffer,
+        child: ChannelView(
+          inputFocusNode: _inputFocusNode,
+          key: ValueKey('ChannelView(buffer: ${_relayBuffer?.bufferPointer})'),
+        ),
+      );
     } else {
       return _showConnectionErrors(context, reason: cs.reason);
     }
@@ -268,17 +428,13 @@ class _HomePageState extends State<HomePage> {
     RelayConnection connection,
     ChannelListItem channelListItem,
   ) async {
-    if (!connection.isConnected || _channelView == null) return;
+    if (!connection.isConnected) return;
 
-    await _channelView!.buffer.desync();
+    await _relayBuffer?.desync();
 
     final bufferFullName = channelListItem.fullName;
     final bufferName = channelListItem.name;
     final bufferPtr = channelListItem.bufferPointer;
-
-    // switch buffer on remote weechat
-    await connection.command('input core.weechat /buffer $bufferFullName');
-
     final buffer = RelayBuffer(
       relayConnection: connection,
       bufferPointer: bufferPtr,
@@ -290,48 +446,13 @@ class _HomePageState extends State<HomePage> {
     // close the drawer
     scaffoldState.closeDrawer();
 
+    // switch buffer on remote weechat
+    await connection.command('input core.weechat /buffer $bufferFullName');
+
     setState(() {
-      _channelView = ChannelView(
-        buffer: buffer,
-        key: ValueKey(bufferFullName),
-      );
+      _relayBuffer = buffer;
     });
   }
-
-  // Widget _buildChannelList(BuildContext context) {
-  //   final con = RelayConnection.of(context);
-  //
-  //   return ReorderableListView(
-  //     children: [
-  //       Container(height: 5, key: UniqueKey()),
-  //       ..._channelList.map((e) => e.build(
-  //             context,
-  //             hotlist: _hotList[e.bufferPointer],
-  //             beforeBufferOpened: () => desyncHotlist(con),
-  //             afterBufferClosed: () => _loadHotList(con),
-  //           )),
-  //       Container(height: 100, key: UniqueKey()),
-  //     ],
-  //     onReorder: (int oldIndex, int newIndex) async {
-  //       // subtract 1 from both indexes for the first container child
-  //       oldIndex -= 1;
-  //       newIndex -= 1;
-  //
-  //       // check if both indexes are in range
-  //       final l = _channelList.length;
-  //       if (0 <= oldIndex && oldIndex < l && 0 <= newIndex && newIndex < l) {
-  //         setState(() {
-  //           _channelList.insert(newIndex, _channelList[oldIndex]);
-  //           _channelList
-  //               .removeAt(oldIndex < newIndex ? oldIndex : oldIndex + 1);
-  //         });
-  //
-  //         // save new layout
-  //         _saveLayout(context);
-  //       }
-  //     },
-  //   );
-  // }
 
   Widget _showConnectionErrors(context, {String? reason}) {
     final l = AppLocalizations.of(context)!;

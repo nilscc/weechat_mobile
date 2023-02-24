@@ -9,15 +9,41 @@ import 'package:weechat/relay/completion.dart';
 import 'package:weechat/relay/connection.dart';
 
 class ChannelView extends StatefulWidget {
-  final RelayBuffer buffer;
+  final FocusNode inputFocusNode;
 
-  const ChannelView({required this.buffer, Key? key}) : super(key: key);
+  ChannelView({super.key, inputFocusNode})
+      : inputFocusNode = inputFocusNode ?? FocusNode();
 
   @override
   State<StatefulWidget> createState() => _ChannelViewState();
 }
 
 class _ChannelViewState extends State<ChannelView> {
+  final _inputController = TextEditingController();
+
+  final _linesController = ScrollController();
+
+  RelayCompletion? _completion;
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.inputFocusNode.onKey = (node, event) {
+      if (event is RawKeyDownEvent && event.logicalKey.keyLabel == 'Tab') {
+        final con = RelayConnection.of(node.context!);
+        final buffer = Provider.of<RelayBuffer>(node.context!);
+        _complete(con, buffer);
+        return KeyEventResult.handled;
+      } else {
+        return KeyEventResult.ignored;
+      }
+    };
+
+    // automatically focus on the input field when opening a new channel
+    widget.inputFocusNode.requestFocus();
+  }
+
   @override
   Widget build(BuildContext context) => SafeArea(
         top: false, // covered by app bar
@@ -29,59 +55,27 @@ class _ChannelViewState extends State<ChannelView> {
         ),
       );
 
-  final _linesController = ScrollController();
-
-  Widget _linesWidget(BuildContext context) => ChangeNotifierProvider.value(
-        value: widget.buffer,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: ChannelLines(scrollController: _linesController),
-        ),
+  Widget _linesWidget(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: ChannelLines(scrollController: _linesController),
       );
 
-  final _inputController = TextEditingController();
-
-  late final FocusNode _inputFocusNode;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // handle tab events in focus node of input field
-    _inputFocusNode = FocusNode(
-      debugLabel: "_inputFocusNode",
-      onKey: (node, event) {
-        if (event is RawKeyDownEvent && event.logicalKey.keyLabel == 'Tab') {
-          final con = RelayConnection.of(node.context!);
-          _complete(con);
-          return KeyEventResult.handled;
-        } else {
-          return KeyEventResult.ignored;
-        }
-      },
-    );
-
-    // automatically focus on the input field when opening a new channel
-    _inputFocusNode.requestFocus();
-  }
-
-  RelayCompletion? _completion;
-
-  void _send(RelayConnection con) async {
+  void _send(RelayConnection con, RelayBuffer buffer) async {
     final text = _inputController.text;
     if (text.isNotEmpty) {
-      await con.command('input ${widget.buffer.bufferPointer} $text');
+      await con.command('input ${buffer.bufferPointer} $text');
       _inputController.text = '';
       _linesController.jumpTo(0);
     }
   }
 
-  void _complete(RelayConnection connection) async {
+  void _complete(RelayConnection connection, RelayBuffer buffer) async {
     _completion ??= await RelayCompletion.load(
-        connection,
-        widget.buffer.bufferPointer,
-        _inputController.text,
-        _inputController.selection.base.offset);
+      connection,
+      buffer.bufferPointer,
+      _inputController.text,
+      _inputController.selection.base.offset,
+    );
 
     if (_completion != null) {
       final n = _completion!.next();
@@ -94,9 +88,10 @@ class _ChannelViewState extends State<ChannelView> {
   }
 
   Widget _inputWidget(BuildContext context) {
-    //final loc = AppLocalizations.of(context)!;
     final con = Provider.of<RelayConnection>(context);
     final cfg = Config.of(context);
+
+    final buffer = Provider.of<RelayBuffer>(context, listen: true);
 
     return Card(
       margin: const EdgeInsets.all(10),
@@ -115,8 +110,9 @@ class _ChannelViewState extends State<ChannelView> {
                 onChanged: (text) {
                   _completion = null;
                 },
-                onEditingComplete: () => _send(con),
-                focusNode: _inputFocusNode,
+                onEditingComplete:
+                    buffer.active ? () => _send(con, buffer) : null,
+                focusNode: widget.inputFocusNode,
               ),
             ),
             if (cfg.uiShowCompletion ?? true)
@@ -124,13 +120,14 @@ class _ChannelViewState extends State<ChannelView> {
                 padding: EdgeInsets.zero,
                 child: IconButton(
                   icon: const Icon(Icons.keyboard_tab),
-                  onPressed: () => _complete(con),
+                  onPressed:
+                      buffer.active ? () => _complete(con, buffer) : null,
                 ),
               ),
             if (cfg.uiShowSend ?? false)
               IconButton(
                 icon: const Icon(Feather.arrow_up),
-                onPressed: () => _send(con),
+                onPressed: () => _send(con, buffer),
               ),
           ],
         ),
