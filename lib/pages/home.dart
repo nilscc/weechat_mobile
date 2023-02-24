@@ -29,11 +29,58 @@ class HomePage extends StatefulWidget {
       MaterialPageRoute(builder: (BuildContext context) => const HomePage());
 }
 
+class _GuiCurrentWindowBuffer {
+  final String bufferPointer;
+  final String shortName;
+  final String name;
+  final String fullName;
+
+  _GuiCurrentWindowBuffer({
+    required this.bufferPointer,
+    required this.shortName,
+    required this.name,
+    required this.fullName,
+  });
+
+  RelayBuffer toRelayBuffer(RelayConnection relayConnection) => RelayBuffer(
+        relayConnection: relayConnection,
+        bufferPointer: bufferPointer,
+        name: shortName,
+      );
+
+  static Future<_GuiCurrentWindowBuffer?> load(
+      RelayConnection relayConnection) async {
+    return relayConnection.command(
+      'hdata window:gui_current_window/buffer full_name,name,short_name',
+      callback: (body) {
+        final h = body.objects()[0] as RelayHData;
+        final o = h.objects[0];
+
+        final bufferPtr = o.pPath[1];
+        final fullName = o.values[0];
+        final name = o.values[1];
+        final shortName = o.values[2];
+
+        return _GuiCurrentWindowBuffer(
+          bufferPointer: bufferPtr,
+          shortName: shortName,
+          name: name,
+          fullName: fullName,
+        );
+      },
+    );
+  }
+}
+
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   RelayBuffer? _relayBuffer;
   EventLogger? _eventLogger;
   Config? _config;
   RelayConnection? _relayConnection;
+
+  // UI control
+  final _inputFocusNode = FocusNode();
+  bool _inputHadFocus = false;
 
   @override
   void initState() {
@@ -75,6 +122,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Future<void> _suspend() async {
     setState(() {
       _suspended = true;
+      _inputHadFocus = _inputFocusNode.hasFocus;
     });
     await _relayBuffer?.suspend();
     await _disconnect();
@@ -82,17 +130,43 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Future<void> _resume() async {
     if (_relayConnection == null || _config == null) {
-      setState(() {
+      return setState(() {
         _suspended = false;
       });
-      return;
     }
-    
+
     // check if we're already connected or if we don't have autoconnect
     // configured
     if (_suspended && _connectionConfigured(_config!) && _config!.autoconnect) {
       await _connect();
-      await _relayBuffer?.resume();
+
+      // check if weechat gui has still the same buffer opened
+      final wb = await _GuiCurrentWindowBuffer.load(_relayConnection!);
+
+      // check if current and previous buffer pointer still are the same.
+      // this will prevent not only issues when switching buffers in the UI, but also if
+      // e.g. the weechat instance was upgraded to a new software version and prevents
+      // accessing (and crashing weechat) illegal pointer addresses.
+      if (wb != null) {
+        if (wb.bufferPointer == _relayBuffer?.bufferPointer) {
+          await _relayBuffer?.resume();
+          if (_inputHadFocus) {
+            _inputFocusNode.requestFocus();
+          }
+        } else {
+          setState(() {
+            _relayBuffer = wb.toRelayBuffer(_relayConnection!);
+          });
+          await _relayBuffer!.sync();
+        }
+      } else {
+        _disconnect();
+        setState(() {
+          _relayBuffer = null;
+        });
+      }
+
+      // unset suspended state in any case
       setState(() {
         _suspended = false;
       });
@@ -149,27 +223,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Future<void> _loadCurrentGuiBuffer() async {
-    await _relayConnection?.command(
-      'hdata window:gui_current_window/buffer short_name',
-      callback: (body) async {
-        final h = body.objects()[0] as RelayHData;
-        final o = h.objects[0];
-        final bufferPtr = o.pPath[1];
-        final name = o.values[0];
+    // require connection
+    if (_relayConnection == null) {
+      return;
+    }
 
-        final buffer = RelayBuffer(
-          relayConnection: _relayConnection!,
-          bufferPointer: bufferPtr,
-          name: name,
-        );
+    // require window buffer
+    final wb = await _GuiCurrentWindowBuffer.load(_relayConnection!);
+    if (wb == null) {
+      return;
+    }
 
-        await buffer.sync();
+    // connect and sync buffer
+    final buffer = wb.toRelayBuffer(_relayConnection!);
+    await buffer.sync();
 
-        setState(() {
-          _relayBuffer = buffer;
-        });
-      },
-    );
+    setState(() {
+      _relayBuffer = buffer;
+    });
   }
 
   Future<List<ChannelListItem>> _loadChannelList(
@@ -290,6 +361,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       return ChangeNotifierProvider.value(
         value: _relayBuffer,
         child: ChannelView(
+          inputFocusNode: _inputFocusNode,
           key: ValueKey('ChannelView(buffer: ${_relayBuffer?.bufferPointer})'),
         ),
       );
