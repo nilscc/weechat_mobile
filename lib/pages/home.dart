@@ -6,6 +6,7 @@ import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:weechat/pages/home/channel_drawer.dart';
+import 'package:weechat/pages/home/channel_list.dart';
 import 'package:weechat/widgets/home/channel_list_item.dart';
 import 'package:weechat/pages/log.dart';
 import 'package:weechat/pages/log/event_logger.dart';
@@ -307,17 +308,73 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // get current connection status
     final cs = RelayConnectionStatus.of(context, listen: true);
 
-    return Scaffold(
-      drawer: ChannelListDrawer(
-        openBuffer: _openBuffer,
-        channelFuture: _channelFuture,
-      ),
-      onDrawerChanged: (isOpen) {
-        if (_relayConnection != null) {
-          _channelListDrawerChanged(_relayConnection!, isOpen);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > constraints.maxHeight && constraints.maxWidth >= 750) {
+          return _desktopLayout();
+        } else {
+          return _mobileLayout(cs);
         }
       },
-      appBar: AppBar(
+    );
+  }
+
+  /// The main scaffold for mobile use
+  Widget _mobileLayout(RelayConnectionStatus cs) => Scaffold(
+        appBar: _appBar(),
+        drawer: _channelDrawer(),
+        onDrawerChanged: _onDrawerChanged(),
+
+        // main body
+        body: SafeArea(
+          top: false, // covered by app bar
+          bottom: false, // covered by bottom padding of channel list
+          child: _buildBody(context),
+        ),
+
+        // the connection status floating button
+        floatingActionButton: _floatingConnectButton(cs),
+      );
+
+  /// The row based layout for desktop/landscape mode
+  Widget _desktopLayout() {
+    if (_relayConnection != null && _channelFuture == null) {
+      _channelFuture = _updateChannelList(_relayConnection!);
+    }
+    return Scaffold(
+      appBar: _appBar(),
+      body: Row(
+        children: [
+          if (_relayConnection != null)
+            SizedBox(
+              width: 250,
+              child: ChannelList(
+                openBufferCallback: _openBuffer,
+                relayConnection: _relayConnection!,
+                channelFuture: _channelFuture,
+              ),
+            ),
+          Expanded(
+            child: _buildBody(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget? _channelDrawer() => ChannelListDrawer(
+        openBuffer: _openBuffer,
+        channelFuture: _channelFuture,
+      );
+
+  ValueChanged<bool>? _onDrawerChanged() {
+    if (_relayConnection != null) {
+      return (isOpen) => _channelListDrawerChanged(_relayConnection!, isOpen);
+    }
+    return null;
+  }
+
+  PreferredSizeWidget? _appBar() => AppBar(
         title: _title(),
         actions: [
           IconButton(
@@ -332,17 +389,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               },
               icon: const Icon(Icons.settings)),
         ],
-      ),
+      );
 
-      // main body
-      body: SafeArea(
-        top: false, // covered by app bar
-        bottom: false, // covered by bottom padding of channel list
-        child: _buildBody(context),
-      ),
-
-      // the connection status floating button
-      floatingActionButton: (cs.connected || _suspended)
+  Widget? _floatingConnectButton(RelayConnectionStatus cs) =>
+      (cs.connected || _suspended)
           ? null
           : FloatingActionButton(
               onPressed: () => _toggleConnect(context),
@@ -351,9 +401,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               child: cs.connected
                   ? const Icon(Feather.log_out)
                   : const Icon(Feather.log_in),
-            ),
-    );
-  }
+            );
 
   Widget _title() {
     return Text(_relayBuffer?.name ?? widget.title);
@@ -374,17 +422,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-  Future<Tuple2<List<ChannelListItem>, List<RelayHotlistEntry>>>?
-      _channelFuture;
+  ChannelFuture? _channelFuture;
+
+  ChannelFuture _updateChannelList(RelayConnection connection) async {
+    final l = await _loadChannelList(connection);
+    final h = await _loadHotList(connection);
+    return Tuple2(l, h);
+  }
 
   void _channelListDrawerChanged(RelayConnection connection, bool isOpened) {
     setState(() {
       if (isOpened) {
-        _channelFuture = Future(() async {
-          final l = await _loadChannelList(connection);
-          final h = await _loadHotList(connection);
-          return Tuple2(l, h);
-        });
+        _channelFuture = _updateChannelList(connection);
       } else {
         _channelFuture = null;
       }
