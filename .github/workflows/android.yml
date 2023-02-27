@@ -23,7 +23,7 @@ jobs:
       - name: Use Flutter Action
         uses: subosito/flutter-action@v2.8.0
         with:
-          channel: 'main'
+          channel: 'master'
       
       - run: flutter pub get
       - run: flutter build apk
