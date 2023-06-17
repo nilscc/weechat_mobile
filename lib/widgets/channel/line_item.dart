@@ -47,8 +47,7 @@ class LineItem extends StatelessWidget {
       ),
     );
 
-    final bodyRT = RichText(
-      text: TextSpan(
+    final bodyRT = TextSpan(
         style: bodyStyle,
         children: [
           if (!(isSystem || isAction)) TextSpan(text: '<', style: tt.bodyMedium),
@@ -61,14 +60,13 @@ class LineItem extends StatelessWidget {
             ));
           }, localizations: loc),
         ],
-      ),
     );
 
     return Container(
       padding: const EdgeInsets.only(top: 3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [dateRT, Expanded(child: bodyRT)],
+        children: [dateRT, Expanded(child: SelectableText.rich(bodyRT))],
       ),
     );
   }
