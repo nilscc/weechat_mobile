@@ -63,13 +63,15 @@ class _ChannelLinesState extends State<ChannelLines> {
       focusNode: _focusNode,
       child: GestureDetector(
         onVerticalDragDown: (_) => _focusNode.requestFocus(),
-        child: ListView.builder(
-          controller: widget.scrollController,
-          shrinkWrap: true,
-          itemBuilder: (BuildContext context, int index) =>
-              _buildLineData(context, buffer.lines[index]),
-          itemCount: buffer.lines.length,
-          reverse: true,
+        child: SelectionArea(
+          child: ListView.builder(
+            controller: widget.scrollController,
+            shrinkWrap: true,
+            itemBuilder: (BuildContext context, int index) =>
+                _buildLineData(context, buffer.lines[index]),
+            itemCount: buffer.lines.length,
+            reverse: true,
+          ),
         ),
       ),
     );

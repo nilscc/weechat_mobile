@@ -55,30 +55,30 @@ void _stripColors(int idx) {
 
 void _parseColors() {
   final rt01 = parseColors('\x19F00\x19F01test', _defaultColor);
-  expect(rt01.text.toPlainText(), equals('test'));
-  expect(rt01.text.style?.color, equals(defaultColorCodes[1]));
+  expect(rt01.textSpan!.toPlainText(), equals('test'));
+  expect(rt01.textSpan!.style?.color, equals(defaultColorCodes[1]));
 
   final rt02 = parseColors('\x19F00~\x19F@00151f0ck', _defaultColor);
-  expect(rt02.text.toPlainText(), equals('~f0ck'));
+  expect(rt02.textSpan!.toPlainText(), equals('~f0ck'));
 
   final rt03 = parseColors('\x1A*\x19F|01bla', _defaultColor);
-  expect(rt03.text.toPlainText(), equals('bla'));
-  expect(rt03.text.style?.fontWeight, equals(FontWeight.bold));
-  expect(rt03.text.style?.color, equals(defaultColorCodes[1]));
+  expect(rt03.textSpan!.toPlainText(), equals('bla'));
+  expect(rt03.textSpan!.style?.fontWeight, equals(FontWeight.bold));
+  expect(rt03.textSpan!.style?.color, equals(defaultColorCodes[1]));
 
   final rt04 = parseColors('\x1A\x01\x19F|05test', _defaultColor);
-  expect(rt04.text.toPlainText(), equals('test'));
-  expect(rt04.text.style?.fontWeight, equals(FontWeight.bold));
-  expect(rt04.text.style?.color, equals(defaultColorCodes[5]));
+  expect(rt04.textSpan!.toPlainText(), equals('test'));
+  expect(rt04.textSpan!.style?.fontWeight, equals(FontWeight.bold));
+  expect(rt04.textSpan!.style?.color, equals(defaultColorCodes[5]));
 
   final rt05 = parseColors('\x19F@*00001test', _defaultColor);
-  expect(rt05.text.toPlainText(), equals('test'));
-  expect(rt05.text.style?.fontWeight, equals(FontWeight.bold));
-  expect(rt05.text.style?.color, equals(getExtendedColor(1)));
+  expect(rt05.textSpan!.toPlainText(), equals('test'));
+  expect(rt05.textSpan!.style?.fontWeight, equals(FontWeight.bold));
+  expect(rt05.textSpan!.style?.color, equals(getExtendedColor(1)));
 }
 
 void _parseColorsExtended() {
   final rt01 = parseColors('\x19F00\x19F01test', _defaultColor);
-  expect(rt01.text.toPlainText(), equals('test'));
-  expect(rt01.text.style?.color, equals(defaultColorCodes[1]));
+  expect(rt01.textSpan!.toPlainText(), equals('test'));
+  expect(rt01.textSpan!.style?.color, equals(defaultColorCodes[1]));
 }

@@ -42,8 +42,8 @@ TextSpan urlify(TextSpan input,
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
-                  child: RichText(
-                    text: TextSpan(
+                  child: Text.rich(
+                    TextSpan(
                       style: (input.style ?? const TextStyle())
                           .copyWith(color: Colors.blue),
                       text: words[idx],

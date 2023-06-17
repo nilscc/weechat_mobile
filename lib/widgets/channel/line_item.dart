@@ -29,15 +29,15 @@ class LineItem extends StatelessWidget {
     if (isAction) bodyStyle = bodyStyle?.copyWith(fontStyle: FontStyle.italic);
 
     final prefixRT = parseColors(line.prefix, defaultColor, alpha: alpha);
-    final messageRT =
-        parseColors(line.message, defaultColor, alpha: alpha).text as TextSpan;
+    final messageRT = parseColors(line.message, defaultColor, alpha: alpha)
+        .textSpan! as TextSpan;
 
     final dateRT = Container(
       padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 3),
       margin: const EdgeInsets.only(right: 5),
       color: line.highlight ? Colors.redAccent : null,
-      child: RichText(
-        text: TextSpan(
+      child: Text.rich(
+        TextSpan(
           text: df,
           style: tt.bodyMedium?.copyWith(
             fontFeatures: [const FontFeature.tabularFigures()],
@@ -47,11 +47,13 @@ class LineItem extends StatelessWidget {
       ),
     );
 
-    final bodyRT = TextSpan(
+    final bodyRT = Text.rich(
+      TextSpan(
         style: bodyStyle,
         children: [
-          if (!(isSystem || isAction)) TextSpan(text: '<', style: tt.bodyMedium),
-          if (!isAction) prefixRT.text,
+          if (!(isSystem || isAction))
+            TextSpan(text: '<', style: tt.bodyMedium),
+          if (!isAction) prefixRT.textSpan!,
           if (!isAction && line.prefix.isNotEmpty)
             TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyMedium),
           urlify(messageRT, onNotification: (msg) {
@@ -60,13 +62,22 @@ class LineItem extends StatelessWidget {
             ));
           }, localizations: loc),
         ],
+      ),
     );
 
     return Container(
       padding: const EdgeInsets.only(top: 3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [dateRT, Expanded(child: SelectableText.rich(bodyRT))],
+        children: [
+          SelectionContainer.disabled(child: dateRT),
+          Expanded(child: bodyRT),
+          const Visibility(
+            visible: false,
+            maintainState: true,
+            child: Text('\r'), // why \r and not \n ???
+          ),
+        ],
       ),
     );
   }

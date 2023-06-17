@@ -8,7 +8,7 @@ import 'package:weechat/relay/colors/color_code_parser.dart';
 import 'package:weechat/relay/colors/color_codes.dart';
 import 'package:weechat/relay/colors/rich_text_parser.dart';
 
-RichText parseColors(
+Text parseColors(
   String raw,
   Color defaultColor, {
   TextStyle? textStyle,
@@ -59,9 +59,9 @@ RichText parseColors(
   }
 
   p.finalizeCurrentSpan();
-  return RichText(text: p.span);
+  return Text.rich(p.span);
 }
 
 String stripColors(String raw) {
-  return parseColors(raw, Colors.black).text.toPlainText();
+  return parseColors(raw, Colors.black).textSpan!.toPlainText();
 }
