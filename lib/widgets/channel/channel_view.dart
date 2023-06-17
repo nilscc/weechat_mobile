@@ -101,6 +101,7 @@ class _ChannelViewState extends State<ChannelView> {
           children: [
             Expanded(
               child: TextField(
+                maxLines: null,
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.send,
                 controller: _inputController,
