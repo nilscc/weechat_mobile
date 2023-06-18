@@ -11,92 +11,83 @@ bool _validUrl(String text) => isURL(
       requireTld: true,
     );
 
-TextSpan urlify(TextSpan input,
-    {void Function(String text)? onNotification, AppLocalizations? localizations}) {
-  var words = input.text?.split(' ');
+WidgetSpan urlWidget(
+  String url,
+  TextStyle style, {
+  void Function(String text)? onNotification,
+  AppLocalizations? localizations,
+}) {
+  final u = Uri.parse(url);
 
-  String? text;
-  List<InlineSpan>? children;
-
-  var idx = words?.indexWhere(_validUrl) ?? -1;
-  if (idx == -1) {
-    text = input.text;
-  } else {
-    children = [];
-    String addSpace = '';
-
-    while ((words ?? []).isNotEmpty && idx != -1) {
-      final u = Uri.parse(words![idx]);
-
-      children = children! +
-          [
-            // the text up to the URL
-            if (idx > 0)
-              TextSpan(
-                text: '$addSpace${words.sublist(0, idx).join(' ')} ',
-                style: input.style,
-              ),
-
-            // widget for the URL
-            WidgetSpan(
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  child: Text.rich(
-                    TextSpan(
-                      style: (input.style ?? const TextStyle())
-                          .copyWith(color: Colors.blue),
-                      text: words[idx],
-                    ),
-                  ),
-                  onTap: () {
-                    launchUrl(u, mode: LaunchMode.externalApplication);
-                  },
-                  onLongPress: () async {
-                    await Clipboard.setData(ClipboardData(text: u.toString()));
-                    onNotification?.call(
-                        localizations?.urlifyCopiedMessage(u.toString()) ??
-                            u.toString());
-                  },
-                ),
-              ),
-            ),
-          ];
-
-      // build words list for the rest of the input, then find next URL
-      words = words.sublist(idx + 1);
-      idx = words.indexWhere(_validUrl);
-      addSpace = ' ';
-    }
-
-    // add remaining words if no more URLs have been found
-    if (words!.isNotEmpty) {
-      children = children! + [TextSpan(text: addSpace + words.join(' '))];
-    }
-  }
-
-  // urlify all children of input
-  if (input.children?.isNotEmpty == true) {
-    children = (children ?? []) +
-        input.children!
-            .map((e) => (e is TextSpan)
-                ? urlify(e,
-                    localizations: localizations,
-                    onNotification: onNotification)
-                : e)
-            .toList();
-  }
-
-  return TextSpan(
-    text: text,
-    children: children ?? input.children,
-    style: input.style,
-    locale: input.locale,
-    mouseCursor: input.mouseCursor,
-    onEnter: input.onEnter,
-    onExit: input.onExit,
-    recognizer: input.recognizer,
-    semanticsLabel: input.semanticsLabel,
-    spellOut: input.spellOut,
+  // widget for the URL
+  return WidgetSpan(
+    child: MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        child: Text.rich(
+          TextSpan(text: url),
+          style: style.copyWith(color: Colors.blue),
+        ),
+        onTap: () {
+          launchUrl(u, mode: LaunchMode.externalApplication);
+        },
+        onLongPress: () async {
+          await Clipboard.setData(ClipboardData(text: u.toString()));
+          onNotification?.call(
+              localizations?.urlifyCopiedMessage(u.toString()) ?? u.toString());
+        },
+      ),
+    ),
   );
+}
+
+TextSpan urlify(
+  TextSpan input, {
+  void Function(String text)? onNotification,
+  AppLocalizations? localizations,
+}) {
+
+  // the list of child spans will be filled only if we find any urls
+  List<InlineSpan> children = [];
+
+  // temporary text variable which stores all text so far processed
+  var txt = '';
+
+  // iterate over all words in the input and look for URLs
+  var words = input.text?.split(' ');
+  for (final String word in (words ?? [])) {
+    if (_validUrl(word)) {
+      // url found -> combine text before URL with new URL widget
+      if (txt.isNotEmpty) {
+        children.add(TextSpan(text: '$txt '));
+        txt = '';
+      }
+      children.add(urlWidget(
+        word,
+        input.style ?? const TextStyle(),
+        onNotification: onNotification,
+        localizations: localizations,
+      ));
+    } else {
+      // no URL found, append text to temporary buffer
+      txt += ' $word';
+    }
+  }
+
+  // final result is either the unchanged input or a new text span with all text/url children
+  if (children.isEmpty) {
+    return input;
+  } else {
+    return TextSpan(
+      children: children,
+      style: input.style,
+      locale: input.locale,
+      mouseCursor: input.mouseCursor,
+      onEnter: input.onEnter,
+      onExit: input.onExit,
+      recognizer: input.recognizer,
+      semanticsLabel: input.semanticsLabel,
+      spellOut: input.spellOut,
+    );
+  }
 }

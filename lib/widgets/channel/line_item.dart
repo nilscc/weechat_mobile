@@ -18,14 +18,15 @@ class LineItem extends StatelessWidget {
     final df = DateFormat.Hm().format(line.date);
     final th = Theme.of(context);
     final tt = th.textTheme;
+    final st = tt.bodyMedium;
 
     final isSystem = line.prefix.isEmpty ||
         ['<--', '-->', '--', '===', '=!='].any((e) => line.prefix.endsWith(e));
     final alpha = isSystem ? 100 : 255;
-    final defaultColor = tt.bodyMedium?.color ?? th.colorScheme.onSurface;
+    final defaultColor = st?.color ?? th.colorScheme.onSurface;
 
     final isAction = [' *'].any((e) => line.prefix.endsWith(e));
-    var bodyStyle = tt.bodyMedium;
+    var bodyStyle = st;
     if (isAction) bodyStyle = bodyStyle?.copyWith(fontStyle: FontStyle.italic);
 
     final prefixRT = parseColors(line.prefix, defaultColor, alpha: alpha);
@@ -37,32 +38,33 @@ class LineItem extends StatelessWidget {
       margin: const EdgeInsets.only(right: 5),
       color: line.highlight ? Colors.redAccent : null,
       child: Text.rich(
-        TextSpan(
-          text: df,
-          style: tt.bodyMedium?.copyWith(
-            fontFeatures: [const FontFeature.tabularFigures()],
-            color: line.highlight ? Colors.white : Colors.grey.withAlpha(100),
-          ),
+        style: st?.copyWith(
+          fontFeatures: [const FontFeature.tabularFigures()],
+          color: line.highlight ? Colors.white : Colors.grey.withAlpha(100),
         ),
+        TextSpan(text: df),
       ),
     );
 
     final bodyRT = Text.rich(
-      TextSpan(
-        style: bodyStyle,
-        children: [
-          if (!(isSystem || isAction))
-            TextSpan(text: '<', style: tt.bodyMedium),
-          if (!isAction) prefixRT.textSpan!,
-          if (!isAction && line.prefix.isNotEmpty)
-            TextSpan(text: isSystem ? ' ' : '> ', style: tt.bodyMedium),
-          urlify(messageRT, onNotification: (msg) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(msg),
-            ));
-          }, localizations: loc),
-        ],
-      ),
+      style: bodyStyle,
+      TextSpan(children: [
+        if (!(isSystem || isAction)) const TextSpan(text: '<'),
+        if (!isAction) prefixRT.textSpan!,
+        if (!isAction && line.prefix.isNotEmpty)
+          isSystem ? const TextSpan(text: ' ') : const TextSpan(text: '> '),
+        urlify(
+          messageRT,
+          onNotification: (msg) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(msg),
+              ),
+            );
+          },
+          localizations: loc,
+        ),
+      ]),
     );
 
     return Container(
