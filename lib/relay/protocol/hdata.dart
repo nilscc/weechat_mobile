@@ -11,10 +11,12 @@ class RelayHData {
     required this.objects,
   });
 
-  @override
-  String toString() {
-    final obj = [];
+  String _indent(String lines) =>
+      lines.split("\n").map((e) => "    $e").join("\n");
 
+  @override
+  String toString({int? truncate, bool? includeLast = true}) {
+    final res = [];
     for (final o in objects) {
       final val = [];
       for (var i = 0; i < (keys?.length ?? 0); ++i) {
@@ -24,11 +26,11 @@ class RelayHData {
         val.add('${keys![i].name}: [$ty] $v');
       }
       if (val.isNotEmpty) {
-        obj.add('${o.pPath} {\n\t${val.join(',\n\t')}\n}');
+        res.add('${o.pPath} {\n${_indent(val.join(',\n'))}\n}');
       }
     }
 
-    return 'RelayHData(hPath: $hPath, objects: {\n${obj.join(",\n\n")}\n})'; // keys: $keys, objects: $objects)';
+    return 'RelayHData(hPath: $hPath, objects: {\n${_indent(res.join(",\n"))}\n})'; // keys: $keys, objects: $objects)';
   }
 }
 
@@ -51,5 +53,7 @@ class RelayHDataObject {
   });
 
   @override
-  String toString() => 'RelayHDataObject(pPath: $pPath, values: $values)';
+  String toString() {
+    return 'RelayHDataObject(pPath: $pPath, values: $values)';
+  }
 }

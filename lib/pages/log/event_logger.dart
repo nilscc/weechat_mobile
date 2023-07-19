@@ -5,9 +5,14 @@ import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
 enum LogType {
-  INFO,
-  WARNING,
-  ERROR,
+  DEBUG('Debug'),
+  INFO('Info'),
+  WARNING('Warning'),
+  ERROR('Error');
+
+  final String label;
+
+  const LogType(this.label);
 }
 
 class EventLogger extends ChangeNotifier {
@@ -25,6 +30,7 @@ class EventLogger extends ChangeNotifier {
     notifyListeners();
   }
 
+  void debug(String message) => log(LogType.DEBUG, message);
   void info(String message) => log(LogType.INFO, message);
   void warning(String message) => log(LogType.WARNING, message);
   void error(String message) => log(LogType.ERROR, message);

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/protocol/hdata.dart';
 import 'package:weechat/relay/protocol/line_data.dart';
@@ -15,6 +16,8 @@ class RelayBuffer extends ChangeNotifier {
 
   String? _lastLinePointer;
   String? _firstLinePointer;
+
+  EventLogger? get _eventLogger => relayConnection.connectionStatus.eventLogger;
 
   RelayBuffer({
     required this.relayConnection,
@@ -131,10 +134,15 @@ class RelayBuffer extends ChangeNotifier {
     _loadNewLines();
   }
 
+  String _indent(String lines) =>
+      lines.split("\n").map((e) => "    $e").join("\n");
+
   Future<void> _loadNewLines() async {
     final hdataCmd = 'hdata'
         ' line:$_firstLinePointer/next_line(*)/data'
         ' $lineDataSelected';
+
+    _eventLogger?.debug("_loadNewLines: hdataCmd = $hdataCmd");
 
     final syncCmd = 'sync $bufferPointer buffer';
 
@@ -143,19 +151,42 @@ class RelayBuffer extends ChangeNotifier {
     await relayConnection.command(
       '$hdataCmd\n$syncCmd',
       callback: (body) async {
-        final o = body.objects();
-        for (final RelayHData hdata in o) {
-          if (hdata.objects.isNotEmpty) {
-            for (final l in handleLineData(hdata, 0)) {
-              lines.insert(0, l);
+        List<String> fmt = [];
+        try {
+          final o = body.objects();
+          fmt.add(o.toString());
+
+          for (final RelayHData hdata in o) {
+            if (hdata.objects.isNotEmpty) {
+              for (final l in handleLineData(hdata, 0)) {
+                lines.insert(0, l);
+              }
+              // next_line is sorted oldest to newest, so the first line is always the last one!
+              _firstLinePointer = hdata.objects.last.pPath[1];
             }
-            // next_line is sorted oldest to newest, so the first line is always the last one!
-            _firstLinePointer = hdata.objects.last.pPath[1];
           }
+          // always notify listeners about active state change => no "success" variable needed
+          _active = true;
+          notifyListeners();
+        } finally {
+          fmt = fmt.join("\n").split("\n");
+
+          // truncate debug output
+          const trunc = 30;
+          final l = fmt.length;
+          if (l > trunc) {
+            fmt = [
+              ...fmt.take((trunc/2).round()),
+              "",
+              "<< truncated ${l - trunc} lines >>",
+              "",
+              ...fmt.skip((trunc/2).round()),
+            ];
+          }
+
+          _eventLogger
+              ?.debug("_loadNewLines: body = {\n${_indent(fmt.join('\n'))}\n}");
         }
-        // always notify listeners about active state change => no "success" variable needed
-        _active = true;
-        notifyListeners();
       },
     );
   }
