@@ -13,7 +13,7 @@ class LogPage extends StatefulWidget {
 }
 
 class _State extends State<LogPage> {
-  LogType logType = LogType.DEBUG;
+  LogType logType = LogType.INFO;
 
   @override
   Widget build(BuildContext context) {
@@ -21,15 +21,43 @@ class _State extends State<LogPage> {
       appBar: AppBar(
         title: const Text('Logs'),
       ),
-      body: Container(
+      body: Padding(
         padding: const EdgeInsets.all(10),
-        child: ListView(
-          children: EventLogger.of(context, listen: true)
-              .messages
-              .reversed
-              .where((element) => element.item2 >= logType)
-              .map((e) => Text('${e.item1} [${e.item2}]\n${e.item3}\n'))
-              .toList(),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                DropdownMenu(
+                  label: const Text('Log Level'),
+                  dropdownMenuEntries: LogType.values.reversed
+                      .map((e) => DropdownMenuEntry(value: e, label: e.label))
+                      .toList(),
+                  onSelected: (val) {
+                    if (val != null) {
+                      setState(() {
+                        logType = val;
+                      });
+                    }
+                  },
+                  initialSelection: logType,
+                ),
+              ],
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: ListView(
+                  shrinkWrap: true,
+                  children: EventLogger.of(context, listen: true)
+                      .messages
+                      .reversed
+                      .where((element) => element.item2 >= logType)
+                      .map((e) => Text('${e.item1} [${e.item2}]\n${e.item3}\n'))
+                      .toList(),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
