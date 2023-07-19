@@ -15,7 +15,7 @@ class RelayConnectionStatus extends ChangeNotifier {
 
   bool get connected => _connected;
   set connected(bool connected) {
-    eventLogger?.info('RelayConnectionStatus.connected = $connected');
+    eventLogger?.debug('RelayConnectionStatus.connected = $connected');
     if (_connected != connected) {
       _connected = connected;
 
@@ -30,7 +30,7 @@ class RelayConnectionStatus extends ChangeNotifier {
 
   String? get reason => _reason;
   set reason(String? error) {
-    eventLogger?.info('RelayConnectionStatus.reason = $reason');
+    eventLogger?.debug('RelayConnectionStatus.reason = $reason');
     if (_reason != error && error != null) {
       _reason = error;
       notifyListeners();

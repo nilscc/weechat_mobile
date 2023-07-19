@@ -212,7 +212,7 @@ class RelayConnection {
 
   Future<Duration?> ping({Duration? timeout}) async {
     final t1 = DateTime.now().microsecondsSinceEpoch;
-    _eventLogger?.info('Ping? $t1');
+    _eventLogger?.debug('Ping? $t1');
     return await command(
       'ping $t1',
       responseId: '_pong',
@@ -226,7 +226,7 @@ class RelayConnection {
         if (tr == t1.toString()) {
           final t2 = DateTime.now().microsecondsSinceEpoch;
           final p = Duration(microseconds: t2 - t1);
-          _eventLogger?.info('Pong! ${p.inMilliseconds}ms');
+          _eventLogger?.debug('Pong! ${p.inMilliseconds}ms');
           return p;
         } else {
           _eventLogger?.warning('Invalid PONG response: $tr');
