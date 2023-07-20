@@ -169,21 +169,6 @@ class RelayBuffer extends ChangeNotifier {
           _active = true;
           notifyListeners();
         } finally {
-          fmt = fmt.join("\n").split("\n");
-
-          // truncate debug output
-          const trunc = 30;
-          final l = fmt.length;
-          if (l > trunc) {
-            fmt = [
-              ...fmt.take((trunc/2).round()),
-              "",
-              "<< truncated ${l - trunc} lines >>",
-              "",
-              ...fmt.skip((trunc/2).round()),
-            ];
-          }
-
           _eventLogger
               ?.debug("_loadNewLines: body = {\n${_indent(fmt.join('\n'))}\n}");
         }
