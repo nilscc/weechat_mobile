@@ -38,7 +38,7 @@ class _State extends State<LogPage> {
                 DropdownMenu<int?>(
                   dropdownMenuEntries: truncateDropdownValues,
                   initialSelection: truncateDropdownValues.first.value,
-                  label: const Text("Truncate"),
+                  label: const Text("Max Lines"),
                   onSelected: (val) => setState(() {
                     truncate = val;
                   }),
