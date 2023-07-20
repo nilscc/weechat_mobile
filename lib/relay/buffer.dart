@@ -134,15 +134,18 @@ class RelayBuffer extends ChangeNotifier {
     _loadNewLines();
   }
 
-  String _indent(String lines) =>
-      lines.split("\n").map((e) => "    $e").join("\n");
+  String _indent(String lines, {int n = 4}) =>
+      lines.split("\n").map((e) => "${' ' * n}$e").join("\n");
 
   Future<void> _loadNewLines() async {
     final hdataCmd = 'hdata'
         ' line:$_firstLinePointer/next_line(*)/data'
         ' $lineDataSelected';
 
-    _eventLogger?.debug("_loadNewLines: hdataCmd = $hdataCmd");
+    _eventLogger?.debug(
+      "RelayBuffer._loadNewLines().hdataCmd =\n"
+      "${_indent(hdataCmd)}",
+    );
 
     final syncCmd = 'sync $bufferPointer buffer';
 
@@ -152,7 +155,11 @@ class RelayBuffer extends ChangeNotifier {
       '$hdataCmd\n$syncCmd',
       callback: (body) async {
         List<String> fmt = [];
+        String rawBytes = "";
         try {
+          _eventLogger?.debug("RelayBuffer._loadNewLines().buffer =\n"
+              "${_indent(body.buffer.asInt32x4List().join('\n'))}");
+
           final o = body.objects();
           fmt.add(o.toString());
 
@@ -169,8 +176,8 @@ class RelayBuffer extends ChangeNotifier {
           _active = true;
           notifyListeners();
         } finally {
-          _eventLogger
-              ?.debug("_loadNewLines: body = {\n${_indent(fmt.join('\n'))}\n}");
+          _eventLogger?.debug("RelayBuffer._loadNewLines().body =\n"
+              "${_indent(fmt.join('\n'), n: 4)}");
         }
       },
     );
