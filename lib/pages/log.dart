@@ -14,8 +14,8 @@ class LogPage extends StatefulWidget {
 }
 
 class _State extends State<LogPage> {
-  LogType logType = LogType.INFO;
-  int? truncate;
+  LogType logType = LogType.DEBUG;
+  int? truncate = 20;
 
   static const truncateDropdownValues = [
     DropdownMenuEntry(value: 20, label: "20"),
@@ -76,7 +76,7 @@ class _State extends State<LogPage> {
               children: [
                 DropdownMenu<int?>(
                   dropdownMenuEntries: truncateDropdownValues,
-                  initialSelection: truncateDropdownValues.first.value,
+                  initialSelection: truncate,
                   label: const Text("Max Lines"),
                   onSelected: (val) => setState(() {
                     truncate = val;
