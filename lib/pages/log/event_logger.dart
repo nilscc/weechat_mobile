@@ -34,4 +34,9 @@ class EventLogger extends ChangeNotifier {
   void info(String message) => log(LogType.INFO, message);
   void warning(String message) => log(LogType.WARNING, message);
   void error(String message) => log(LogType.ERROR, message);
+
+  void clear() {
+    _messages.clear();
+    notifyListeners();
+  }
 }
