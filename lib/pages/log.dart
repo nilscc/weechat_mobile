@@ -23,14 +23,47 @@ class _State extends State<LogPage> {
     DropdownMenuEntry(value: null, label: "None"),
   ];
 
+  final _controller = ScrollController();
+  Widget? _upArrow;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // show/hide up arrow dynamically
+    _controller.addListener(() {
+      if (!_controller.hasClients) {
+        return;
+      } else if (_upArrow == null && _controller.offset != 0) {
+        setState(() {
+          _upArrow = IconButton(
+            icon: const Icon(Icons.arrow_upward),
+            onPressed: () {
+              _controller.animateTo(
+                0,
+                duration: const Duration(milliseconds: 100),
+                curve: Curves.ease,
+              );
+            },
+          );
+        });
+      } else if (_upArrow != null && _controller.offset == 0) {
+        setState(() {
+          _upArrow = null;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Logs'),
       ),
+      floatingActionButton: _upArrow,
       body: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
         child: Column(
           children: [
             Row(
@@ -64,6 +97,7 @@ class _State extends State<LogPage> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: ListView(
+                  controller: _controller,
                   shrinkWrap: true,
                   children: EventLogger.of(context, listen: true)
                       .messages
