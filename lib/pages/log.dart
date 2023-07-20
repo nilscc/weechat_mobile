@@ -60,6 +60,12 @@ class _State extends State<LogPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Logs'),
+        actions: [
+          IconButton(
+            onPressed: () => EventLogger.of(context).clear(),
+            icon: const Icon(Icons.delete),
+          ),
+        ],
       ),
       floatingActionButton: _upArrow,
       body: Padding(
