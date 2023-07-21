@@ -1,5 +1,6 @@
 buildscript {
-    ext.kotlin_version = '1.8.0'
+    // https://kotlinlang.org/docs/releases.html#release-details
+    ext.kotlin_version = '1.9.0'
     repositories {
         google()
         mavenCentral()
@@ -7,7 +8,7 @@ buildscript {
 
     dependencies {
         // https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        classpath 'com.android.tools.build:gradle:7.2.2'
+        classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
