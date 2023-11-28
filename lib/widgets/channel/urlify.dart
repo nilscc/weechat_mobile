@@ -4,16 +4,17 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:validators/validators.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-bool _validUrl(String text) => isURL(
+bool validUrl(String text) => isURL(
       text,
       protocols: ['https', 'http'],
       requireProtocol: true,
       requireTld: true,
+      allowUnderscore: true,
     );
 
 WidgetSpan urlWidget(
-  String url,
-  TextStyle style, {
+  String url, {
+  TextStyle? style,
   void Function(String text)? onNotification,
   AppLocalizations? localizations,
 }) {
@@ -25,8 +26,10 @@ WidgetSpan urlWidget(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         child: Text.rich(
-          TextSpan(text: url),
-          style: style.copyWith(color: Colors.blue),
+          TextSpan(
+            text: url,
+            style: style?.copyWith(color: Colors.blue),
+          ),
         ),
         onTap: () {
           launchUrl(u, mode: LaunchMode.externalApplication);
@@ -43,35 +46,28 @@ WidgetSpan urlWidget(
 
 TextSpan urlify(
   TextSpan input, {
+  TextStyle? style,
   void Function(String text)? onNotification,
   AppLocalizations? localizations,
 }) {
-
   // the list of child spans will be filled only if we find any urls
   List<InlineSpan> children = [];
 
-  // temporary text variable which stores all text so far processed
-  var txt = '';
+  if (input.text != null) {
+    children.addAll(urlifyText(
+      input.text ?? "",
+      style: input.style,
+      onNotification: onNotification,
+      localizations: localizations,
+    ));
+  }
 
-  // iterate over all words in the input and look for URLs
-  var words = input.text?.split(' ');
-  for (final String word in (words ?? [])) {
-    if (_validUrl(word)) {
-      // url found -> combine text before URL with new URL widget
-      if (txt.isNotEmpty) {
-        children.add(TextSpan(text: '$txt '));
-        txt = '';
-      }
-      children.add(urlWidget(
-        word,
-        input.style ?? const TextStyle(),
-        onNotification: onNotification,
-        localizations: localizations,
-      ));
-    } else {
-      // no URL found, append text to temporary buffer
-      txt += ' $word';
-    }
+  for (final inlineSpan in input.children ?? []) {
+    children.addAll(urlifyInlineSpan(
+      inlineSpan,
+      onNotification: onNotification,
+      localizations: localizations,
+    ));
   }
 
   // final result is either the unchanged input or a new text span with all text/url children
@@ -90,4 +86,80 @@ TextSpan urlify(
       spellOut: input.spellOut,
     );
   }
+}
+
+List<InlineSpan> urlifyInlineSpan(
+  InlineSpan inlineSpan, {
+  void Function(String text)? onNotification,
+  AppLocalizations? localizations,
+}) {
+  final res = <InlineSpan>[];
+  if (inlineSpan is TextSpan) {
+    if (inlineSpan.text != null) {
+      res.addAll(urlifyText(
+        inlineSpan.text!,
+        style: inlineSpan.style,
+        onNotification: onNotification,
+        localizations: localizations,
+      ));
+    } else {
+      res.add(inlineSpan);
+    }
+    for (final child in inlineSpan.children ?? []) {
+      res.addAll(urlifyInlineSpan(
+        child,
+        onNotification: onNotification,
+        localizations: localizations,
+      ));
+    }
+  }
+  return res;
+}
+
+List<InlineSpan> urlifyText(
+  String text, {
+  TextStyle? style,
+  void Function(String text)? onNotification,
+  AppLocalizations? localizations,
+}) {
+  // the list of child spans will be filled only if we find any urls
+  List<InlineSpan> spans = [];
+
+  // temporary text variable which stores all text so far processed
+  final non_url_words = <String>[];
+
+  // iterate over all words in the input and look for URLs
+  final words = text.split(' ');
+  for (final String word in words) {
+    if (validUrl(word)) {
+      // url found -> combine text before URL with new URL widget
+      if (non_url_words.isNotEmpty) {
+        spans.add(TextSpan(
+          text: '${non_url_words.join(' ')} ',
+          style: style,
+        ));
+        non_url_words.clear();
+      }
+      spans.add(urlWidget(
+        word,
+        style: style,
+        onNotification: onNotification,
+        localizations: localizations,
+      ));
+    } else {
+      // no URL found, append text to temporary buffer
+      non_url_words.add(word);
+    }
+  }
+
+// add final text span
+  if (non_url_words.isNotEmpty) {
+    final space = spans.isEmpty ? '' : ' ';
+    spans.add(TextSpan(
+      text: '$space${non_url_words.join(' ')}',
+      style: style,
+    ));
+  }
+
+  return spans;
 }
