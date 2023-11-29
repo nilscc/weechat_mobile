@@ -20,16 +20,21 @@ class LineItem extends StatelessWidget {
     final tt = th.textTheme;
     final st = tt.bodyMedium;
 
-    final isSystem = line.prefix.isEmpty ||
-        ['<--', '-->', '--', '===', '=!='].any((e) => line.prefix.endsWith(e));
+    final isSystem = line.prefix == null ||
+        line.prefix!.isEmpty ||
+        ['<--', '-->', '--', '===', '=!='].any((e) => line.prefix!.endsWith(e));
     final alpha = isSystem ? 100 : 255;
     final defaultColor = st?.color ?? th.colorScheme.onSurface;
 
-    final isAction = [' *'].any((e) => line.prefix.endsWith(e));
+    final isAction = [' *'].any((e) => line.prefix?.endsWith(e) ?? false);
     var bodyStyle = st;
     if (isAction) bodyStyle = bodyStyle?.copyWith(fontStyle: FontStyle.italic);
 
-    final prefixRT = parseColors(line.prefix, defaultColor, alpha: alpha);
+    Text? prefixRT;
+    if (line.prefix != null) {
+      prefixRT = parseColors(line.prefix!, defaultColor, alpha: alpha);
+    }
+
     final messageRT = parseColors(line.message, defaultColor, alpha: alpha)
         .textSpan! as TextSpan;
 
@@ -50,8 +55,8 @@ class LineItem extends StatelessWidget {
       style: bodyStyle,
       TextSpan(children: [
         if (!(isSystem || isAction)) const TextSpan(text: '<'),
-        if (!isAction) prefixRT.textSpan!,
-        if (!isAction && line.prefix.isNotEmpty)
+        if (!isAction && prefixRT != null) prefixRT.textSpan!,
+        if (!isAction && (line.prefix?.isNotEmpty ?? false))
           isSystem ? const TextSpan(text: ' ') : const TextSpan(text: '> '),
         urlify(
           messageRT,
