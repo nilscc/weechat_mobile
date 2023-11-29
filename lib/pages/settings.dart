@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -162,7 +164,8 @@ class _SettingsState extends State<SettingsPage> {
     ];
   }
 
-  List<Widget> _fontSettings(BuildContext context) {
+  List<Widget> _fontSettings(BuildContext context,
+      {int minFontSize = 8, int maxFontSize = 32}) {
     final loc = AppLocalizations.of(context)!;
     final config = Config.of(context);
 
@@ -182,10 +185,13 @@ class _SettingsState extends State<SettingsPage> {
                         config.fontSize = value.round();
                       });
                     },
-                    value:
-                        (config.fontSize ?? Config.defaultFontSize).toDouble(),
-                    min: 9,
-                    max: 20,
+                    value: max(
+                            minFontSize,
+                            min((config.fontSize ?? Config.defaultFontSize),
+                                maxFontSize))
+                        .toDouble(),
+                    min: minFontSize.toDouble(),
+                    max: maxFontSize.toDouble(),
                   ),
                 ),
               ),
