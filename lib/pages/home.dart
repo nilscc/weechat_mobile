@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
+import 'package:weechat/relay/nicklist.dart';
+import 'package:weechat/widgets/channel/user_list.dart';
 import 'package:weechat/widgets/home/channel_list_item.dart';
-import 'package:weechat/pages/log.dart';
 import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/pages/settings.dart';
 import 'package:weechat/pages/settings/config.dart';
@@ -322,14 +323,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             Builder(
               builder: (context) => IconButton(
                 icon: const Icon(Icons.group),
-                onPressed: () {
-                  final scaff = Scaffold.of(context);
-                  if (scaff.isEndDrawerOpen) {
-                    scaff.closeEndDrawer();
-                  } else {
-                    scaff.openEndDrawer();
-                  }
-                },
+                onPressed: () => _toggleUserList(context),
               ),
             ),
           // settings button
@@ -399,17 +393,31 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     });
   }
 
-  Future? _userListFuture;
-
   Widget? _userListDrawer(BuildContext context) {
-    return Drawer(
-      child: FutureBuilder(
-        future: _userListFuture,
-        builder: (context, snapshot) {
-          return Container();
-        },
-      ),
-    );
+    if (_relayBuffer != null) {
+      return Drawer(
+        child: UserListWidget(
+          nicklist: RelayBufferNicklist(
+            bufferId: _relayBuffer!.bufferPointer,
+            connection: _relayBuffer!.relayConnection,
+          ),
+          key: ValueKey(
+            "UserListWidget(buffer: ${_relayBuffer!.bufferPointer})",
+          ),
+        ),
+      );
+    } else {
+      return const Drawer();
+    }
+  }
+
+  void _toggleUserList(BuildContext context) {
+    final scaff = Scaffold.of(context);
+    if (scaff.isEndDrawerOpen) {
+      scaff.closeEndDrawer();
+    } else {
+      scaff.openEndDrawer();
+    }
   }
 
   Widget? _channelListDrawer(BuildContext context) {
