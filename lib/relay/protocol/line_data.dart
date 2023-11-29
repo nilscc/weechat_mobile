@@ -9,7 +9,8 @@ class LineData {
   final int notifyLevel;
   final bool highlight;
   final List<String> tags;
-  final String prefix, message;
+  final String? prefix;
+  final String message;
 
   LineData({
     required this.lineDataPointer,

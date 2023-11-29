@@ -63,7 +63,7 @@ class _GuiCurrentWindowBuffer {
 
         return _GuiCurrentWindowBuffer(
           bufferPointer: bufferPtr,
-          shortName: shortName,
+          shortName: shortName ?? name,
           name: name,
           fullName: fullName,
         );
