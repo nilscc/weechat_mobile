@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
+import 'package:weechat/pages/settings/config.dart';
 import 'package:weechat/relay/protocol/line_data.dart';
 import 'package:weechat/widgets/channel/urlify.dart';
 import 'package:weechat/relay/colors.dart';
@@ -10,15 +11,16 @@ import 'package:weechat/relay/colors.dart';
 class LineItem extends StatelessWidget {
   final LineData line;
 
-  const LineItem({required this.line, Key? key}) : super(key: key);
+  const LineItem({required this.line, super.key});
 
   @override
   Widget build(BuildContext context) {
+    final cfg = Config.of(context, listen: true);
     final loc = AppLocalizations.of(context);
     final df = DateFormat.Hm().format(line.date);
     final th = Theme.of(context);
     final tt = th.textTheme;
-    final st = tt.bodyMedium;
+    final st = tt.bodyMedium?.copyWith(fontSize: cfg.fontSize?.toDouble());
 
     final isSystem = line.prefix == null ||
         line.prefix!.isEmpty ||
@@ -60,6 +62,7 @@ class LineItem extends StatelessWidget {
           isSystem ? const TextSpan(text: ' ') : const TextSpan(text: '> '),
         urlify(
           messageRT,
+          style: bodyStyle,
           onNotification: (msg) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

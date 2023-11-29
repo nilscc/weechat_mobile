@@ -4,7 +4,6 @@
   "errorConnectionTimeout": "Connection timed out.",
   "errorConnectionFailedInit": "Initialization failed. Possibly incorrect relay password?",
   "errorConnectionInvalidCertificate": "Failed to verify the server certificate.",
-
   "settingsTitle": "Settings",
   "settingsConnectionTitle": "Connection",
   "settingsConnectionSubtitle": "Host, port and login information of your remote Weechat instance.",
@@ -14,21 +13,18 @@
   "settingsConnectionVerifyCert": "Verify server certificate",
   "settingsConnectionVerifyButton": "Verify connection.",
   "settingsConnectAutomatically": "Connect automatically.",
-
   "settingsUiTitle": "User Interface",
   "settingsUiSubtitle": "Configure look and feel of the user interface.",
   "settingsUiShowCompletion": "Show completion (tab) button",
   "settingsUiShowSend": "Show send button",
-
+  "settingsFontSize": "Font size:",
   "certificateValid": "Certificate is valid.",
   "certificateInvalid": "Certificate is invalid.",
   "certificateIssuerLabel": "Issuer:",
   "certificateStartValidity": "Start validity:",
   "certificateEndValidity": "End validity:",
   "certificateSubject": "Subject:",
-
   "channelInputPlaceholder": "Write a message...",
-
   "urlifyCopiedMessage": "Copied to clipboard: {url}",
   "@urlifyCopiedMessage": {
     "placeholders": {

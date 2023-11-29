@@ -4,7 +4,6 @@
   "errorConnectionTimeout": "Verbindung wurde wegen Zeitüberschreitung unterbrochen.",
   "errorConnectionFailedInit": "Initialisierung gescheitert. Möglicherweise falsches Relay-Passwort?",
   "errorConnectionInvalidCertificate": "Verifizierung des Serverzertifikats fehlgeschlagen.",
-
   "settingsTitle": "Einstellungen",
   "settingsConnectionTitle": "Verbindung",
   "settingsConnectionSubtitle": "Server, Port und Login-Informationen von deiner entfernten Weechat-Instanz.",
@@ -14,21 +13,18 @@
   "settingsConnectionVerifyCert": "Serverzertifikat verifizieren",
   "settingsConnectionVerifyButton": "Verbindung testen.",
   "settingsConnectAutomatically": "Automatisch Verbinden",
-
   "settingsUiTitle": "Benutzerinterface",
   "settingsUiSubtitle": "Konfiguriere Aussehen und Verhalten des Benutzerinterfaces.",
   "settingsUiShowCompletion": "Zeige Knopf für Vervollständigung",
   "settingsUiShowSend": "Zeige Knopf zum Versenden",
-
+  "settingsFontSize": "Schriftgröße:",
   "certificateValid": "Zertifikat ist gültig.",
   "certificateInvalid": "Zertifikat ist ungültig.",
   "certificateIssuerLabel": "Ersteller:",
   "certificateStartValidity": "Anfang Gültigkeit:",
   "certificateEndValidity": "Ende Gültigkeit:",
   "certificateSubject": "Betreff:",
-
   "channelInputPlaceholder": "Nachricht schreiben...",
-
   "urlifyCopiedMessage": "In die Zwischenablage kopiert: {url}",
   "@urlifyCopiedMessage": {
     "placeholders": {
