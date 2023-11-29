@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:weechat/pages/log.dart';
 import 'package:weechat/pages/settings/config.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -23,6 +24,14 @@ class _SettingsState extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.settingsTitle),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(LogPage.route());
+            },
+            icon: const Icon(Feather.info),
+          ),
+        ],
       ),
       body: ListView(
         children: [

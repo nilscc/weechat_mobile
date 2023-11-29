@@ -317,12 +317,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         title: _title(),
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.of(context).push(LogPage.route());
-            },
-            icon: const Icon(Feather.info),
-          ),
-          IconButton(
               onPressed: () {
                 Navigator.of(context).push(SettingsPage.route());
               },
