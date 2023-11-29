@@ -26,6 +26,9 @@ class _SettingsState extends State<SettingsPage> {
         children: [
           ..._connectionSettings(context),
           ..._uiSettings(context),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 100),
+          ),
         ],
       ),
     );
@@ -153,6 +156,42 @@ class _SettingsState extends State<SettingsPage> {
           },
           title: Text(loc.settingsUiShowSend),
           secondary: const Icon(Feather.arrow_up),
+        ),
+      ),
+      ..._fontSettings(context),
+    ];
+  }
+
+  List<Widget> _fontSettings(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    final config = Config.of(context);
+
+    return [
+      Container(
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        child: ListTile(
+          title: Row(
+            children: [
+              Text(loc.settingsFontSize),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Slider(
+                    onChanged: (double value) {
+                      setState(() {
+                        config.fontSize = value.round();
+                      });
+                    },
+                    value:
+                        (config.fontSize ?? Config.defaultFontSize).toDouble(),
+                    min: 9,
+                    max: 20,
+                  ),
+                ),
+              ),
+              Text("${config.fontSize ?? Config.defaultFontSize} pt")
+            ],
+          ),
         ),
       ),
     ];

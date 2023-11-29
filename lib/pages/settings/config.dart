@@ -21,12 +21,10 @@ class Config extends _ConfigBackend {
       this['relayPassword'] = relayPassword;
 
   bool? get verifyCert => this['verifyCert'];
-  set verifyCert(bool? verifyCert) =>
-      this['verifyCert'] = verifyCert;
+  set verifyCert(bool? verifyCert) => this['verifyCert'] = verifyCert;
 
   bool get autoconnect => this['autoconnect'] ?? true;
-  set autoconnect(bool autoconnect) =>
-      this['autoconnect'] = autoconnect;
+  set autoconnect(bool autoconnect) => this['autoconnect'] = autoconnect;
 
   bool? get uiShowCompletion => this['uiShowCompletion'];
   set uiShowCompletion(bool? uiShowCompletion) =>
@@ -34,6 +32,11 @@ class Config extends _ConfigBackend {
 
   bool? get uiShowSend => this['uiShowSend'];
   set uiShowSend(bool? uiShowSend) => this['uiShowSend'] = uiShowSend;
+
+  int? get fontSize => this['fontSize'];
+  set fontSize(int? value) => this['fontSize'] = value;
+
+  static int defaultFontSize = 9;
 }
 
 class _ConfigBackend extends ChangeNotifier {
@@ -49,6 +52,7 @@ class _ConfigBackend extends ChangeNotifier {
   void operator []=(String key, dynamic value) {
     values[key] = value;
     save();
+    notifyListeners();
   }
 
   Future<void> load() async {

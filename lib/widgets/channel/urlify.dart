@@ -56,7 +56,7 @@ TextSpan urlify(
   if (input.text != null) {
     children.addAll(urlifyText(
       input.text ?? "",
-      style: input.style,
+      style: input.style?.merge(style) ?? style,
       onNotification: onNotification,
       localizations: localizations,
     ));
@@ -65,6 +65,7 @@ TextSpan urlify(
   for (final inlineSpan in input.children ?? []) {
     children.addAll(urlifyInlineSpan(
       inlineSpan,
+      style: style,
       onNotification: onNotification,
       localizations: localizations,
     ));
@@ -90,6 +91,7 @@ TextSpan urlify(
 
 List<InlineSpan> urlifyInlineSpan(
   InlineSpan inlineSpan, {
+  TextStyle? style,
   void Function(String text)? onNotification,
   AppLocalizations? localizations,
 }) {
@@ -98,7 +100,7 @@ List<InlineSpan> urlifyInlineSpan(
     if (inlineSpan.text != null) {
       res.addAll(urlifyText(
         inlineSpan.text!,
-        style: inlineSpan.style,
+        style: inlineSpan.style?.merge(style) ?? style,
         onNotification: onNotification,
         localizations: localizations,
       ));
@@ -108,6 +110,7 @@ List<InlineSpan> urlifyInlineSpan(
     for (final child in inlineSpan.children ?? []) {
       res.addAll(urlifyInlineSpan(
         child,
+        style: style,
         onNotification: onNotification,
         localizations: localizations,
       ));
