@@ -313,14 +313,32 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           _channelListDrawerChanged(_relayConnection!, isOpen);
         }
       },
+      endDrawer: _userListDrawer(context),
       appBar: AppBar(
         title: _title(),
         actions: [
+          // show users button if connected
+          if (cs.connected)
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.group),
+                onPressed: () {
+                  final scaff = Scaffold.of(context);
+                  if (scaff.isEndDrawerOpen) {
+                    scaff.closeEndDrawer();
+                  } else {
+                    scaff.openEndDrawer();
+                  }
+                },
+              ),
+            ),
+          // settings button
           IconButton(
-              onPressed: () {
-                Navigator.of(context).push(SettingsPage.route());
-              },
-              icon: const Icon(Icons.settings)),
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(SettingsPage.route());
+            },
+          )
         ],
       ),
 
@@ -379,6 +397,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         _channelFuture = null;
       }
     });
+  }
+
+  Future? _userListFuture;
+
+  Widget? _userListDrawer(BuildContext context) {
+    return Drawer(
+      child: FutureBuilder(
+        future: _userListFuture,
+        builder: (context, snapshot) {
+          return Container();
+        },
+      ),
+    );
   }
 
   Widget? _channelListDrawer(BuildContext context) {
