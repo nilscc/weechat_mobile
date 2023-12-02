@@ -56,7 +56,7 @@ TextSpan urlify(
   if (input.text != null) {
     children.addAll(urlifyText(
       input.text ?? "",
-      style: input.style?.merge(style) ?? style,
+      style: style?.merge(input.style) ?? input.style,
       onNotification: onNotification,
       localizations: localizations,
     ));
@@ -100,7 +100,7 @@ List<InlineSpan> urlifyInlineSpan(
     if (inlineSpan.text != null) {
       res.addAll(urlifyText(
         inlineSpan.text!,
-        style: inlineSpan.style?.merge(style) ?? style,
+        style: style?.merge(inlineSpan.style) ?? inlineSpan.style,
         onNotification: onNotification,
         localizations: localizations,
       ));
