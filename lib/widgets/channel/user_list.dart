@@ -30,9 +30,28 @@ class _State extends State<UserListWidget> {
     return FutureBuilder(
         future: _request,
         builder: (context, snapshot) {
-          return ListView(
-            children: const [],
-          );
+          if (!snapshot.hasData) {
+            return _loading();
+          } else if (snapshot.data == null) {
+            return _failed();
+          } else {
+            return _userList(context, snapshot.data!);
+          }
         });
+  }
+
+  Widget _loading() => Container();
+  Widget _failed() => Container();
+
+  Widget _userList(BuildContext context, List<NicklistData> nicks) {
+    return ListView(
+      children: nicks.map((nick) => _userWidget(context, nick)).toList(),
+    );
+  }
+
+  Widget _userWidget(BuildContext context, NicklistData nick) {
+    return ListTile(
+      title: Text("${nick.prefix}${nick.name}"),
+    );
   }
 }

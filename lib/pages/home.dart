@@ -109,10 +109,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           return _suspend();
         }
       case AppLifecycleState.detached:
-        {
-          break;
-        }
       case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
         {
           break;
         }
@@ -400,9 +398,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           nicklist: RelayBufferNicklist(
             bufferId: _relayBuffer!.bufferPointer,
             connection: _relayBuffer!.relayConnection,
-          ),
-          key: ValueKey(
-            "UserListWidget(buffer: ${_relayBuffer!.bufferPointer})",
           ),
         ),
       );
