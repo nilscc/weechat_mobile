@@ -168,6 +168,7 @@ class _SettingsState extends State<SettingsPage> {
       {int minFontSize = 8, int maxFontSize = 32}) {
     final loc = AppLocalizations.of(context)!;
     final config = Config.of(context);
+    final ts = Theme.of(context).textTheme.bodyMedium?.fontSize?.round() ?? 14;
 
     return [
       Container(
@@ -185,17 +186,15 @@ class _SettingsState extends State<SettingsPage> {
                         config.fontSize = value.round();
                       });
                     },
-                    value: max(
-                            minFontSize,
-                            min((config.fontSize ?? Config.defaultFontSize),
-                                maxFontSize))
+                    value: max(minFontSize,
+                            min((config.fontSize ?? ts), maxFontSize))
                         .toDouble(),
                     min: minFontSize.toDouble(),
                     max: maxFontSize.toDouble(),
                   ),
                 ),
               ),
-              Text("${config.fontSize ?? Config.defaultFontSize} pt")
+              Text("${config.fontSize ?? ts} pt")
             ],
           ),
         ),
