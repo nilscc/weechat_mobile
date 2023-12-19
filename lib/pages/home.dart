@@ -190,7 +190,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     await _relayConnection!.connect(
       hostName: _config!.hostName!,
       portNumber: _config!.portNumber!,
-      ignoreInvalidCertificate: !_config!.verifyCert!,
+      ignoreInvalidCertificate: !(_config!.verifyCert ?? true),
     );
 
     await _relayConnection!.init(_config!.relayPassword!);
