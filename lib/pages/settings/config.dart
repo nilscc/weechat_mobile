@@ -35,8 +35,6 @@ class Config extends _ConfigBackend {
 
   int? get fontSize => this['fontSize'];
   set fontSize(int? value) => this['fontSize'] = value;
-
-  static int defaultFontSize = 9;
 }
 
 class _ConfigBackend extends ChangeNotifier {
