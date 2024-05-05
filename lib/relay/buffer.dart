@@ -155,7 +155,6 @@ class RelayBuffer extends ChangeNotifier {
       '$hdataCmd\n$syncCmd',
       callback: (body) async {
         List<String> fmt = [];
-        String rawBytes = "";
         try {
           _eventLogger?.debug("RelayBuffer._loadNewLines().buffer =\n"
               "${_indent(body.buffer.asInt32x4List().join('\n'))}");

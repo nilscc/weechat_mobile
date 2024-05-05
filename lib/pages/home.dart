@@ -115,6 +115,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         {
           break;
         }
+      case AppLifecycleState.hidden:
+        {
+          break;
+        }
     }
   }
 

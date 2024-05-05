@@ -14,8 +14,8 @@ class ChannelListItem extends StatelessWidget {
     required this.topic,
     required this.plugin,
     required this.nickCount,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   RelayBuffer buffer(RelayConnection connection) => RelayBuffer(
         relayConnection: connection,
@@ -24,12 +24,11 @@ class ChannelListItem extends StatelessWidget {
       );
 
   @override
-  Widget build(BuildContext context,
-  {
+  Widget build(
+    BuildContext context, {
     RelayHotlistEntry? hotlist,
     Future Function(BuildContext)? openBuffer,
   }) {
-
     final theme = Theme.of(context);
 
     var titleColor = theme.disabledColor;

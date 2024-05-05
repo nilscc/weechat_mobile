@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:weechat/pages/log/event_logger.dart';
 
 class LogItem extends StatelessWidget {

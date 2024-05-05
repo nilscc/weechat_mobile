@@ -129,19 +129,19 @@ List<InlineSpan> urlifyText(
   List<InlineSpan> spans = [];
 
   // temporary text variable which stores all text so far processed
-  final non_url_words = <String>[];
+  final nonUrlWords = <String>[];
 
   // iterate over all words in the input and look for URLs
   final words = text.split(' ');
   for (final String word in words) {
     if (validUrl(word)) {
       // url found -> combine text before URL with new URL widget
-      if (non_url_words.isNotEmpty) {
+      if (nonUrlWords.isNotEmpty) {
         spans.add(TextSpan(
-          text: '${non_url_words.join(' ')} ',
+          text: '${nonUrlWords.join(' ')} ',
           style: style,
         ));
-        non_url_words.clear();
+        nonUrlWords.clear();
       }
       spans.add(urlWidget(
         word,
@@ -151,15 +151,15 @@ List<InlineSpan> urlifyText(
       ));
     } else {
       // no URL found, append text to temporary buffer
-      non_url_words.add(word);
+      nonUrlWords.add(word);
     }
   }
 
 // add final text span
-  if (non_url_words.isNotEmpty) {
+  if (nonUrlWords.isNotEmpty) {
     final space = spans.isEmpty ? '' : ' ';
     spans.add(TextSpan(
-      text: '$space${non_url_words.join(' ')}',
+      text: '$space${nonUrlWords.join(' ')}',
       style: style,
     ));
   }
