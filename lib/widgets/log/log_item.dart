@@ -54,7 +54,9 @@ class LogItem extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text.rich(TextSpan(text: "$dateTime [$logType]", style: const TextStyle(color: Colors.grey))),
+            Text.rich(TextSpan(
+                text: "$dateTime [$logType]",
+                style: const TextStyle(color: Colors.grey))),
             _truncate(message),
           ],
         ),
