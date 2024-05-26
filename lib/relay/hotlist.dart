@@ -53,18 +53,23 @@ Future<List<RelayHotlistEntry>> loadRelayHotlist(
 
   await connection.command(
     'hdata hotlist:gui_hotlist(*) '
-    'priority,creation_time.tv_sec,creation_time.tv_usec,buffer,count'
+    'priority,time,time_usec,buffer,count'
     '$syncCmd',
     callback: (reply) async {
       for (final RelayHData h in reply.objects()) {
+        final Map<String, int> keys =
+            (h.keys ?? []).asMap().map((i, val) => MapEntry(val.name, i));
         for (final o in h.objects) {
           hotlist.add(RelayHotlistEntry(
             pointer: o.pPath[0],
-            priority: o.values[0],
+            priority: o.values[keys['priority']!],
             creationTime: DateTime.fromMicrosecondsSinceEpoch(
-                o.values[1].toInt() * 1000000 + o.values[2].toInt()),
-            buffer: o.values[3],
-            count: (o.values[4] as List).map((i) => i as int).toList(),
+                o.values[keys['time']!].toInt() * 1000000 +
+                    o.values[keys['time_usec']!].toInt()),
+            buffer: o.values[keys['buffer']!],
+            count: (o.values[keys['count']!] as List)
+                .map((i) => i as int)
+                .toList(),
           ));
         }
       }

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class Config extends _ConfigBackend {
-  Config({required String path}) : super(path: path);
+  Config({required super.path});
 
   static Config of(BuildContext context, {bool listen = false}) =>
       Provider.of(context, listen: listen);

@@ -115,6 +115,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         {
           break;
         }
+      case AppLifecycleState.hidden:
+        {
+          break;
+        }
     }
   }
 
@@ -250,18 +254,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // https://weechat.org/files/doc/devel/weechat_plugin_api.en.html#hdata_buffer
     // https://github.com/weechat/weechat/blob/12be3b8c332c75a398f77478fd8d62304c632a1e/src/gui/gui-buffer.h#L73
     await connection.command(
-      'hdata buffer:gui_buffers(*) plugin,short_name,full_name,title,nicklist_nicks_count,type',
+      'hdata buffer:gui_buffers(*) plugin,short_name,full_name,title,nicklist_nicks_count',
       callback: (body) async {
         final h = body.objects()[0] as RelayHData;
+        final Map<String, int> keys =
+            (h.keys ?? []).asMap().map((i, val) => MapEntry(val.name, i));
         for (final o in h.objects) {
-          if (o.values[1] != null) {
+          if (keys['short_name'] != null &&
+              o.values[keys['short_name']!] != null) {
             l.add(ChannelListItem(
               bufferPointer: o.pPath[0],
-              plugin: o.values[0],
-              name: o.values[1] ?? '',
-              fullName: o.values[2] ?? '',
-              topic: o.values[3] ?? '',
-              nickCount: o.values[4],
+              plugin: o.values[keys['plugin']!],
+              name: o.values[keys['short_name']!] ?? '',
+              fullName: o.values[keys['full_name']!] ?? '',
+              topic: o.values[keys['title']!] ?? '',
+              nickCount: o.values[keys['nicklist_nicks_count']!],
               key: ValueKey('ChannelListItem ${o.pPath[0]}'),
             ));
           }

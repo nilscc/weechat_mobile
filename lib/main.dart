@@ -16,9 +16,12 @@ import 'package:weechat/themes.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
+  // get platform dispatcher. this needs to be done through the singleton as described on
+  // https://api.flutter.dev/flutter/dart-ui/PlatformDispatcher/instance.html
+  final dispatcher = PlatformDispatcher.instance;
   // check if locale is part of supported locales
   Locale locale = const Locale('en');
-  for (final l in window.locales) {
+  for (final l in dispatcher.locales) {
     final lang = Locale(l.languageCode);
     if (AppLocalizations.supportedLocales.contains(lang)) {
       locale = lang;
@@ -62,8 +65,9 @@ void main() async {
       }
     } else if (error is TimeoutException) {
       reason = CONNECTION_TIMEOUT;
-    } else if (error is HandshakeException && (error.osError?.message
-        .contains("CERTIFICATE_VERIFY_FAILED") ?? false)) {
+    } else if (error is HandshakeException &&
+        (error.osError?.message.contains("CERTIFICATE_VERIFY_FAILED") ??
+            false)) {
       reason = CERTIFICATE_VERIFY_FAILED;
     } else {
       throw error;
@@ -82,8 +86,8 @@ class MyApp extends StatelessWidget {
     required this.config,
     required this.connection,
     required this.eventLogger,
-    Key? key,
-  }) : super(key: key) {
+    super.key,
+  }) {
     // link up connection status with event logger
     connection.connectionStatus.eventLogger = eventLogger;
   }
