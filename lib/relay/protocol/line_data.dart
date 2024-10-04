@@ -44,18 +44,18 @@ List<LineData> handleLineData(
     // get members
     final bufferPointer = o.values[keys["buffer"]!];
     final date =
-DateTime.fromMillisecondsSinceEpoch(o.values[keys["date"]!] * 1000);
+        DateTime.fromMillisecondsSinceEpoch(o.values[keys["date"]!] * 1000);
     final datePrinted = DateTime.fromMillisecondsSinceEpoch(
-o.values[keys["date_printed"]!] * 1000);
+        o.values[keys["date_printed"]!] * 1000);
     final displayed =
-(o.values[keys["displayed"]!] as String).codeUnits[0] == 1;
+        (o.values[keys["displayed"]!] as String).codeUnits[0] == 1;
     final notifyLevel =
-(o.values[keys["notify_level"]!] as String).codeUnits[0];
+        (o.values[keys["notify_level"]!] as String).codeUnits[0];
     final highlight =
-(o.values[keys["highlight"]!] as String).codeUnits[0] == 1;
+        (o.values[keys["highlight"]!] as String).codeUnits[0] == 1;
     final tags = (o.values[keys["tags_array"]!] as List)
-.map((e) => e as String)
-.toList();
+        .map((e) => e as String)
+        .toList();
     final prefix = o.values[keys["prefix"]!];
     final message = o.values[keys["message"]!];
 
