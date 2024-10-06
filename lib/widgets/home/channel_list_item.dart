@@ -36,13 +36,13 @@ class ChannelListItem extends StatelessWidget {
 
     switch (hotlist?.priority) {
       case 0: // GUI_HOTLIST_LOW
-        titleColor = theme.colorScheme.inverseSurface.withAlpha(200);
+        titleColor = theme.colorScheme.onSurface.withAlpha(180);
         break;
       case 1: // GUI_HOTLIST_MESSAGE
-        titleColor = theme.colorScheme.secondary;
+        titleColor = theme.colorScheme.onSurface;
         break;
       case 2: // GUI_HOTLIST_PRIVATE
-        titleColor = theme.colorScheme.secondary;
+        titleColor = theme.colorScheme.onSurface;
         break;
       case 3: // GUI_HOTLIST_HIGHLIGHT
         titleColor = theme.colorScheme.primary;
