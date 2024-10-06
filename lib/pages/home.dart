@@ -57,9 +57,9 @@ class _GuiCurrentWindowBuffer {
         final o = h.objects[0];
 
         final bufferPtr = o.pPath[1];
-        final fullName = o.values[0];
-        final name = o.values[1];
-        final shortName = o.values[2];
+        final fullName = o.value('full_name');
+        final name = o.value('name');
+        final shortName = o.value('short_name');
 
         return _GuiCurrentWindowBuffer(
           bufferPointer: bufferPtr,
@@ -257,18 +257,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       'hdata buffer:gui_buffers(*) plugin,short_name,full_name,title,nicklist_nicks_count',
       callback: (body) async {
         final h = body.objects()[0] as RelayHData;
-        final Map<String, int> keys =
-            (h.keys ?? []).asMap().map((i, val) => MapEntry(val.name, i));
         for (final o in h.objects) {
-          if (keys['short_name'] != null &&
-              o.values[keys['short_name']!] != null) {
+          if (o.value('short_name') != null) {
             l.add(ChannelListItem(
               bufferPointer: o.pPath[0],
-              plugin: o.values[keys['plugin']!],
-              name: o.values[keys['short_name']!] ?? '',
-              fullName: o.values[keys['full_name']!] ?? '',
-              topic: o.values[keys['title']!] ?? '',
-              nickCount: o.values[keys['nicklist_nicks_count']!],
+              plugin: o.value('plugin'),
+              name: o.value('short_name'),
+              fullName: o.value('full_name') ?? '',
+              topic: o.value('title') ?? '',
+              nickCount: o.value('nicklist_nicks_count'),
               key: ValueKey('ChannelListItem ${o.pPath[0]}'),
             ));
           }

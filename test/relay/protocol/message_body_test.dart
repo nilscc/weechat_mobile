@@ -168,13 +168,16 @@ void _decodeHData() {
   expect(h01.objects[0].pPath[0], equals('0x12345'));
   expect(h01.objects[0].values.length, equals(2));
   expect(h01.objects[0].values[0], equals(1));
+  expect(h01.objects[0].value('number'), equals(1));
   expect(h01.objects[0].values[1], equals('core.weechat'));
+  expect(h01.objects[0].value('full_name'), equals('core.weechat'));
 
   // test second object
   expect(h01.objects[1].pPath.length, equals(1));
   expect(h01.objects[1].pPath[0], equals('0x6789a'));
   expect(h01.objects[1].values[0], equals(2));
-  expect(h01.objects[1].values[1], equals('irc.server.libera'));
+  expect(h01.objects[1].value('number'), equals(2));
+  expect(h01.objects[1].value('full_name'), equals('irc.server.libera'));
 
   expect(RelayMessageBody(_hda01).hdaLength(0), equals(_hda01.lengthInBytes));
 }

@@ -36,12 +36,13 @@ Future<List<RelayHotlistEntry>> loadRelayHotlist(
       for (final RelayHData h in b.objects()) {
         for (final o in h.objects) {
           await hotlistChanged.call(RelayHotlistEntry(
-            creationTime: DateTime.fromMicrosecondsSinceEpoch(
-                o.values[1].toInt() * 1000000 + o.values[2].toInt()),
             pointer: o.pPath[0],
-            buffer: o.values[3],
-            priority: o.values[0],
-            count: (o.values[4] as List).map((e) => e as int).toList(),
+            priority: o.value('priority'),
+            creationTime: DateTime.fromMicrosecondsSinceEpoch(
+                o.value('time').toInt() * 1000000 +
+                    o.value('time_usec').toInt()),
+            buffer: o.value('buffer'),
+            count: (o.value('count') as List).map((e) => e as int).toList(),
           ));
         }
       }
@@ -57,19 +58,15 @@ Future<List<RelayHotlistEntry>> loadRelayHotlist(
     '$syncCmd',
     callback: (reply) async {
       for (final RelayHData h in reply.objects()) {
-        final Map<String, int> keys =
-            (h.keys ?? []).asMap().map((i, val) => MapEntry(val.name, i));
         for (final o in h.objects) {
           hotlist.add(RelayHotlistEntry(
             pointer: o.pPath[0],
-            priority: o.values[keys['priority']!],
+            priority: o.value('priority'),
             creationTime: DateTime.fromMicrosecondsSinceEpoch(
-                o.values[keys['time']!].toInt() * 1000000 +
-                    o.values[keys['time_usec']!].toInt()),
-            buffer: o.values[keys['buffer']!],
-            count: (o.values[keys['count']!] as List)
-                .map((i) => i as int)
-                .toList(),
+                o.value('time').toInt() * 1000000 +
+                    o.value('time_usec').toInt()),
+            buffer: o.value('buffer'),
+            count: (o.value('count') as List).map((i) => i as int).toList(),
           ));
         }
       }

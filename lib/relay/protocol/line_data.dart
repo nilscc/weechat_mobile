@@ -33,31 +33,22 @@ List<LineData> handleLineData(
   RelayHData hdata,
   int lineDataPointerPPathIndex,
 ) {
-  // get key-index-pairs for all entries
-  final Map<String, int> keys =
-      (hdata.keys ?? []).asMap().map((i, val) => MapEntry(val.name, i));
-
   final List<LineData> l = [];
   for (int i = 0; i < hdata.count; ++i) {
     final o = hdata.objects[i];
 
     // get members
-    final bufferPointer = o.values[keys["buffer"]!];
-    final date =
-        DateTime.fromMillisecondsSinceEpoch(o.values[keys["date"]!] * 1000);
-    final datePrinted = DateTime.fromMillisecondsSinceEpoch(
-        o.values[keys["date_printed"]!] * 1000);
-    final displayed =
-        (o.values[keys["displayed"]!] as String).codeUnits[0] == 1;
-    final notifyLevel =
-        (o.values[keys["notify_level"]!] as String).codeUnits[0];
-    final highlight =
-        (o.values[keys["highlight"]!] as String).codeUnits[0] == 1;
-    final tags = (o.values[keys["tags_array"]!] as List)
-        .map((e) => e as String)
-        .toList();
-    final prefix = o.values[keys["prefix"]!];
-    final message = o.values[keys["message"]!];
+    final bufferPointer = o.value("buffer");
+    final date = DateTime.fromMillisecondsSinceEpoch(o.value("date") * 1000);
+    final datePrinted =
+        DateTime.fromMillisecondsSinceEpoch(o.value("date_printed") * 1000);
+    final displayed = (o.value("displayed") as String).codeUnits[0] == 1;
+    final notifyLevel = (o.value("notify_level") as String).codeUnits[0];
+    final highlight = (o.value("highlight") as String).codeUnits[0] == 1;
+    final tags =
+        (o.value("tags_array") as List).map((e) => e as String).toList();
+    final prefix = o.value("prefix");
+    final message = o.value("message");
 
     l.add(LineData(
       lineDataPointer: o.pPath[lineDataPointerPPathIndex],

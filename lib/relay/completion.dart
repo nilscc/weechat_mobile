@@ -48,8 +48,6 @@ class RelayCompletion {
       'completion $bufferPointer $position $text',
       callback: (b) async {
         final h = b.objects()[0] as RelayHData;
-        final Map<String, int> keys =
-            (h.keys ?? []).asMap().map((i, val) => MapEntry(val.name, i));
 
         // check if response is empty (no completion available)
         if (h.objects.isEmpty) {
@@ -60,17 +58,16 @@ class RelayCompletion {
         final o = h.objects[0];
 
         // manually convert List<dynamic> to List<String>
-        final list =
-            (o.values[keys['list']!] as List).map((e) => e as String).toList();
+        final list = (o.value('list') as List).map((e) => e as String).toList();
 
         c.complete(RelayCompletion(
-          context: o.values[keys['context']!],
-          baseWord: o.values[keys['base_word']!],
+          context: o.value('context'),
+          baseWord: o.value('base_word'),
           // posStart is given as byte offset, see
           // https://github.com/weechat/weechat/issues/1590
-          posStart: textPosition(text, o.values[keys['pos_start']!]),
-          posEnd: o.values[keys['pos_end']!],
-          addSpace: o.values[keys['add_space']!] == 1,
+          posStart: textPosition(text, o.value('pos_start')),
+          posEnd: o.value('pos_end'),
+          addSpace: o.value('add_space') == 1,
           list: list,
           text: text,
         ));
