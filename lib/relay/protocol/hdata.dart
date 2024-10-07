@@ -62,6 +62,8 @@ class RelayHDataObject {
   dynamic value(String name) {
     if (mapping.containsKey(name)) {
       return values[mapping[name]];
+    } else {
+      return null;
     }
   }
 }

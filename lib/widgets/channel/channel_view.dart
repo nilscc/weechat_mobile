@@ -29,8 +29,8 @@ class _ChannelViewState extends State<ChannelView> {
   void initState() {
     super.initState();
 
-    widget.inputFocusNode.onKey = (node, event) {
-      if (event is RawKeyDownEvent && event.logicalKey.keyLabel == 'Tab') {
+    widget.inputFocusNode.onKeyEvent = (node, event) {
+      if (event is KeyDownEvent && event.logicalKey.keyLabel == 'Tab') {
         final con = RelayConnection.of(node.context!);
         final buffer = Provider.of<RelayBuffer>(node.context!);
         _complete(con, buffer);
