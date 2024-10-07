@@ -44,10 +44,12 @@ class RelayHDataKeyNameType {
 }
 
 class RelayHDataObject {
+  final Map<String, dynamic> mapping;
   final List<String> pPath;
   final List<dynamic> values;
 
   RelayHDataObject({
+    required this.mapping,
     required this.pPath,
     required this.values,
   });
@@ -55,5 +57,13 @@ class RelayHDataObject {
   @override
   String toString() {
     return 'RelayHDataObject(pPath: $pPath, values: $values)';
+  }
+
+  dynamic value(String name) {
+    if (mapping.containsKey(name)) {
+      return values[mapping[name]];
+    } else {
+      return null;
+    }
   }
 }

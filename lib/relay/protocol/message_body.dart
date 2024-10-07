@@ -183,6 +183,7 @@ class RelayMessageBody {
         }
 
         objects.add(RelayHDataObject(
+          mapping: keyTypes.asMap().map((i, val) => MapEntry(val.name, i)),
           pPath: pPath,
           values: values,
         ));
