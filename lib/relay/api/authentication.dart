@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 abstract interface class AuthenticationMethod {
+  const AuthenticationMethod();
+
   // Basic authorization header, not encoded in
   String basic();
 
@@ -13,7 +15,7 @@ abstract interface class AuthenticationMethod {
 final class PlainAuthentication extends AuthenticationMethod {
   final String password;
 
-  PlainAuthentication(this.password);
+  const PlainAuthentication(this.password);
 
   @override
   String basic() => 'plain:$password';
