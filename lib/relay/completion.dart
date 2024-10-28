@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:tuple/tuple.dart';
 import 'package:weechat/relay/connection.dart';
-import 'package:weechat/relay/protocol/hdata.dart';
 
 class RelayCompletion {
   final String context, baseWord;
@@ -47,30 +46,30 @@ class RelayCompletion {
     await connection.command(
       'completion $bufferPointer $position $text',
       callback: (b) async {
-        final h = b.objects()[0] as RelayHData;
+        // final h = b.objects()[0] as RelayHData;
 
-        // check if response is empty (no completion available)
-        if (h.objects.isEmpty) {
-          c.complete(null);
-          return;
-        }
+        // // check if response is empty (no completion available)
+        // if (h.objects.isEmpty) {
+        //   c.complete(null);
+        //   return;
+        // }
 
-        final o = h.objects[0];
+        // final o = h.objects[0];
 
-        // manually convert List<dynamic> to List<String>
-        final list = (o.value('list') as List).map((e) => e as String).toList();
+        // // manually convert List<dynamic> to List<String>
+        // final list = (o.value('list') as List).map((e) => e as String).toList();
 
-        c.complete(RelayCompletion(
-          context: o.value('context'),
-          baseWord: o.value('base_word'),
-          // posStart is given as byte offset, see
-          // https://github.com/weechat/weechat/issues/1590
-          posStart: textPosition(text, o.value('pos_start')),
-          posEnd: o.value('pos_end'),
-          addSpace: o.value('add_space') == 1,
-          list: list,
-          text: text,
-        ));
+        // c.complete(RelayCompletion(
+        //   context: o.value('context'),
+        //   baseWord: o.value('base_word'),
+        //   // posStart is given as byte offset, see
+        //   // https://github.com/weechat/weechat/issues/1590
+        //   posStart: textPosition(text, o.value('pos_start')),
+        //   posEnd: o.value('pos_end'),
+        //   addSpace: o.value('add_space') == 1,
+        //   list: list,
+        //   text: text,
+        // ));
       },
     );
 

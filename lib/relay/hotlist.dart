@@ -1,5 +1,4 @@
 import 'package:weechat/relay/connection.dart';
-import 'package:weechat/relay/protocol/hdata.dart';
 
 class RelayHotlistEntry {
   final DateTime creationTime;
@@ -32,21 +31,21 @@ Future<List<RelayHotlistEntry>> loadRelayHotlist(
 
   var syncCmd = '';
   if (hotlistChanged != null) {
-    connection.addCallback('_hotlist_changed', (b) async {
-      for (final RelayHData h in b.objects()) {
-        for (final o in h.objects) {
-          await hotlistChanged.call(RelayHotlistEntry(
-            pointer: o.pPath[0],
-            priority: o.value('priority'),
-            creationTime: DateTime.fromMicrosecondsSinceEpoch(
-                o.value('time').toInt() * 1000000 +
-                    o.value('time_usec').toInt()),
-            buffer: o.value('buffer'),
-            count: (o.value('count') as List).map((e) => e as int).toList(),
-          ));
-        }
-      }
-    }, repeat: true);
+    // connection.addCallback('_hotlist_changed', (b) async {
+    //   for (final RelayHData h in b.objects()) {
+    //     for (final o in h.objects) {
+    //       await hotlistChanged.call(RelayHotlistEntry(
+    //         pointer: o.pPath[0],
+    //         priority: o.value('priority'),
+    //         creationTime: DateTime.fromMicrosecondsSinceEpoch(
+    //             o.value('time').toInt() * 1000000 +
+    //                 o.value('time_usec').toInt()),
+    //         buffer: o.value('buffer'),
+    //         count: (o.value('count') as List).map((e) => e as int).toList(),
+    //       ));
+    //     }
+    //   }
+    // }, repeat: true);
 
     // immediately start syncing hotlist
     syncCmd = '\nsync * hotlist';
@@ -57,19 +56,19 @@ Future<List<RelayHotlistEntry>> loadRelayHotlist(
     'priority,time,time_usec,buffer,count'
     '$syncCmd',
     callback: (reply) async {
-      for (final RelayHData h in reply.objects()) {
-        for (final o in h.objects) {
-          hotlist.add(RelayHotlistEntry(
-            pointer: o.pPath[0],
-            priority: o.value('priority'),
-            creationTime: DateTime.fromMicrosecondsSinceEpoch(
-                o.value('time').toInt() * 1000000 +
-                    o.value('time_usec').toInt()),
-            buffer: o.value('buffer'),
-            count: (o.value('count') as List).map((i) => i as int).toList(),
-          ));
-        }
-      }
+      // for (final RelayHData h in reply.objects()) {
+      //   for (final o in h.objects) {
+      //     hotlist.add(RelayHotlistEntry(
+      //       pointer: o.pPath[0],
+      //       priority: o.value('priority'),
+      //       creationTime: DateTime.fromMicrosecondsSinceEpoch(
+      //           o.value('time').toInt() * 1000000 +
+      //               o.value('time_usec').toInt()),
+      //       buffer: o.value('buffer'),
+      //       count: (o.value('count') as List).map((i) => i as int).toList(),
+      //     ));
+      //   }
+      // }
     },
   );
 

@@ -8,8 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/relay/connection/status.dart';
-import 'package:weechat/relay/protocol/message_body.dart';
-import 'package:weechat/relay/protocol/parser.dart';
 
 const String CONNECTION_CLOSED_REMOTE = 'Connection closed by remote.';
 const String CONNECTION_CLOSED_OS = 'Connection closed by OS.';
@@ -28,7 +26,7 @@ class RelayConnection {
   StreamSubscription? _socketSubscription;
   DateTime? _socketCreated;
 
-  final Map<String, Completer<RelayMessageBody?>> _callbacks = {};
+  // final Map<String, Completer<RelayMessageBody?>> _callbacks = {};
 
   RelayConnectionStatus connectionStatus;
 
@@ -67,7 +65,7 @@ class RelayConnection {
       _socketSubscription = null;
       _socketCreated = null;
       _pingTimer = null;
-      _callbacks.clear();
+      // _callbacks.clear();
       _id = 0;
       connectionStatus.reason = reason;
       connectionStatus.connected = false;
@@ -90,8 +88,8 @@ class RelayConnection {
 
       // start listening
       _socketSubscription = _socket!.listen((event) async {
-        final b = RelayParser(event).body();
-        await _handleMessageBody(b);
+        // final b = RelayParser(event).body();
+        // await _handleMessageBody(b);
       });
 
       connectionStatus.connected = true;
@@ -111,7 +109,7 @@ class RelayConnection {
 
   Future<T?> command<T>(
     String command, {
-    FutureOr<T?> Function(RelayMessageBody)? callback,
+    FutureOr<T?> Function(dynamic /* TODO */)? callback,
     String? responseId,
     Duration? timeout,
     FutureOr<T?> Function()? onTimeout,
@@ -122,38 +120,38 @@ class RelayConnection {
     final id = responseId ?? _nextId();
 
     // setup callback
-    Completer<RelayMessageBody?>? c;
-    if (callback != null) {
-      c = Completer<RelayMessageBody?>();
-      _callbacks[id] = c;
-    }
+    // Completer<RelayMessageBody?>? c;
+    // if (callback != null) {
+    //   c = Completer<RelayMessageBody?>();
+    //   _callbacks[id] = c;
+    // }
 
     // run command and catch possible exception
     try {
-      _socket!.write('($id) $command\n');
-      await _socket!.flush();
+      // _socket!.write('($id) $command\n');
+      // await _socket!.flush();
 
-      // execute callback
-      if (c != null) {
-        final co = CancelableOperation.fromFuture(c.future.timeout(
-          timeout ?? _DEFAULT_TIMEOUT,
-          onTimeout: onTimeout == null ? null : () => null,
-        ));
-        _runningCommands.add(co);
+      // // execute callback
+      // if (c != null) {
+      //   final co = CancelableOperation.fromFuture(c.future.timeout(
+      //     timeout ?? _DEFAULT_TIMEOUT,
+      //     onTimeout: onTimeout == null ? null : () => null,
+      //   ));
+      //   _runningCommands.add(co);
 
-        RelayMessageBody? m;
-        try {
-          m = await co.valueOrCancellation();
-        } finally {
-          _runningCommands.remove(co);
-        }
+      //   RelayMessageBody? m;
+      //   try {
+      //     m = await co.valueOrCancellation();
+      //   } finally {
+      //     _runningCommands.remove(co);
+      //   }
 
-        if (m != null) {
-          return await callback?.call(m);
-        } else {
-          return await onTimeout?.call();
-        }
-      }
+      //   if (m != null) {
+      //     return await callback?.call(m);
+      //   } else {
+      //     return await onTimeout?.call();
+      //   }
+      // }
     } catch (e) {
       _eventLogger?.error('RelayConnection.command($command): $e');
       if (e is StateError) {
@@ -167,31 +165,31 @@ class RelayConnection {
     return null;
   }
 
-  void addCallback(String id, FutureOr Function(RelayMessageBody) callback,
-      {bool repeat = false}) {
-    final c = Completer<RelayMessageBody?>();
-    _callbacks[id] = c;
-    c.future.then((value) async {
-      if (value != null) {
-        await callback(value);
-        if (repeat) addCallback(id, callback, repeat: repeat);
-      }
-    });
-  }
+  // void addCallback(String id, FutureOr Function(RelayMessageBody) callback,
+  //     {bool repeat = false}) {
+  //   final c = Completer<RelayMessageBody?>();
+  //   _callbacks[id] = c;
+  //   c.future.then((value) async {
+  //     if (value != null) {
+  //       await callback(value);
+  //       if (repeat) addCallback(id, callback, repeat: repeat);
+  //     }
+  //   });
+  // }
 
-  void removeCallback(String id) {
-    _callbacks.remove(id);
-  }
+  // void removeCallback(String id) {
+  //   _callbacks.remove(id);
+  // }
 
-  Future<void> _handleMessageBody(final RelayMessageBody body) async {
-    if (_callbacks.containsKey(body.id)) {
-      final c = _callbacks.remove(body.id)!;
-      c.complete(body);
-    } else {
-      _eventLogger
-          ?.warning('Unhandled message body: ${body.id} ${body.objects()}');
-    }
-  }
+  // Future<void> _handleMessageBody(final RelayMessageBody body) async {
+  //   if (_callbacks.containsKey(body.id)) {
+  //     final c = _callbacks.remove(body.id)!;
+  //     c.complete(body);
+  //   } else {
+  //     _eventLogger
+  //         ?.warning('Unhandled message body: ${body.id} ${body.objects()}');
+  //   }
+  // }
 
   Future<void> init(String relayPassword) async {
     // perform handshake

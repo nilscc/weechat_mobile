@@ -6,15 +6,15 @@ import 'package:weechat/relay/api/authentication.dart';
 
 typedef Headers = Map<String, String>;
 
-enum WebSocketClientExceptionReason implements Exception {
-  alreadyConnected,
-}
+class WebSocketClientException implements Exception {}
 
-class WebSocketClientException implements Exception {
-  final WebSocketClientExceptionReason reason;
+class FailedToConnect extends WebSocketClientException {}
 
-  WebSocketClientException.alreadyConnected()
-      : reason = WebSocketClientExceptionReason.alreadyConnected;
+class AlreadyConnected extends WebSocketClientException {}
+
+class OnDataException extends WebSocketClientException {
+  final String message;
+  OnDataException(this.message);
 }
 
 class StatusCode {
@@ -73,8 +73,8 @@ class WebsocketClient {
     String? origin,
     Duration? pingInterval,
   }) async {
-    if (_webSocket != null || _streamSubscription != null) {
-      throw WebSocketClientException.alreadyConnected();
+    if (isConnected()) {
+      throw AlreadyConnected();
     }
 
     _webSocket = await WebSocket.connect(
@@ -86,39 +86,62 @@ class WebsocketClient {
       ]),
     );
 
-    _webSocket!.pingInterval = pingInterval ?? defaultPingInterval;
-    _streamSubscription = _webSocket!.listen(_onData);
-
-    _finalizer.attach(this, _webSocket!, detach: this);
+    if (_webSocket case final ws?) {
+      ws.pingInterval = pingInterval ?? defaultPingInterval;
+      if (_onData case final od?) {
+        _streamSubscription = ws.listen(od);
+      }
+      _finalizer.attach(this, ws, detach: this);
+    } else {
+      throw FailedToConnect();
+    }
   }
 
   void close() {
-    if (_webSocket == null) {
-      return;
-    }
-    _webSocket!.close();
-    _webSocket = null;
+    // cancel and close all streams
+    _streamSubscription?.cancel();
+    _webSocket?.close();
     _finalizer.detach(this);
+
+    // set members to zero
+    _streamSubscription = null;
+    _webSocket = null;
   }
+
+  OnDataCallback? _onData;
+  set onData(OnDataCallback? onData) {
+    // cancel old stream subscription
+    if (_streamSubscription case final ss?) {
+      ss.cancel();
+      _streamSubscription = null;
+    }
+    // if callback given and websocket is up and running, start listening
+    if ((onData, _webSocket) case (final od?, final ws?)) {
+      _streamSubscription = ws.listen(od);
+    }
+    // assign
+    _onData = onData;
+  }
+
+  // void _onData(data) async {
+  //   final result = jsonDecode(data);
+  //   // check if theres a request_id
+  //   if (int.tryParse(result["request_id"]) case final id?) {
+  //     // get the correct completer for the ID
+  //     if (_completer.remove(id) case final completer?) {
+  //       // construct response
+  //       final status = StatusCode(result["code"], result["message"]);
+  //       final body = result["body"];
+  //       completer.complete(Response(status, body));
+  //     }
+  //   } else if (result["message"] case "Event") {
+  //   } else {
+  //     throw OnDataException("Unhandled data:\n$data");
+  //   }
+  // }
 
   int _requestCounter = 0;
   final _completer = <int, Completer<Response>>{};
-
-  void _onData(data) async {
-    final result = jsonDecode(data);
-    // check if theres a request_id
-    if (int.tryParse(result["request_id"]) case final id?) {
-      // get the correct completer for the ID
-      if (_completer.remove(id) case final completer?) {
-        // construct response
-        final status = StatusCode(result["code"], result["message"]);
-        final body = result["body"];
-        completer.complete(Response(status, body));
-      }
-    } else {
-      throw "Unhandled data:\n$data";
-    }
-  }
 
   /// Send of new request. Include the request method in [path]. See also
   /// implementations of [get], [options], [put], [post].
@@ -162,3 +185,5 @@ class WebsocketClient {
           {RequestCallback? callback, dynamic body}) =>
       request("POST $path", body: body);
 }
+
+typedef OnDataCallback = FutureOr<void> Function(dynamic);
