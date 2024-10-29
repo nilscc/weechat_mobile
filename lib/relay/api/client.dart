@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:weechat/relay/api/authentication.dart';
 import 'package:weechat/relay/api/event.dart';
+import 'package:weechat/relay/api/json_requests.dart';
 import 'package:weechat/relay/api/objects/buffer.dart';
 import 'package:weechat/relay/api/objects/hotlist.dart';
 import 'package:weechat/relay/api/objects/line.dart';
@@ -28,101 +29,74 @@ class UnexpectedRequest extends ApiException {
   UnexpectedRequest(this.message);
 }
 
-class ApiClient {
+class ApiClient with JsonRequests {
   final WebsocketClient _websocket;
+
+  @override
+  WebsocketClient get webSocket => _websocket;
 
   ApiClient(Uri baseUri, AuthenticationMethod authenticationMethod)
       : _websocket = WebsocketClient(
           baseUri: baseUri,
           authenticationMethod: authenticationMethod,
-        ) {
-    _websocket.onData = _onData;
+        );
+
+  Future<void> connect() async {
+    await _websocket.connect();
+    // handle json requests
+    listen();
   }
 
-  void _onData(dynamic data) {
-    // all data should be json decoded
-    final json = jsonDecode(data);
-    // check if request_id exists
-    if (int.tryParse(json["request_id"]) case final id?) {
-      
-    }
-  }
-
-  Future<void> connect() => _websocket.connect();
   bool isConnected() => _websocket.isConnected();
 
-  /// Helper to request a list of [T]hings.
-  Future<List<T>> _jsonList<T>(String path) async {
-    final response = await _websocket.get(path);
-
-    // check for error
-    if (response.status.code != 200) {
-      throw UnexpectedStatus(response.status);
-    }
-
-    // parse json as list of buffers
-    return (response.body as List)
-        // perform `T.fromJson()`, see workaround below
-        .map((m) => _callFromJson[T]!(m as Map<String, dynamic>) as T)
-        .toList();
-  }
-
-  static const _callFromJson = {
-    ApiBuffer: ApiBuffer.fromJson,
-    Line: Line.fromJson,
-    Nick: Nick.fromJson,
-    Hotlist: Hotlist.fromJson,
-  };
+  Future<T> _getObject<T>(path) async => switch (await get(path)) {
+        Response(
+          status: StatusCode(code: 200),
+          body: final T buffers,
+        ) =>
+          buffers,
+        Response(status: StatusCode(code: != 200)) =>
+          throw OnDataException("Unexpected status code."),
+        final other =>
+          throw OnDataException("Expected body of type $T, got: $other"),
+      };
 
   /// Get all [ApiBuffer]s from API
-  Future<List<ApiBuffer>> buffers() => _jsonList<ApiBuffer>("/api/buffers");
+  Future<List<ApiBuffer>> buffers() => _getObject("/api/buffers");
 
   /// Get all [Line]s of a given [buffer]
   Future<List<Line>> lines(ApiBuffer buffer) =>
-      _jsonList<Line>("/api/buffers/${buffer.id}/lines");
+      _getObject("/api/buffers/${buffer.id}/lines");
 
   /// Get all [Nick]s of a given [buffer]
   Future<List<Nick>> nicks(ApiBuffer buffer) =>
-      _jsonList("/api/buffers/${buffer.id}/nicks");
+      _getObject("/api/buffers/${buffer.id}/nicks");
 
   /// Get all [Hotlist]
-  Future<List<Hotlist>> hotlist() => _jsonList("/api/hotlist");
+  Future<List<Hotlist>> hotlist() => _getObject("/api/hotlist");
 
   /// Request a single [ApiBuffer]
-  Future<ApiBuffer?> buffer(IdOrName idOrName) async {
-    if (!(idOrName is String || idOrName is int)) {
-      throw UnexpectedRequest(
-        "Unexpected argument: $idOrName (type: ${idOrName.runtimeType})",
-      );
-    }
+  Future<ApiBuffer> buffer(IdOrName idOrName) =>
+      _getObject("/api/buffers/$idOrName");
 
-    final response = await _websocket.get("/api/buffers/$idOrName");
-    return switch (response.body) {
-      final json? => ApiBuffer.fromJson(json),
-      _ => throw UnexpectedResponseBody(response.body),
-    };
-  }
-
-  EventCallback? onEvent;
-
-  Future<void> sync({
-    bool sync = true,
-    bool nicks = false,
-    bool input = false,
-    Colors? colors,
-  }) async {
-    final body = <String, dynamic>{
-      "sync": sync,
-      "nicks": nicks,
-      "input": input,
-    };
-    if (colors case final c?) {
-      body["colors"] = c.toString();
-    }
-    final r = await _websocket.post("/api/sync", body: jsonEncode(body));
-    print(r.status.code);
-    print(r.body);
-  }
+  // Future<void> sync({
+  //   bool sync = true,
+  //   bool nicks = false,
+  //   bool input = false,
+  //   Colors? colors,
+  // }) async {
+  //   final body = <String, dynamic>{
+  //     "sync": sync,
+  //     "nicks": nicks,
+  //     "input": input,
+  //   };
+  //   if (colors case final c?) {
+  //     body["colors"] = c.toString();
+  //   }
+  //   final r = await _websocket.post("/api/sync", body: jsonEncode(body));
+  //   print(r.status.code);
+  //   print(r.body);
+  // }
 }
 
 typedef EventCallback = FutureOr<void> Function(Event);

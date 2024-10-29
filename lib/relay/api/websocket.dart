@@ -12,31 +12,11 @@ class FailedToConnect extends WebSocketClientException {}
 
 class AlreadyConnected extends WebSocketClientException {}
 
+class NotConnected extends WebSocketClientException {}
+
 class OnDataException extends WebSocketClientException {
   final String message;
   OnDataException(this.message);
-}
-
-class StatusCode {
-  final int code;
-  final String message;
-  StatusCode(this.code, this.message);
-}
-
-/// Function used in [WebsocketClient] callbacks. Receives the status code
-/// [status] and  decoded request [body] as argument.
-/// Return `true` if the callback should be removed (one time callback) or kept,
-/// e.g. for regular `sync` callbacks.
-typedef RequestCallback = Future<bool> Function(
-  StatusCode status,
-  dynamic body,
-);
-
-class Response {
-  final StatusCode status;
-  final dynamic body;
-
-  Response(this.status, [this.body]);
 }
 
 class WebsocketClient {
@@ -123,67 +103,13 @@ class WebsocketClient {
     _onData = onData;
   }
 
-  // void _onData(data) async {
-  //   final result = jsonDecode(data);
-  //   // check if theres a request_id
-  //   if (int.tryParse(result["request_id"]) case final id?) {
-  //     // get the correct completer for the ID
-  //     if (_completer.remove(id) case final completer?) {
-  //       // construct response
-  //       final status = StatusCode(result["code"], result["message"]);
-  //       final body = result["body"];
-  //       completer.complete(Response(status, body));
-  //     }
-  //   } else if (result["message"] case "Event") {
-  //   } else {
-  //     throw OnDataException("Unhandled data:\n$data");
-  //   }
-  // }
-
-  int _requestCounter = 0;
-  final _completer = <int, Completer<Response>>{};
-
-  /// Send of new request. Include the request method in [path]. See also
-  /// implementations of [get], [options], [put], [post].
-  /// [body] should only be used for `POST` and `PUT` as per API definition.
-  Future<Response> request(
-    String path, {
-    dynamic body,
-    Duration timeout = const Duration(seconds: 10),
-  }) async {
-    assert(isConnected());
-
-    final request = {
-      "request": path,
-      "request_id": (++_requestCounter).toString(), // increment counter
-    };
-
-    // add request body if given
-    if (body != null) {
-      request["body"] = body;
+  void add(data) {
+    if (_webSocket case final ws?) {
+      ws.add(data);
+    } else {
+      throw NotConnected();
     }
-
-    // store completer for request ID
-    final completer = Completer<Response>();
-    _completer[_requestCounter] = completer;
-
-    // send request encoded as json
-    _webSocket?.add(jsonEncode(request));
-
-    // wait for completion
-    return completer.future.timeout(timeout);
   }
-
-  Future<Response> get(String path, {RequestCallback? callback}) =>
-      request("GET $path");
-  Future<Response> options(String path, {RequestCallback? callback}) =>
-      request("OPTIONS $path");
-  Future<Response> put(String path,
-          {RequestCallback? callback, dynamic body}) =>
-      request("PUT $path", body: body);
-  Future<Response> post(String path,
-          {RequestCallback? callback, dynamic body}) =>
-      request("POST $path", body: body);
 }
 
 typedef OnDataCallback = FutureOr<void> Function(dynamic);
