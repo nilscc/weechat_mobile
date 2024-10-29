@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:weechat/relay/api/client.dart';
+import 'package:weechat/relay/api/event.dart';
 import 'package:weechat/relay/api/websocket.dart';
 
 import 'package:weechat/relay/api/objects/buffer.dart';
@@ -32,13 +32,14 @@ class Response {
   Response(this.status, [this.body]);
 }
 
+typedef EventCallback = FutureOr<void> Function(Event);
+
 mixin JsonRequests {
   WebsocketClient get webSocket;
+  EventCallback? get onEvent => null;
 
   int _requestCounter = 0;
   final _completer = <String, Completer>{};
-
-  EventCallback? onEvent;
 
   void listen() {
     webSocket.onData = _onDataCallback;
@@ -47,8 +48,8 @@ mixin JsonRequests {
   dynamic _fromJson(final String bodyType, final body) => switch (bodyType) {
         "line" => Line.fromJson(body),
         "lines" => _fromJsonList<Line>(body),
-        "buffer" => ApiBuffer.fromJson(body),
-        "buffers" => _fromJsonList<ApiBuffer>(body),
+        "buffer" => Buffer.fromJson(body),
+        "buffers" => _fromJsonList<Buffer>(body),
         "nick" => Nick.fromJson(body),
         "nick_group" => NickGroup.fromJson(body),
         "hotlist" => _fromJsonList<Hotlist>(body),
@@ -62,7 +63,7 @@ mixin JsonRequests {
       .toList();
 
   static const _callFromJson = {
-    ApiBuffer: ApiBuffer.fromJson,
+    Buffer: Buffer.fromJson,
     Line: Line.fromJson,
     Nick: Nick.fromJson,
     Hotlist: Hotlist.fromJson,
@@ -71,29 +72,31 @@ mixin JsonRequests {
   /// Handle incoming [data], either via request ID or through events.
   void _onDataCallback(dynamic data) {
     final json = jsonDecode(data);
+    print("json=$json");
 
     // construct response
     final status = StatusCode(json["code"], json["message"]);
-    final body = json["body"];
-    final bodyType = json["body_type"];
+    var body;
+    if ((json["body_type"], json["body"]) case (final bodyType?, final json?)) {
+      body = _fromJson(bodyType, json);
+    }
 
     // check if request_id is part of json response
     if (json["request_id"] case final id?) {
       if (_completer.remove(id) case final completer?) {
-        completer.complete(Response(status, _fromJson(bodyType, body)));
+        completer.complete(Response(status, body));
       } else {
         // TODO: log only
-        throw OnDataException("Missing completer:\n$json");
+        print("Missing completer:\n$json");
       }
     } else if (json["message"] case "Event") {
       if (onEvent case final cb?) {
-        cb.call(_fromJson(bodyType, body));
+        cb.call(Event(json["event_name"], json["buffer_id"], body));
       } else {
-        // TODO: log only
-        throw OnDataException("Unhandled event message:\n$json");
+        print("Unhandled event message:\n$json");
       }
     } else {
-      throw OnDataException("Unhandled response:\n$json");
+      print("Unhandled response:\n$json");
     }
   }
 
@@ -109,7 +112,7 @@ mixin JsonRequests {
 
     // increment counter
     _requestCounter += 1;
-    final request = {
+    final request = <String, dynamic>{
       "request": path,
       "request_id": "request_$_requestCounter",
     };

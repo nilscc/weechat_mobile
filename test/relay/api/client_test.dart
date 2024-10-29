@@ -32,13 +32,17 @@ void main() async {
   test("Get hotlist", () async {
     final hotlist = await client.hotlist();
     expect(hotlist, isNotEmpty);
-    print(hotlist);
   });
 
-  // test("Basic syncing...", () async {
-  //   await client.sync(colors: Colors.strip);
-  //   await Future.delayed(Duration(seconds: 30));
-  // }, timeout: Timeout(Duration(minutes: 1)));
+  test(
+    "Basic syncing...",
+    () async {
+      await client.sync(colors: Colors.strip);
+      print("möp");
+      await Future.delayed(Duration(seconds: 30));
+    },
+    timeout: Timeout(Duration(minutes: 1)),
+  );
 }
 
 Future<ApiClient> _connect() async {

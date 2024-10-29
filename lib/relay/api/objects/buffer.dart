@@ -8,7 +8,7 @@ enum BufferType {
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
-class ApiBuffer {
+class Buffer {
   final int id;
   final String name;
   final String shortName;
@@ -27,7 +27,7 @@ class ApiBuffer {
   final Map<String, dynamic> localVariables;
   final List<Map<String, String>> keys;
 
-  ApiBuffer({
+  Buffer({
     required this.id,
     required this.name,
     required this.shortName,
@@ -49,7 +49,7 @@ class ApiBuffer {
 
   /// Connect the generated [_$ApiBufferFromJson] function to the `fromJson`
   /// factory.
-  factory ApiBuffer.fromJson(Map<String, dynamic> json) =>
+  factory Buffer.fromJson(Map<String, dynamic> json) =>
       _$ApiBufferFromJson(json);
 
   /// Connect the generated [_$ApiBufferToJson] function to the `toJson` method.

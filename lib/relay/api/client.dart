@@ -35,6 +35,9 @@ class ApiClient with JsonRequests {
   @override
   WebsocketClient get webSocket => _websocket;
 
+  @override
+  EventCallback? get onEvent => _onEvent;
+
   ApiClient(Uri baseUri, AuthenticationMethod authenticationMethod)
       : _websocket = WebsocketClient(
           baseUri: baseUri,
@@ -45,6 +48,13 @@ class ApiClient with JsonRequests {
     await _websocket.connect();
     // handle json requests
     listen();
+  }
+
+  void _onEvent(final Event event) {
+    print(
+      "event \"${event.eventName}\" buffer #${event.bufferId} "
+      "of type ${event.body.runtimeType}",
+    );
   }
 
   bool isConnected() => _websocket.isConnected();
@@ -61,45 +71,41 @@ class ApiClient with JsonRequests {
           throw OnDataException("Expected body of type $T, got: $other"),
       };
 
-  /// Get all [ApiBuffer]s from API
-  Future<List<ApiBuffer>> buffers() => _getObject("/api/buffers");
+  /// Get all [Buffer]s from API
+  Future<List<Buffer>> buffers() => _getObject("/api/buffers");
 
   /// Get all [Line]s of a given [buffer]
-  Future<List<Line>> lines(ApiBuffer buffer) =>
+  Future<List<Line>> lines(Buffer buffer) =>
       _getObject("/api/buffers/${buffer.id}/lines");
 
   /// Get all [Nick]s of a given [buffer]
-  Future<List<Nick>> nicks(ApiBuffer buffer) =>
+  Future<List<Nick>> nicks(Buffer buffer) =>
       _getObject("/api/buffers/${buffer.id}/nicks");
 
   /// Get all [Hotlist]
   Future<List<Hotlist>> hotlist() => _getObject("/api/hotlist");
 
-  /// Request a single [ApiBuffer]
-  Future<ApiBuffer> buffer(IdOrName idOrName) =>
+  /// Request a single [Buffer]
+  Future<Buffer> buffer(IdOrName idOrName) =>
       _getObject("/api/buffers/$idOrName");
 
-  // Future<void> sync({
-  //   bool sync = true,
-  //   bool nicks = false,
-  //   bool input = false,
-  //   Colors? colors,
-  // }) async {
-  //   final body = <String, dynamic>{
-  //     "sync": sync,
-  //     "nicks": nicks,
-  //     "input": input,
-  //   };
-  //   if (colors case final c?) {
-  //     body["colors"] = c.toString();
-  //   }
-  //   final r = await _websocket.post("/api/sync", body: jsonEncode(body));
-  //   print(r.status.code);
-  //   print(r.body);
-  // }
+  Future<void> sync({
+    bool sync = true,
+    bool nicks = false,
+    bool input = false,
+    Colors? colors,
+  }) async {
+    final body = <String, dynamic>{
+      "sync": sync,
+      "nicks": nicks,
+      "input": input,
+    };
+    if (colors case final c?) {
+      body["colors"] = c.name;
+    }
+    await post("/api/sync", body: body);
+  }
 }
-
-typedef EventCallback = FutureOr<void> Function(Event);
 
 enum Colors {
   ansi,
