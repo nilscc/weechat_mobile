@@ -25,4 +25,7 @@ class Version {
 
   /// Connect the generated [_$VersionToJson] function to the `toJson` method.
   Map<String, dynamic> toJson() => _$VersionToJson(this);
+  
+  @override
+  String toString() => "$runtimeType ${toJson()}";
 }

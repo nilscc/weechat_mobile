@@ -41,9 +41,11 @@ class Line {
 
   /// Connect the generated [_$LineFromJson] function to the `fromJson`
   /// factory.
-  factory Line.fromJson(Map<String, dynamic> json) =>
-      _$LineFromJson(json);
+  factory Line.fromJson(Map<String, dynamic> json) => _$LineFromJson(json);
 
   /// Connect the generated [_$LineToJson] function to the `toJson` method.
   Map<String, dynamic> toJson() => _$LineToJson(this);
+
+  @override
+  String toString() => "$runtimeType ${toJson()}";
 }

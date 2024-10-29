@@ -35,22 +35,21 @@ class ApiClient with JsonRequests {
   @override
   WebsocketClient get webSocket => _websocket;
 
-  @override
-  EventCallback? get onEvent => _onEvent;
-
   ApiClient(Uri baseUri, AuthenticationMethod authenticationMethod)
       : _websocket = WebsocketClient(
           baseUri: baseUri,
           authenticationMethod: authenticationMethod,
-        );
+        ) {
+    // assign default event handler (so that it can be changed by application)
+    onEvent = _onEvent;
+  }
 
   Future<void> connect() async {
     await _websocket.connect();
-    // handle json requests
     listen();
   }
 
-  void _onEvent(final Event event) {
+  FutureOr<void> _onEvent(final Event event) {
     print(
       "event \"${event.eventName}\" buffer #${event.bufferId} "
       "of type ${event.body.runtimeType}",

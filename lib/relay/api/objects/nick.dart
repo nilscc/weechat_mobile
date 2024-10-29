@@ -33,4 +33,7 @@ class Nick {
 
   /// Connect the generated [_$NickToJson] function to the `toJson` method.
   Map<String, dynamic> toJson() => _$NickToJson(this);
+  
+  @override
+  String toString() => "$runtimeType ${toJson()}";
 }

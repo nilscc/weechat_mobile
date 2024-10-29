@@ -32,4 +32,7 @@ class NickGroup {
 
   /// Connect the generated [_$NickGroupToJson] function to the `toJson` method.
   Map<String, dynamic> toJson() => _$NickGroupToJson(this);
+  
+  @override
+  String toString() => "$runtimeType ${toJson()}";
 }

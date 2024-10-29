@@ -47,11 +47,13 @@ class Buffer {
     required this.keys,
   });
 
-  /// Connect the generated [_$ApiBufferFromJson] function to the `fromJson`
+  /// Connect the generated [_$BufferFromJson] function to the `fromJson`
   /// factory.
-  factory Buffer.fromJson(Map<String, dynamic> json) =>
-      _$ApiBufferFromJson(json);
+  factory Buffer.fromJson(Map<String, dynamic> json) => _$BufferFromJson(json);
 
-  /// Connect the generated [_$ApiBufferToJson] function to the `toJson` method.
-  Map<String, dynamic> toJson() => _$ApiBufferToJson(this);
+  /// Connect the generated [_$BufferToJson] function to the `toJson` method.
+  Map<String, dynamic> toJson() => _$BufferToJson(this);
+
+  @override
+  String toString() => "$runtimeType ${toJson()}";
 }

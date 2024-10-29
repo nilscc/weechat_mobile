@@ -36,7 +36,7 @@ typedef EventCallback = FutureOr<void> Function(Event);
 
 mixin JsonRequests {
   WebsocketClient get webSocket;
-  EventCallback? get onEvent => null;
+  EventCallback? onEvent;
 
   int _requestCounter = 0;
   final _completer = <String, Completer>{};

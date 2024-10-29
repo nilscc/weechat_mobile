@@ -34,4 +34,7 @@ class Hotlist {
 
   /// Connect the generated [_$HotlistToJson] function to the `toJson` method.
   Map<String, dynamic> toJson() => _$HotlistToJson(this);
+  
+  @override
+  String toString() => "$runtimeType ${toJson()}";
 }

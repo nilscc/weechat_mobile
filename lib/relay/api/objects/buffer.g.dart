@@ -6,7 +6,7 @@ part of 'buffer.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Buffer _$ApiBufferFromJson(Map<String, dynamic> json) => Buffer(
+Buffer _$BufferFromJson(Map<String, dynamic> json) => Buffer(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String,
       shortName: json['short_name'] as String,
@@ -28,7 +28,7 @@ Buffer _$ApiBufferFromJson(Map<String, dynamic> json) => Buffer(
           .toList(),
     );
 
-Map<String, dynamic> _$ApiBufferToJson(Buffer instance) => <String, dynamic>{
+Map<String, dynamic> _$BufferToJson(Buffer instance) => <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
       'short_name': instance.shortName,
