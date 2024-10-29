@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:weechat/relay/api/client.dart';
 import 'package:weechat/relay/api/authentication.dart';
@@ -37,11 +39,19 @@ void main() async {
   test(
     "Basic syncing...",
     () async {
+      // Create future completer
+      final comp = Completer<bool>();
+      client.onEvent = (e) {
+        comp.complete(true);
+        print("Done! $e");
+      };
+
+      // start syncing
       await client.sync(colors: Colors.strip);
-      print("möp");
-      await Future.delayed(Duration(seconds: 30));
+
+      // Wait for the future to be completed
+      expect(await comp.future, isTrue);
     },
-    timeout: Timeout(Duration(minutes: 1)),
   );
 }
 
