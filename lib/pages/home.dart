@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
+import 'package:weechat/relay/api/objects/buffer.dart';
+import 'package:weechat/relay/api/objects/hotlist.dart';
 import 'package:weechat/widgets/home/channel_list_item.dart';
 import 'package:weechat/pages/log.dart';
 import 'package:weechat/pages/log/event_logger.dart';
@@ -14,7 +16,6 @@ import 'package:weechat/relay/buffer.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/relay/hotlist.dart';
-import 'package:weechat/relay/protocol/hdata.dart';
 import 'package:weechat/widgets/channel/channel_view.dart';
 
 class HomePage extends StatefulWidget {
@@ -44,31 +45,32 @@ class _GuiCurrentWindowBuffer {
 
   RelayBuffer toRelayBuffer(RelayConnection relayConnection) => RelayBuffer(
         relayConnection: relayConnection,
-        bufferPointer: bufferPointer,
-        name: shortName,
+        name: fullName,
       );
 
   static Future<_GuiCurrentWindowBuffer?> load(
       RelayConnection relayConnection) async {
-    return relayConnection.command(
-      'hdata window:gui_current_window/buffer full_name,name,short_name',
-      callback: (body) {
-        final h = body.objects()[0] as RelayHData;
-        final o = h.objects[0];
+    return null;
 
-        final bufferPtr = o.pPath[1];
-        final fullName = o.value('full_name');
-        final name = o.value('name');
-        final shortName = o.value('short_name');
+    // return relayConnection.command(
+    //   'hdata window:gui_current_window/buffer full_name,name,short_name',
+    //   callback: (body) {
+    //     final h = body.objects()[0] as RelayHData;
+    //     final o = h.objects[0];
 
-        return _GuiCurrentWindowBuffer(
-          bufferPointer: bufferPtr,
-          shortName: shortName ?? name,
-          name: name,
-          fullName: fullName,
-        );
-      },
-    );
+    //     final bufferPtr = o.pPath[1];
+    //     final fullName = o.value('full_name');
+    //     final name = o.value('name');
+    //     final shortName = o.value('short_name');
+
+    //     return _GuiCurrentWindowBuffer(
+    //       bufferPointer: bufferPtr,
+    //       shortName: shortName ?? name,
+    //       name: name,
+    //       fullName: fullName,
+    //     );
+    //   },
+    // );
   }
 }
 
@@ -152,7 +154,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       // e.g. the weechat instance was upgraded to a new software version and prevents
       // accessing (and crashing weechat) illegal pointer addresses.
       if (wb != null) {
-        if (wb.bufferPointer == _relayBuffer?.bufferPointer) {
+        if (wb.name == _relayBuffer?.name) {
           await _relayBuffer?.resume();
           if (_inputHadFocus) {
             _inputFocusNode.requestFocus();
@@ -194,15 +196,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     await _relayConnection!.connect(
       hostName: _config!.hostName!,
       portNumber: _config!.portNumber!,
-      ignoreInvalidCertificate: !(_config!.verifyCert ?? true),
+      password: _config!.relayPassword!,
+      ignoreInvalidCertificate: _config?.verifyCert ?? false,
     );
 
-    await _relayConnection!.init(_config!.relayPassword!);
-
-    _eventLogger
-        ?.info('Connected relay version: ${_relayConnection!.relayVersion}');
-
-    _relayConnection!.startPingTimer();
+    // do not block any further to log version info...
+    _relayConnection!.client
+        ?.version()
+        .then((ver) => _eventLogger?.info('Connected relay version: $ver'));
   }
 
   Future<void> _disconnect() async {
@@ -247,38 +248,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     });
   }
 
-  Future<List<ChannelListItem>> _loadChannelList(
-      RelayConnection connection) async {
-    final List<ChannelListItem> l = [];
-
-    // https://weechat.org/files/doc/devel/weechat_plugin_api.en.html#hdata_buffer
-    // https://github.com/weechat/weechat/blob/12be3b8c332c75a398f77478fd8d62304c632a1e/src/gui/gui-buffer.h#L73
-    await connection.command(
-      'hdata buffer:gui_buffers(*) plugin,short_name,full_name,title,nicklist_nicks_count',
-      callback: (body) async {
-        final h = body.objects()[0] as RelayHData;
-        for (final o in h.objects) {
-          if (o.value('short_name') != null) {
-            l.add(ChannelListItem(
-              bufferPointer: o.pPath[0],
-              plugin: o.value('plugin'),
-              name: o.value('short_name'),
-              fullName: o.value('full_name') ?? '',
-              topic: o.value('title') ?? '',
-              nickCount: o.value('nicklist_nicks_count'),
-              key: ValueKey('ChannelListItem ${o.pPath[0]}'),
-            ));
-          }
-        }
-      },
-    );
-
-    return l;
+  Future<List<Buffer>?> _loadChannelList(RelayConnection connection) async {
+    return connection.client?.buffers();
   }
 
-  Future<List<RelayHotlistEntry>> _loadHotList(
-      RelayConnection connection) async {
-    return await loadRelayHotlist(connection);
+  Future<List<Hotlist>?> _loadHotList(RelayConnection connection) async {
+    return connection.client?.hotlist();
   }
 
   Future<void> _autoConnect() async {
@@ -366,7 +341,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         value: _relayBuffer,
         child: ChannelView(
           inputFocusNode: _inputFocusNode,
-          key: ValueKey('ChannelView(buffer: ${_relayBuffer?.bufferPointer})'),
+          key: ValueKey('ChannelView(buffer: ${_relayBuffer?.name})'),
         ),
       );
     } else {
@@ -374,8 +349,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-  Future<Tuple2<List<ChannelListItem>, List<RelayHotlistEntry>>>?
-      _channelFuture;
+  Future<Tuple2<List<Buffer>, List<Hotlist>>>? _channelFuture;
 
   void _channelListDrawerChanged(RelayConnection connection, bool isOpened) {
     setState(() {
@@ -383,7 +357,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         _channelFuture = Future(() async {
           final l = await _loadChannelList(connection);
           final h = await _loadHotList(connection);
-          return Tuple2(l, h);
+
+          return Tuple2(l!, h!);
         });
       } else {
         _channelFuture = null;
@@ -438,10 +413,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     final bufferFullName = channelListItem.fullName;
     final bufferName = channelListItem.name;
-    final bufferPtr = channelListItem.bufferPointer;
     final buffer = RelayBuffer(
       relayConnection: connection,
-      bufferPointer: bufferPtr,
       name: bufferName,
     );
 
@@ -451,7 +424,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     scaffoldState.closeDrawer();
 
     // switch buffer on remote weechat
-    await connection.command('input core.weechat /buffer $bufferFullName');
+    await connection.client?.input(
+      "/buffer $bufferFullName",
+      buffer_name: "core.weechat",
+    );
 
     setState(() {
       _relayBuffer = buffer;

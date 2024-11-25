@@ -18,7 +18,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.24.17+22
 
 environment:
-  sdk: ">=2.19.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -50,11 +50,19 @@ dependencies:
 
   # ssh upload
   #dartssh2:
+  http:
+
+  # for converting json to dart classes
+  json_annotation: ^4.9.0
 
 dev_dependencies:
   flutter_lints: any
   flutter_test:
     sdk: flutter
+
+  # for generating json converters
+  build_runner: 
+  json_serializable: 
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

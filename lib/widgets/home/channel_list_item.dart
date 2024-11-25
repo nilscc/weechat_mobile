@@ -20,7 +20,6 @@ class ChannelListItem extends StatelessWidget {
   RelayBuffer buffer(RelayConnection connection) => RelayBuffer(
         relayConnection: connection,
         name: name,
-        bufferPointer: bufferPointer,
       );
 
   @override
