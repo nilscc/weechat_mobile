@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:weechat/relay/api/objects/buffer.dart';
 import 'package:weechat/widgets/channel/lines.dart';
 import 'package:weechat/pages/settings/config.dart';
 import 'package:weechat/relay/buffer.dart';
@@ -60,31 +61,31 @@ class _ChannelViewState extends State<ChannelView> {
         child: ChannelLines(scrollController: _linesController),
       );
 
-  void _send(RelayConnection con, RelayBuffer buffer) async {
+  void _send(RelayConnection con, String buffer_name) async {
     final text = _inputController.text;
     if (text.isNotEmpty) {
-      await con.command('input ${buffer.bufferPointer} $text');
+      await con.client!.input(text, buffer_name: buffer_name);
       _inputController.text = '';
       _linesController.jumpTo(0);
     }
   }
 
   void _complete(RelayConnection connection, RelayBuffer buffer) async {
-    _completion ??= await RelayCompletion.load(
-      connection,
-      buffer.bufferPointer,
-      _inputController.text,
-      _inputController.selection.base.offset,
-    );
+    // _completion ??= await RelayCompletion.load(
+    //   connection,
+    //   buffer.bufferPointer,
+    //   _inputController.text,
+    //   _inputController.selection.base.offset,
+    // );
 
-    if (_completion != null) {
-      final n = _completion!.next();
-      _inputController.text = n.item1;
-      _inputController.selection = TextSelection(
-        baseOffset: n.item2,
-        extentOffset: n.item2,
-      );
-    }
+    // if (_completion != null) {
+    //   final n = _completion!.next()!;
+    //   _inputController.text = n.item1;
+    //   _inputController.selection = TextSelection(
+    //     baseOffset: n.item2,
+    //     extentOffset: n.item2,
+    //   );
+    // }
   }
 
   Widget _inputWidget(BuildContext context) {
@@ -112,7 +113,7 @@ class _ChannelViewState extends State<ChannelView> {
                   _completion = null;
                 },
                 onEditingComplete:
-                    buffer.active ? () => _send(con, buffer) : null,
+                    buffer.active ? () => _send(con, buffer.name) : null,
                 focusNode: widget.inputFocusNode,
               ),
             ),
@@ -128,7 +129,7 @@ class _ChannelViewState extends State<ChannelView> {
             if (cfg.uiShowSend ?? false)
               IconButton(
                 icon: const Icon(Feather.arrow_up),
-                onPressed: () => _send(con, buffer),
+                onPressed: () => _send(con, buffer.name),
               ),
           ],
         ),

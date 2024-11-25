@@ -8,6 +8,7 @@ import 'package:weechat/relay/api/objects/buffer.dart';
 import 'package:weechat/relay/api/objects/hotlist.dart';
 import 'package:weechat/relay/api/objects/line.dart';
 import 'package:weechat/relay/api/objects/nick.dart';
+import 'package:weechat/relay/api/objects/version.dart';
 import 'package:weechat/relay/api/websocket.dart';
 
 typedef IdOrName = dynamic;
@@ -61,14 +62,35 @@ class ApiClient with JsonRequests {
   Future<T> _getObject<T>(path) async => switch (await get(path)) {
         Response(
           status: StatusCode(code: 200),
-          body: final T buffers,
+          body: final T body,
         ) =>
-          buffers,
+          body,
         Response(status: StatusCode(code: != 200)) =>
           throw OnDataException("Unexpected status code."),
         final other =>
           throw OnDataException("Expected body of type $T, got: $other"),
       };
+
+  Future _postObject<T>(String path, T object) async =>
+      switch (await post(path, body: object)) {
+        Response(status: StatusCode(code: 204)) => null,
+        Response(status: StatusCode(code: != 200)) =>
+          throw OnDataException("Unexpected status code."),
+        final other => throw OnDataException("Unexpected response: $other"),
+      };
+
+  Future input(String command,
+      {Buffer? buffer, int? buffer_id, String? buffer_name}) async {
+    final id = buffer?.id ?? buffer_id;
+    await _postObject("/api/input", {
+      if (id != null) "buffer_id": id,
+      if (id == null) "buffer": buffer_name!,
+      "command": command,
+    });
+  }
+
+  /// Get [Version] of connected relay client
+  Future<Version> version() => _getObject("/api/version");
 
   /// Get all [Buffer]s from API
   Future<List<Buffer>> buffers() => _getObject("/api/buffers");

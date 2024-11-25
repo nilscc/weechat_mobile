@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:weechat/relay/api/event.dart';
+import 'package:weechat/relay/api/objects/version.dart';
 import 'package:weechat/relay/api/websocket.dart';
 
 import 'package:weechat/relay/api/objects/buffer.dart';
@@ -53,6 +54,7 @@ mixin JsonRequests {
         "nick" => Nick.fromJson(body),
         "nick_group" => NickGroup.fromJson(body),
         "hotlist" => _fromJsonList<Hotlist>(body),
+        "version" => Version.fromJson(body),
         _ =>
           throw OnDataException("Failed to parse body type $bodyType\n$body"),
       };

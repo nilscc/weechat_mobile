@@ -7,7 +7,7 @@ import 'package:weechat/relay/protocol/line_data.dart';
 
 class RelayBuffer extends ChangeNotifier {
   final RelayConnection relayConnection;
-  final String bufferPointer, name;
+  final String name;
   final List<LineData> lines = [];
 
   bool get active => _active;
@@ -20,7 +20,6 @@ class RelayBuffer extends ChangeNotifier {
 
   RelayBuffer({
     required this.relayConnection,
-    required this.bufferPointer,
     required this.name,
   });
 
