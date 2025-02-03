@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
+import 'package:weechat/relay/nicklist.dart';
+import 'package:weechat/widgets/channel/user_list.dart';
 import 'package:weechat/widgets/home/channel_list_item.dart';
-import 'package:weechat/pages/log.dart';
 import 'package:weechat/pages/log/event_logger.dart';
 import 'package:weechat/pages/settings.dart';
 import 'package:weechat/pages/settings/config.dart';
@@ -108,10 +109,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           return _suspend();
         }
       case AppLifecycleState.detached:
-        {
-          break;
-        }
       case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
         {
           break;
         }
@@ -317,20 +316,25 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           _channelListDrawerChanged(_relayConnection!, isOpen);
         }
       },
+      endDrawer: _userListDrawer(context),
       appBar: AppBar(
         title: _title(),
         actions: [
+          // show users button if connected
+          if (cs.connected)
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.group),
+                onPressed: () => _toggleUserList(context),
+              ),
+            ),
+          // settings button
           IconButton(
+            icon: const Icon(Icons.settings),
             onPressed: () {
-              Navigator.of(context).push(LogPage.route());
+              Navigator.of(context).push(SettingsPage.route());
             },
-            icon: const Icon(Feather.info),
-          ),
-          IconButton(
-              onPressed: () {
-                Navigator.of(context).push(SettingsPage.route());
-              },
-              icon: const Icon(Icons.settings)),
+          )
         ],
       ),
 
@@ -389,6 +393,30 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         _channelFuture = null;
       }
     });
+  }
+
+  Widget? _userListDrawer(BuildContext context) {
+    if (_relayBuffer != null) {
+      return Drawer(
+        child: UserListWidget(
+          nicklist: RelayBufferNicklist(
+            bufferId: _relayBuffer!.bufferPointer,
+            connection: _relayBuffer!.relayConnection,
+          ),
+        ),
+      );
+    } else {
+      return const Drawer();
+    }
+  }
+
+  void _toggleUserList(BuildContext context) {
+    final scaff = Scaffold.of(context);
+    if (scaff.isEndDrawerOpen) {
+      scaff.closeEndDrawer();
+    } else {
+      scaff.openEndDrawer();
+    }
   }
 
   Widget? _channelListDrawer(BuildContext context) {
