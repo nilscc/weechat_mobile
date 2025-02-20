@@ -28,7 +28,9 @@
   "urlifyCopiedMessage": "In die Zwischenablage kopiert: {url}",
   "@urlifyCopiedMessage": {
     "placeholders": {
-      "url": {}
+      "url": {
+        "type": "String"
+      }
     }
   }
 }

@@ -28,7 +28,9 @@
   "urlifyCopiedMessage": "Copied to clipboard: {url}",
   "@urlifyCopiedMessage": {
     "placeholders": {
-      "url": {}
+      "url": {
+        "type": "String"
+      }
     }
   }
 }
