@@ -13,7 +13,7 @@ import 'package:weechat/pages/settings/config.dart';
 import 'package:weechat/relay/connection.dart';
 import 'package:weechat/relay/connection/status.dart';
 import 'package:weechat/themes.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:weechat/l10n/app_localizations.dart';
 
 void main() async {
   // get platform dispatcher. this needs to be done through the singleton as described on
