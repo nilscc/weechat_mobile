@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:validators/validators.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:weechat/l10n/app_localizations.dart';
 
 bool validUrl(String text) => isURL(
       text,

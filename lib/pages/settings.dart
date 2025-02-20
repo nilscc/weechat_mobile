@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:weechat/l10n/app_localizations.dart';
 import 'package:weechat/pages/settings/config.dart';
 
 class SettingsPage extends StatefulWidget {
