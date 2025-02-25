@@ -19,6 +19,7 @@
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
 #.vscode/
+.vscode/settings.json
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -44,7 +45,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-.vscode/settings.json
+
+# Appbundle debug symbols (see https://github.com/flutter/flutter/issues/163220)
+/android/app/.cxx
 
 # Linux
 **/linux/flutter/ephemeral/
