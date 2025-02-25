@@ -55,6 +55,7 @@ dev_dependencies:
   flutter_lints: any
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -98,3 +99,18 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+flutter_launcher_icons:
+  image_path: "img/logo_transparent.png"
+
+  android: true
+  adaptive_icon_foreground: "img/logo_transparent.png"
+  adaptive_icon_background: "#313131"
+  # The default of 16 is too big compared to other app icons.
+  adaptive_icon_foreground_inset: 20
+
+  # Don't generate the iOS icons from the transparent logo for now due to artifacts:
+  # https://github.com/fluttercommunity/flutter_launcher_icons/issues/514
+  ios: false
+  remove_alpha_ios: true
+  background_color_ios: "#313131"
