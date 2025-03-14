@@ -84,7 +84,7 @@ class RelayConnection {
         hostName,
         portNumber,
         onBadCertificate: (c) => ignoreInvalidCertificate,
-        timeout: const Duration(seconds: 1),
+        timeout: const Duration(seconds: 10),
       );
       _socketCreated = DateTime.now();
 
