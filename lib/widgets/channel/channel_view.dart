@@ -63,7 +63,9 @@ class _ChannelViewState extends State<ChannelView> {
   void _send(RelayConnection con, RelayBuffer buffer) async {
     final text = _inputController.text;
     if (text.isNotEmpty) {
-      await con.command('input ${buffer.bufferPointer} $text');
+      for (final message in text.split("\n")) {
+        await con.command('input ${buffer.bufferPointer} $message');
+      }
       _inputController.text = '';
       _linesController.jumpTo(0);
     }
